@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev]
+  push:
+    branches: [dev]
+jobs:
+  lint:
+    name: Lint (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [auth_service]
+    env:
+      SERVICE_DIR: ${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: poetry
+          cache-dependency-path: |
+            ${{ env.SERVICE_DIR }}/poetry.lock
+            ${{ env.SERVICE_DIR }}/pyproject.toml
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: poetry install --no-interaction --no-ansi
+
+      - name: Run Ruff
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: poetry run ruff check . --output-format=github
+
+  test:
+    name: Tests (${{ matrix.service }})
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [auth_service]
+    env:
+      SERVICE_DIR: ${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: poetry
+          cache-dependency-path: |
+            ${{ env.SERVICE_DIR }}/poetry.lock
+            ${{ env.SERVICE_DIR }}/pyproject.toml
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: poetry install --no-interaction --no-ansi
+
+      - name: Run tests
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: |
+          poetry run pytest
