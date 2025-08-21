@@ -1,14 +1,18 @@
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from enum import Enum as PyEnum
 from datetime import datetime
 
 from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base
 from sqlalchemy import Enum as SAEnum
 
-from auth_service.src.models.pvzs.PVZs import PVZs
-from auth_service.src.models.tokens.refresh_tokens import RefreshTokens, AccessTokens
+from auth_service.src.database.base import Base
+
+if TYPE_CHECKING:
+    from auth_service.src.models.tokens.access_tokens import AccessTokens
+    from auth_service.src.models.tokens.refresh_tokens import RefreshTokens
+    from auth_service.src.models.pvzs.PVZ_workers import PVZWorkers
+    from auth_service.src.models.pvzs.PVZs import PVZs
 
 
 class UsersRoleEnum(str, PyEnum):
@@ -28,13 +32,6 @@ class Users(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
-    pvz_id: Mapped[Optional[int]] = mapped_column(
-        Integer,
-        ForeignKey("pvz.id"),
-        nullable=True,
-        index=True,
-    )
 
     refresh_tokens: Mapped[List["RefreshTokens"]] = relationship(
         "RefreshToken",

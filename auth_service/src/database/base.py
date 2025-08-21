@@ -5,7 +5,6 @@ from auth_service.src.settings.config import settings
 class Base(DeclarativeBase):
     pass
 
-
 class DataBaseHelper:
     def __init__(self):
         self.engine = create_async_engine(

@@ -1,5 +1,9 @@
-from auth_service.src.models.user import User, UserRole  # noqa
-from auth_service.src.models.pvz import PVZ  # noqa
-from auth_service.src.models.pvz_worker import PVZWorker  # noqa
-from auth_service.src.models.refresh_token import RefreshToken  # noqa
-from auth_service.src.models.access_token import AccessToken  # noqa
+__all__ = [
+    "Users", "UsersRoleEnum", "PVZs", "PVZWorkers", "RefreshTokens", "AccessTokens",
+]
+
+from auth_service.src.models.users.users import Users, UsersRoleEnum
+from auth_service.src.models.pvzs.PVZs import PVZs
+from auth_service.src.models.pvzs.PVZ_workers import PVZWorkers
+from auth_service.src.models.tokens.access_tokens import AccessTokens
+from auth_service.src.models.tokens.refresh_tokens import RefreshTokens

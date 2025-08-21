@@ -1,13 +1,15 @@
-from __future__ import annotations
+from typing import TYPE_CHECKING
 from typing import List, Optional
 from datetime import datetime
 
 from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from auth_service.src.database.base import Base
 
-from auth_service.src.models.users.users import Users
+if TYPE_CHECKING:
+    from auth_service.src.models.users.users import Users
+    from auth_service.src.models.pvzs.PVZ_workers import PVZWorkers
 
 
 class PVZs(Base):
@@ -20,8 +22,8 @@ class PVZs(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    owner_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    curator_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    curator_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -39,7 +41,7 @@ class PVZs(Base):
         lazy="joined"
     )
 
-    worker_links: Mapped[List["PVZWorker"]] = relationship(
+    worker_links: Mapped[List["PVZWorkers"]] = relationship(
         "PVZWorker",
         back_populates="pvz",
         cascade="all, delete-orphan",
