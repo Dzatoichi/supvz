@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status, exceptions, HTTPException
 
 from .dependencies import get_auth_service_without_token, get_auth_service_with_token
 from .schemas import (
     TokenResponse,
-    UserRegister, UserRead, UserLogin, UserPasswordUpdate,
+    UserRegister, UserRead, UserLogin, UserPasswordUpdate, UserForgotPassword, PasswordResetConfirm,
 )
 from .service import AuthService
 
@@ -32,12 +32,29 @@ async def login(
     return {'token': user.token}
 
 
-@auth_router.post("/{user_id}/reset-password")
-async def reset_password(
-        email: UserPasswordUpdate,
+@auth_router.post('/forgot_password', status_code=status.HTTP_202_ACCEPTED)
+async def forgot_password(
+        data: UserForgotPassword,
         auth_service: AuthService = Depends(get_auth_service_without_token),
 ):
+    """Route for func 'forgot_password'."""
+    user = await auth_service.get_by_email(data.email)
+
+    if user:
+        return await auth_service.forgot_password(user)
+
+
+# token in header need
+@auth_router.post(
+    "/reset-password",
+    responses={200: {"description": "Password successfully reset"}}
+)
+async def reset_password(
+        confirm_data: PasswordResetConfirm,
+        auth_service: AuthService = Depends(get_auth_service_with_token),
+):
     """Reset user password."""
-    result = await auth_service.reset_password(email)
+
+    result = await auth_service.reset_password(confirm_data.token, confirm_data.new_password)
 
     return result
