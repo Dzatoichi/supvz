@@ -20,13 +20,13 @@ class PVZWorkers(Base):
     assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     pvz: Mapped["PVZs"] = relationship(
-        "PVZ",
+        "PVZs",
         back_populates="worker_links",
         lazy="joined"
     )
 
     worker: Mapped["Users"] = relationship(
-        "User",
+        "Users",
         back_populates="pvz_worker_links",
         lazy="joined"
     )

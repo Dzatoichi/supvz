@@ -28,21 +28,21 @@ class PVZs(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     owner: Mapped[Optional["Users"]] = relationship(
-        "User",
+        "Users",
         back_populates="pvz_owned",
         foreign_keys=[owner_id],
         lazy="joined"
     )
 
     curator: Mapped[Optional["Users"]] = relationship(
-        "User",
+        "Users",
         back_populates="pvz_curated",
         foreign_keys=[curator_id],
         lazy="joined"
     )
 
     worker_links: Mapped[List["PVZWorkers"]] = relationship(
-        "PVZWorker",
+        "PVZWorkers",
         back_populates="pvz",
         cascade="all, delete-orphan",
         lazy="selectin"

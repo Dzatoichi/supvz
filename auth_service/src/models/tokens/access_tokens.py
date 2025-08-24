@@ -20,7 +20,7 @@ class AccessTokens(Base):
     revoked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     user: Mapped["Users"] = relationship(
-        "User",
+        "Users",
         back_populates="access_tokens",
         lazy="joined"
     )

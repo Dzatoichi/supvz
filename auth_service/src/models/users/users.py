@@ -2,7 +2,7 @@ from typing import List, Optional, TYPE_CHECKING
 from enum import Enum as PyEnum
 from datetime import datetime
 
-from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey
+from sqlalchemy import Integer, String, Boolean, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SAEnum
 
@@ -34,35 +34,35 @@ class Users(Base):
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     refresh_tokens: Mapped[List["RefreshTokens"]] = relationship(
-        "RefreshToken",
+        "RefreshTokens",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin"
     )
 
     access_tokens: Mapped[List["AccessTokens"]] = relationship(
-        "AccessToken",
+        "AccessTokens",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin"
     )
 
     pvz_owned: Mapped[List["PVZs"]] = relationship(
-        "PVZ",
+        "PVZs",
         back_populates="owner",
         foreign_keys="[PVZs.owner_id]",
         lazy="selectin"
     )
 
     pvz_curated: Mapped[List["PVZs"]] = relationship(
-        "PVZ",
+        "PVZs",
         back_populates="curator",
         foreign_keys="[PVZs.curator_id]",
         lazy="selectin"
     )
 
     pvz_worker_links: Mapped[List["PVZWorkers"]] = relationship(
-        "PVZWorker",
+        "PVZWorkers",
         back_populates="worker",
         cascade="all, delete-orphan",
         lazy="selectin"
