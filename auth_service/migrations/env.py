@@ -5,18 +5,18 @@ HERE = Path(__file__).resolve()
 PROJECT_ROOT = HERE.parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-import asyncio
-from logging.config import fileConfig
+import asyncio  # noqa: E402
+from logging.config import fileConfig  # noqa: E402
 
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy import pool  # noqa: E402
+from sqlalchemy.engine import Connection  # noqa: E402
+from sqlalchemy.ext.asyncio import async_engine_from_config  # noqa: E402
 
-from alembic import context
+from alembic import context  # noqa: E402
 
-from auth_service.src.settings.config import settings
-from auth_service.src.database.base import Base
-import auth_service.src.models
+from auth_service.src.settings.config import settings  # noqa: E402
+from auth_service.src.database.base import Base  # noqa: E402
+import auth_service.src.models  # noqa: E402, F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
