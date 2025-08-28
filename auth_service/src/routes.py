@@ -44,7 +44,6 @@ async def forgot_password(
         return await auth_service.forgot_password(user)
 
 
-# token in header need
 @auth_router.post(
     "/reset-password",
     responses={200: {"description": "Password successfully reset"}}

@@ -41,7 +41,7 @@ class UserLogin(BaseModel):
 class UserRegister(UserLogin):
     """Pydantic model for user registration data."""
 
-    password: PasswordStr
+    confirm_password: PasswordStr
 
 
 class UserUpdate(BaseModel):
