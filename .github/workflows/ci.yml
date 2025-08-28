@@ -21,11 +21,13 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
+        working-directory: ${{ env.SERVICE_DIR }}
         run: |
           sudo curl -sSL https://install.python-poetry.org | python3 -
           export PATH="$HOME/.local/bin:$PATH"
-          poetry install --with dev
+          poetry install --no-root
       - name: Lint with ruff
+        working-directory: ${{ env.SERVICE_DIR }}
         run: |
           poetry run ruff check .
 
@@ -45,10 +47,11 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
+        working-directory: ${{ env.SERVICE_DIR }}
         run: |
           sudo curl -sSL https://install.python-poetry.org | python3 -
           export PATH="$HOME/.local/bin:$PATH"
-          poetry install --with dev
+          poetry install --no-root
       - name: Run tests
         working-directory: ${{ env.SERVICE_DIR }}
         run: |
