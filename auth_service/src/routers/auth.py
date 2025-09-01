@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, status, exceptions, HTTPException
+from fastapi import APIRouter, Depends, status
 
-from .dependencies import get_auth_service_without_token, get_auth_service_with_token
-from .schemas import (
-    TokenResponse,
-    UserRegister, UserRead, UserLogin, UserPasswordUpdate, UserForgotPassword, PasswordResetConfirm,
-)
-from .service import AuthService
+from auth_service.src.schemas.tokens import TokenResponse
+from auth_service.src.schemas.users_schemas import UserRead, UserRegister, UserLogin, UserForgotPassword, \
+    PasswordResetConfirm
+from auth_service.src.services.auth_service import AuthService
+from auth_service.src.utils.dependencies import get_auth_service_without_token, get_auth_service_with_token
 
 auth_router = APIRouter(prefix='/auth')
 
