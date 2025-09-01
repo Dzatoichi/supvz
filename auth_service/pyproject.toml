@@ -32,5 +32,5 @@ mypy = "^1.10.0"
 [tool.ruff]
 line-length = 120
 select = ["E", "F", "W", "I", "B", "C4"]
-ignore = ["E501", "W503"]
+ignore = ["E501"]
 target-version = "py311"
