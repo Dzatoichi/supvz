@@ -1,6 +1,7 @@
-from fastapi import FastAPI
 import asyncio
+
 from auth_service.src.dao.usersDAO import UsersDAO
+from fastapi import FastAPI
 
 app = FastAPI()
 
