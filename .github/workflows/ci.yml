@@ -16,33 +16,20 @@ jobs:
     env:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
+      - uses: actions/setup-python@v2
         with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: poetry
-          cache-dependency-path: |
-            ${{ env.SERVICE_DIR }}/poetry.lock
-            ${{ env.SERVICE_DIR }}/pyproject.toml
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.3
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
+          python-version: '3.11'
       - name: Install dependencies
         working-directory: ${{ env.SERVICE_DIR }}
-        run: poetry install --no-interaction --no-ansi
-
-      - name: Run Ruff
+        run: |
+          sudo curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install --no-root
+      - name: Lint with ruff
         working-directory: ${{ env.SERVICE_DIR }}
-        run: poetry run ruff check . --output-format=github
+        run: |
+          poetry run ruff check .
 
   test:
     name: Tests (${{ matrix.service }})
@@ -56,29 +43,15 @@ jobs:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: poetry
-          cache-dependency-path: |
-            ${{ env.SERVICE_DIR }}/poetry.lock
-            ${{ env.SERVICE_DIR }}/pyproject.toml
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.3
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
       - name: Install dependencies
         working-directory: ${{ env.SERVICE_DIR }}
-        run: poetry install --no-interaction --no-ansi
-
+        run: |
+          sudo curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install --no-root
       - name: Run tests
         working-directory: ${{ env.SERVICE_DIR }}
         run: |
