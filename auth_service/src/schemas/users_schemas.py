@@ -2,7 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated
 
-from pydantic import BaseModel, EmailStr, SecretStr, StringConstraints, ConfigDict, field_validator, Field
+from pydantic import BaseModel, EmailStr, SecretStr, StringConstraints, ConfigDict, field_validator, Field, \
+    model_validator
 
 PasswordStr = Annotated[SecretStr, StringConstraints(min_length=8, max_length=128)]
 
@@ -28,6 +29,7 @@ class UserBase(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
+
 class UserLogin(BaseModel):
     """Pydantic model for user login data."""
 
@@ -40,7 +42,7 @@ class UserLogin(BaseModel):
 class UserRegister(UserLogin):
     """Pydantic model for user registration data."""
 
-    password: PasswordStr
+    confirm_password: PasswordStr
 
 
 class UserUpdate(BaseModel):
@@ -63,6 +65,20 @@ class UserRead(UserBase):
     created_at: datetime
 
 
+class PasswordResetConfirm(BaseModel):
+    """Pydantic model for password reset confirmation data."""
+
+    token: str
+    new_password: PasswordStr
+    confirm_new_password: PasswordStr
+
+    @model_validator(mode="after")
+    def check_passwords_match(self) -> "PasswordResetConfirm":
+        if self.new_password != self.confirm_new_password:
+            raise ValueError("Passwords do not match")
+        return self
+
+
 class UserPasswordUpdate(BaseModel):
     """Pydantic model for user update password."""
 
@@ -72,8 +88,14 @@ class UserPasswordUpdate(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
+    @model_validator(mode="after")
+    def check_passwords_match(self) -> "UserPasswordUpdate":
+        if self.new_password != self.confirm_password:
+            raise ValueError("Passwords do not match")
+        return self
 
-class UserResetPassword(BaseModel):
+
+class UserForgotPassword(BaseModel):
     """Pydantic model for user reset password."""
 
     email: EmailStr

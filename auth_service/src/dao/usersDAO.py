@@ -1,7 +1,11 @@
+from typing import Optional
+
 from auth_service.src.dao.baseDAO import BaseDAO
 from auth_service.src.models.users.users import Users
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
+from auth_service.src.core.security import HashHelper
+
 
 class UsersDAO(BaseDAO[Users]):
     def __init__(self):
@@ -20,3 +24,7 @@ class UsersDAO(BaseDAO[Users]):
                 return result
         except SQLAlchemyError as e:
             raise e
+
+    async def set_password(self, user_id: int, new_password: str) -> Optional[Users]:
+        hashed_password = HashHelper.hash(new_password)
+        return await self.update(user_id, password=hashed_password)

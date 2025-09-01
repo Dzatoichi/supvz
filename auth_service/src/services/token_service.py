@@ -13,9 +13,9 @@ class JWTTokensService:
     """JWT tokens service."""
 
     async def create_token(
-        self,
-        token_type: TokenTypesEnum,
-        user_id: UUID,
+            self,
+            token_type: TokenTypesEnum,
+            user_id: UUID,
     ) -> str:
         """Method to create access or refresh token."""
         token_handler = TokenHandler(token_type=token_type)
@@ -34,9 +34,9 @@ class JWTTokensService:
         return token
 
     async def revoke_token(
-        self,
-        token: str,
-        token_type: TokenTypesEnum,
+            self,
+            token: str,
+            token_type: TokenTypesEnum,
     ) -> bool:
         """Method to revoke token."""
         repo = TOKENS_DAOS_MAPPER[token_type]
@@ -47,8 +47,8 @@ class JWTTokensService:
         return True
 
     async def refresh_token(
-        self,
-        refresh_token: str,
+            self,
+            refresh_token: str,
     ) -> dict[str, str]:
         """Method to refresh token with rotation of tokens."""
         token_payload = await self.validate_token(
@@ -76,9 +76,9 @@ class JWTTokensService:
         }
 
     async def validate_token(
-        self,
-        token: str,
-        token_type: TokenTypesEnum,
+            self,
+            token: str,
+            token_type: TokenTypesEnum,
     ) -> dict:
         repo = TOKENS_DAOS_MAPPER[token_type]
         token_handler = TokenHandler(token_type=token_type)
@@ -97,3 +97,17 @@ class JWTTokensService:
             raise InvalidTokenException("Invalid token.")
 
         return token_payload
+
+
+class StatefulTokenService:
+    async def create_stateful_token(self, user):
+        """Создает токен и отправляет запрос на создание в репо user_id"""
+        pass
+
+    async def get_reset_token_data(self, token):
+        """Получает всю информацию токена из базы данных"""
+        pass
+
+    async def mark_token_as_used(self, token_data):
+        """Помечает токен как использованный"""
+        pass
