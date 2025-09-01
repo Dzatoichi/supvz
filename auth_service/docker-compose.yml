@@ -4,17 +4,20 @@ services:
   postgres:
     image: postgres:latest
     container_name: auth_postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_HOST: ${DB_HOST}
     ports:
-      - "5433:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - ./pg_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "root", "-d", "db"]
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}", "-d", "${DB_NAME}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -29,7 +32,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://root:root@postgres:5432/db
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@postgres:5432/${DB_NAME}
     depends_on:
       postgres:
         condition: service_healthy
