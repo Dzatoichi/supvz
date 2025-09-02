@@ -1,4 +1,5 @@
 from enum import StrEnum
+
 from auth_service.src.dao.tokensDAO import AccessTokensDAO, RefreshTokensDAO
 
 

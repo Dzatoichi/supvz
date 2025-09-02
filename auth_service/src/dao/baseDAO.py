@@ -1,11 +1,10 @@
-from typing import Generic, TypeVar, Optional, List, Type, Any, Dict
 from contextlib import asynccontextmanager
-
-from sqlalchemy import select, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from auth_service.src.database.base import Base, db_helper
+from sqlalchemy import delete, select, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 T = TypeVar("T", bound=Base)
 
