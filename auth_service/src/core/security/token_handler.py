@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
-from auth_service.src.schemas.tokens import TokenTypesEnum
+
 import jwt
+from auth_service.src.schemas.tokens import TokenTypesEnum
+
 from settings.config import settings
 
 
