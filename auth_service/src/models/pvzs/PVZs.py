@@ -1,15 +1,13 @@
-from typing import TYPE_CHECKING
-from typing import List, Optional
 from datetime import datetime
-
-from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING, List, Optional
 
 from auth_service.src.database.base import Base
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
-    from auth_service.src.models.users.users import Users
     from auth_service.src.models.pvzs.PVZ_workers import PVZWorkers
+    from auth_service.src.models.users.users import Users
 
 
 class PVZs(Base):
