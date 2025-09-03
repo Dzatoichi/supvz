@@ -2,8 +2,16 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated
 
-from pydantic import BaseModel, EmailStr, SecretStr, StringConstraints, ConfigDict, field_validator, Field, \
-    model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SecretStr,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 PasswordStr = Annotated[SecretStr, StringConstraints(min_length=8, max_length=128)]
 

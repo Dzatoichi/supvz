@@ -1,10 +1,10 @@
 from typing import Optional
 
+from auth_service.src.core.security import HashHelper
 from auth_service.src.dao.baseDAO import BaseDAO
 from auth_service.src.models.users.users import Users
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
-from auth_service.src.core.security import HashHelper
 
 
 class UsersDAO(BaseDAO[Users]):

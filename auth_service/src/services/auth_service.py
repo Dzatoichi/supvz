@@ -3,9 +3,8 @@ from datetime import datetime
 from fastapi import HTTPException, status
 
 from src.dao.usersDAO import UsersDAO
-from src.services.token_service import StatefulTokenService
-
 from src.schemas.users_schemas import UserBase
+from src.services.token_service import StatefulTokenService
 
 
 class AuthService:
@@ -51,7 +50,7 @@ class AuthService:
         """
 
         # Генерация токена
-        token = self.token_service.create_stateful_token(user)
+        token = self.token_service.create_stateful_token(user)  # noqa: F841
 
         # Интеграция с notification_service
         # reset_url = f"{self.config.frontend_base_url}/reset-password?token={token}"

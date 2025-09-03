@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, status
-
 from auth_service.src.schemas.tokens import TokenResponse
-from auth_service.src.schemas.users_schemas import UserRead, UserRegister, UserLogin, UserForgotPassword, \
-    PasswordResetConfirm
+from auth_service.src.schemas.users_schemas import (
+    PasswordResetConfirm,
+    UserForgotPassword,
+    UserLogin,
+    UserRead,
+    UserRegister,
+)
 from auth_service.src.services.auth_service import AuthService
-from auth_service.src.utils.dependencies import get_auth_service_without_token, get_auth_service_with_token
+from auth_service.src.utils.dependencies import get_auth_service_with_token, get_auth_service_without_token
+from fastapi import APIRouter, Depends, status
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -12,7 +16,7 @@ auth_router = APIRouter(prefix='/auth')
 @auth_router.post("/register", response_model=UserRead)
 async def register_user(
         user_in: UserRegister,
-        auth_service: AuthService = Depends(get_auth_service_without_token),
+        auth_service: AuthService = Depends(get_auth_service_without_token),  # noqa: B008
 ):
     """Registration user."""
     user = await auth_service.register_user(user_in)
@@ -23,7 +27,7 @@ async def register_user(
 @auth_router.post("/login", response_model=TokenResponse)
 async def login(
         credentials: UserLogin,
-        auth_service: AuthService = Depends(get_auth_service_with_token)
+        auth_service: AuthService = Depends(get_auth_service_with_token)  # noqa: B008
 ):
     """Authentication user."""
     user = await auth_service.login_user(credentials)
@@ -34,7 +38,7 @@ async def login(
 @auth_router.post('/forgot_password', status_code=status.HTTP_202_ACCEPTED)
 async def forgot_password(
         data: UserForgotPassword,
-        auth_service: AuthService = Depends(get_auth_service_without_token),
+        auth_service: AuthService = Depends(get_auth_service_without_token),  # noqa: B008
 ):
     """Route for func 'forgot_password'."""
     user = await auth_service.get_by_email(data.email)
@@ -49,7 +53,7 @@ async def forgot_password(
 )
 async def reset_password(
         confirm_data: PasswordResetConfirm,
-        auth_service: AuthService = Depends(get_auth_service_with_token),
+        auth_service: AuthService = Depends(get_auth_service_with_token),  # noqa: B008
 ):
     """Reset user password."""
 
