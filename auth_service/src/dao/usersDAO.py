@@ -3,6 +3,7 @@ from auth_service.src.models.users.users import Users
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
 
+
 class UsersDAO(BaseDAO[Users]):
     def __init__(self):
         super().__init__(model=Users)

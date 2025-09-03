@@ -7,11 +7,33 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
+    JWT_ACCESS_SECRET_KEY: str
+    JWT_REFRESH_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    JWT_ACCESS_EXPIRE_TIME: int
+    JWT_REFRESH_EXPIRE_TIME: int
 
     model_config = SettingsConfigDict(env_file="auth_service/.env")
 
     def CONNECT_ASYNC(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
+    def get_jwt_params(self, token_type):
+        jwt_params = {
+            "algorithm": self.JWT_ALGORITHM,
+        }
+        if token_type == "access":
+            added_jwt_params = {
+                "secret_key": self.JWT_ACCESS_SECRET_KEY,
+                "expire_time": self.JWT_ACCESS_EXPIRE_TIME,
+            }
+        else:
+            added_jwt_params = {
+                "secret_key": self.JWT_REFRESH_SECRET_KEY,
+                "expire_time": self.JWT_REFRESH_EXPIRE_TIME,
+            }
+
+        return jwt_params | added_jwt_params
 
 
 settings = Settings()
