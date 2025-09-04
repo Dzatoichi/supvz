@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
-from auth_service.src.database.base import Base, db_helper
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.database.base import Base, db_helper
+
 T = TypeVar("T", bound=Base)
+
 
 class BaseDAO(Generic[T]):
     def __init__(self, model: Optional[Type[T]] = None):
