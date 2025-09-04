@@ -15,20 +15,20 @@ class PVZWorkers(Base):
     __tablename__ = "pvz_workers"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    pvz_id: Mapped[int] = mapped_column(Integer, ForeignKey('pvzs.id'), nullable=False, index=True)
-    worker_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    pvz_id: Mapped[int] = mapped_column(Integer, ForeignKey("pvzs.id"), nullable=False, index=True)
+    worker_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     pvz: Mapped["PVZs"] = relationship(
         "PVZs",
         back_populates="worker_links",
-        lazy="joined"
+        lazy="joined",
     )
 
     worker: Mapped["Users"] = relationship(
         "Users",
         back_populates="pvz_worker_links",
-        lazy="joined"
+        lazy="joined",
     )
 
     def __repr__(self) -> str:

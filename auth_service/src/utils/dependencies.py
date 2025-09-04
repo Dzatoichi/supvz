@@ -17,22 +17,22 @@ def get_token_dao() -> StatefulTokenDAO:
 
 
 def get_stateful_token_service(
-        dao: StatefulTokenDAO = Depends(get_token_dao)  # noqa: B008
+    dao: StatefulTokenDAO = Depends(get_token_dao),  # noqa: B008
 ) -> StatefulTokenService:
     """Создает сервис для работы с stateful токенами."""
     return StatefulTokenService(dao)
 
 
 def get_auth_service_without_token(
-        repo: UsersDAO = Depends(get_users_dao)  # noqa: B008
+    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ) -> AuthService:
     """Создаёт сервис с репозиторием без токена."""
     return AuthService(repo)
 
 
 def get_auth_service_with_token(
-        repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-        token_service: StatefulTokenService = Depends(get_stateful_token_service)  # noqa: B008
+    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
+    token_service: StatefulTokenService = Depends(get_stateful_token_service),  # noqa: B008
 ) -> AuthService:
     """Создаёт сервис с репозиторием и токеном."""
     return AuthService(repo, token_service)

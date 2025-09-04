@@ -5,6 +5,7 @@ class HashHelper:
     """
     Class to handle password hashing.
     """
+
     def __init__(self):
         """
         Init function.

@@ -9,12 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 T = TypeVar("T", bound=Base)
 
+
 class BaseDAO(Generic[T]):
     def __init__(self, model: Optional[Type[T]] = None):
         if model is not None:
             self.model = model
 
-        if not hasattr(self, 'model') or self.model is None:
+        if not hasattr(self, "model") or self.model is None:
             raise TypeError("Отсутствует модель")
 
         self._db_helper = db_helper
@@ -40,6 +41,7 @@ class BaseDAO(Generic[T]):
                 raise e
             except Exception as e:
                 raise e
+
         return async_wrapper
 
     @with_exception
@@ -68,12 +70,7 @@ class BaseDAO(Generic[T]):
     @with_exception
     async def update(self, id: int, **kwargs) -> Optional[T]:
         async with self._get_session() as session:
-            stmt = (
-                update(self.model)
-                .where(self.model.id == id)
-                .values(**kwargs)
-                .returning(self.model)
-            )
+            stmt = update(self.model).where(self.model.id == id).values(**kwargs).returning(self.model)
             result = await session.execute(stmt)
             await session.commit()
             updated = result.scalar_one_or_none()

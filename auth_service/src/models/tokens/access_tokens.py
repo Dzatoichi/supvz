@@ -14,8 +14,12 @@ class AccessTokens(Base):
     __tablename__ = "access_tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False,
-                                         index=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     token_hash: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -24,7 +28,7 @@ class AccessTokens(Base):
     user: Mapped["Users"] = relationship(
         "Users",
         back_populates="access_tokens",
-        lazy="joined"
+        lazy="joined",
     )
 
     def __repr__(self) -> str:

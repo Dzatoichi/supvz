@@ -12,11 +12,11 @@ class DataBaseHelper:
     def __init__(self):
         self.engine = create_async_engine(
             url=settings.CONNECT_ASYNC(),
-            echo=False
+            echo=False,
         )
         self.async_session_maker = async_sessionmaker(
             bind=self.engine,
-            expire_on_commit=False
+            expire_on_commit=False,
         )
 
 

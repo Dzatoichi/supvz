@@ -21,8 +21,8 @@ class PVZs(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    owner_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'), nullable=True, index=True)
-    curator_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    curator_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -30,21 +30,21 @@ class PVZs(Base):
         "Users",
         back_populates="pvz_owned",
         foreign_keys=[owner_id],
-        lazy="joined"
+        lazy="joined",
     )
 
     curator: Mapped[Optional["Users"]] = relationship(
         "Users",
         back_populates="pvz_curated",
         foreign_keys=[curator_id],
-        lazy="joined"
+        lazy="joined",
     )
 
     worker_links: Mapped[List["PVZWorkers"]] = relationship(
         "PVZWorkers",
         back_populates="pvz",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
