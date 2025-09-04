@@ -1,10 +1,13 @@
 from datetime import datetime, timezone
+from typing import Optional
 from uuid import UUID
 
-from auth_service.src.core.security.hash_helper import hash_helper
-from auth_service.src.core.security.token_handler import TokenHandler
-from auth_service.src.schemas.tokens import TOKENS_DAOS_MAPPER, TokenTypesEnum
-from auth_service.src.utils.exceptions import (
+from src.core.security.hash_helper import hash_helper
+from src.core.security.token_handler import TokenHandler
+from src.dao.tokensDAO import StatefulTokenDAO
+from src.models.tokens.stateful_tokens import StatefulTokens
+from src.schemas.tokens import TOKENS_DAOS_MAPPER, TokenTypesEnum
+from src.utils.exceptions import (
     InvalidTokenException,
     TokenExpiredException,
 )
@@ -101,14 +104,18 @@ class JWTTokensService:
 
 
 class StatefulTokenService:
-    async def create_stateful_token(self, user):
-        """Создает токен и отправляет запрос на создание в репо user_id"""
-        pass
+    def __init__(self, dao: StatefulTokenDAO):
+        self.dao = dao
 
-    async def get_reset_token_data(self, token):
-        """Получает всю информацию токена из базы данных"""
-        pass
+    async def create_stateful_token(self, user_id: int, expires_in_minutes: int = 15) -> str:
+        """Создаёт токен и возвращает его строку."""
+        token_obj = self.dao.create_token(user_id, expires_in_minutes)
+        return await token_obj.token
 
-    async def mark_token_as_used(self, token_data):
-        """Помечает токен как использованный"""
-        pass
+    async def get_reset_token_data(self, token: str) -> Optional[StatefulTokens]:
+        """Получает данные токена и проверяет валидность."""
+        return await self.dao.validate_token(token)
+
+    async def mark_token_as_used(self, token_obj: StatefulTokens):
+        """Помечает как использованный."""
+        await self.dao.mark_as_used(token_obj.id)

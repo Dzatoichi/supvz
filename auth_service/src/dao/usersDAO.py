@@ -1,5 +1,3 @@
-from typing import Optional
-
 from auth_service.src.core.security import HashHelper
 from auth_service.src.dao.baseDAO import BaseDAO
 from auth_service.src.models.users.users import Users
@@ -25,6 +23,17 @@ class UsersDAO(BaseDAO[Users]):
         except SQLAlchemyError as e:
             raise e
 
-    async def set_password(self, user_id: int, new_password: str) -> Optional[Users]:
-        hashed_password = HashHelper.hash(new_password)
-        return await self.update(user_id, password=hashed_password)
+    async def set_password(self, user_id: int, new_password: str):
+        """Обновление пароля пользователя."""
+        try:
+            hashed_password = HashHelper.hash(new_password)
+
+            updated_user = await self.update(user_id, password=hashed_password)
+
+            if not updated_user:
+                raise NoResultFound(f"Пользователь с id={user_id} не найден")
+
+            return {"detail": "Password reset successful"}
+
+        except SQLAlchemyError as e:
+            raise e
