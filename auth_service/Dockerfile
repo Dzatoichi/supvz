@@ -10,6 +10,7 @@ RUN curl -sSL https://install.python-poetry.org | python3 - \
     && ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 
 # Копируем только файлы зависимостей
+# Копируем только файлы зависимостей
 COPY pyproject.toml poetry.lock* /app/
 
 RUN poetry config virtualenvs.in-project true \
