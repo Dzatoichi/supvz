@@ -1,5 +1,3 @@
-import secrets
-from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import select
@@ -13,18 +11,7 @@ class StatefulTokenDAO(BaseDAO[StatefulTokens]):
     def __init__(self):
         super().__init__(model=StatefulTokens)
 
-    async def create_token(self, user_id: int, expires_in_minutes: int = 15) -> StatefulTokens:
-        """Генерирует и сохраняет новый токен для пользователя."""
-        token_str = secrets.token_urlsafe(16)
-        expires_at = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
-
-        payload = {
-            "token": token_str,
-            "user_id": user_id,
-            "expires_at": expires_at,
-            "used": False,
-        }
-
+    async def create_token(self, payload: dict) -> StatefulTokens:
         return await self.create(payload)
 
     async def get_by_token(self, token: str) -> Optional[StatefulTokens]:
@@ -40,10 +27,3 @@ class StatefulTokenDAO(BaseDAO[StatefulTokens]):
     async def mark_as_used(self, token_id: int) -> Optional[StatefulTokens]:
         """Помечает токен как использованный."""
         return await self.update(token_id, used=True)
-
-    async def validate_token(self, token: str) -> Optional[StatefulTokens]:
-        """Метод для проверки валидности."""
-        token_obj = await self.get_by_token(token)
-        if not token_obj or token_obj.used or token_obj.expires_at < datetime.utcnow():
-            return None
-        return token_obj

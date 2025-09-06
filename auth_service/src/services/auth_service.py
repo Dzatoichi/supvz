@@ -1,12 +1,9 @@
-import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 
 from src.dao.usersDAO import UsersDAO
 from src.services.token_service import StatefulTokenService
-
-logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -31,7 +28,7 @@ class AuthService:
         if token_data.used:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token already used")
 
-        if token_data.expires_at < datetime.utcnow():
+        if token_data.expires_at < datetime.now(timezone.utc):
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token expired")
 
         # Обновляем пароль и помечаем токен как использованный
@@ -60,7 +57,7 @@ class AuthService:
 
                 # Интеграция с notification_service (пока заглушка)
                 reset_url = f"https://frontend.example.com/reset-password?token={token}"
-                logger.info(f"[EMAIL-FAKE] reset link={reset_url} email={user.email}")
+                print(f"[EMAIL-FAKE] reset link={reset_url} email={user.email}")
                 # try:
                 #     await self.notification_service.send_password_reset(
                 #         email=user.email,
@@ -70,7 +67,7 @@ class AuthService:
                 #     logger.error(f"Ошибка при отправке email: {e}")
 
         except Exception as e:
-            logger.error(f"Ошибка при forgot_password: {e}")
+            print(f"Ошибка при forgot_password: {e}")
 
         return None
 

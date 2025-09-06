@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     JWT_ACCESS_EXPIRE_TIME: int
     JWT_REFRESH_EXPIRE_TIME: int
 
+    STATEFUL_TOKEN_EXPIRE_MINUTES: int = 15
+
     model_config = SettingsConfigDict(env_file="auth_service/.env")
 
     def CONNECT_ASYNC(self):

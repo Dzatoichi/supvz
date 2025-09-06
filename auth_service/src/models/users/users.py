@@ -29,8 +29,10 @@ class Users(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     phone_number: Mapped[str] = mapped_column(String(32), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UsersRoleEnum] = mapped_column(SAEnum(UsersRoleEnum, name="user_role", native_enum=False),
-                                                nullable=False, default=UsersRoleEnum.EMPLOYEE)
+    role: Mapped[UsersRoleEnum] = mapped_column(
+        SAEnum(UsersRoleEnum, name="user_role", native_enum=False),
+        nullable=False, default=UsersRoleEnum.EMPLOYEE
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+import secrets
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -7,6 +8,7 @@ from src.core.security.token_handler import TokenHandler
 from src.dao.tokensDAO import StatefulTokenDAO
 from src.models.tokens.stateful_tokens import StatefulTokens
 from src.schemas.tokens import TOKENS_DAOS_MAPPER, TokenTypesEnum
+from src.settings.config import settings
 from src.utils.exceptions import (
     InvalidTokenException,
     TokenExpiredException,
@@ -107,15 +109,33 @@ class StatefulTokenService:
     def __init__(self, dao: StatefulTokenDAO):
         self.dao = dao
 
-    async def create_stateful_token(self, user_id: int, expires_in_minutes: int = 15) -> str:
+    async def create_stateful_token(self, user_id: int):
         """Создаёт токен и возвращает его строку."""
-        token_obj = self.dao.create_token(user_id, expires_in_minutes)
-        return await token_obj.token
+
+        token_str = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.STATEFUL_TOKEN_EXPIRE_MINUTES
+        )
+
+        payload = {
+            "token": token_str,
+            "user_id": user_id,
+            "expires_at": expires_at,
+            "used": False,
+        }
+        return await self.dao.create(payload)
 
     async def get_reset_token_data(self, token: str) -> Optional[StatefulTokens]:
         """Получает данные токена и проверяет валидность."""
-        return await self.dao.validate_token(token)
+        return await self.validate_token(token)
 
     async def mark_token_as_used(self, token_obj: StatefulTokens):
         """Помечает как использованный."""
         await self.dao.mark_as_used(token_obj.id)
+
+    async def validate_token(self, token: str) -> Optional[StatefulTokens]:
+        """Метод для проверки валидности."""
+        token_obj = await self.dao.get_by_token(token)
+        if not token_obj or token_obj.used or token_obj.expires_at < datetime.now(timezone.utc):
+            return None
+        return token_obj
