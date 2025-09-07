@@ -2,22 +2,25 @@ from datetime import datetime
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING, List, Optional
 
-from auth_service.src.database.base import Base
 from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.database.base import Base
+
 if TYPE_CHECKING:
-    from auth_service.src.models.pvzs.PVZ_workers import PVZWorkers
-    from auth_service.src.models.pvzs.PVZs import PVZs
-    from auth_service.src.models.tokens.access_tokens import AccessTokens
-    from auth_service.src.models.tokens.refresh_tokens import RefreshTokens
+    from src.models.pvzs.PVZ_workers import PVZWorkers
+    from src.models.pvzs.PVZs import PVZs
+    from src.models.tokens.access_tokens import AccessTokens
+    from src.models.tokens.refresh_tokens import RefreshTokens
+    from src.models.tokens.stateful_tokens import StatefulTokens
 
 
 class UsersRoleEnum(str, PyEnum):
     OWNER = "owner"
     CURATOR = "curator"
     EMPLOYEE = "employee"
+
 
 class Users(Base):
     __tablename__ = "users"
@@ -26,7 +29,15 @@ class Users(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     phone_number: Mapped[str] = mapped_column(String(32), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UsersRoleEnum] = mapped_column(SAEnum(UsersRoleEnum, name="user_role", native_enum=False), nullable=False, default=UsersRoleEnum.EMPLOYEE)
+    role: Mapped[UsersRoleEnum] = mapped_column(
+        SAEnum(
+            UsersRoleEnum,
+            name="user_role",
+            native_enum=False,
+        ),
+        nullable=False,
+        default=UsersRoleEnum.EMPLOYEE,
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -36,35 +47,42 @@ class Users(Base):
         "RefreshTokens",
         back_populates="user",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     access_tokens: Mapped[List["AccessTokens"]] = relationship(
         "AccessTokens",
         back_populates="user",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
+    )
+
+    stateful_tokens: Mapped[List["StatefulTokens"]] = relationship(
+        "StatefulToken",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     pvz_owned: Mapped[List["PVZs"]] = relationship(
         "PVZs",
         back_populates="owner",
         foreign_keys="[PVZs.owner_id]",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     pvz_curated: Mapped[List["PVZs"]] = relationship(
         "PVZs",
         back_populates="curator",
         foreign_keys="[PVZs.curator_id]",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     pvz_worker_links: Mapped[List["PVZWorkers"]] = relationship(
         "PVZWorkers",
         back_populates="worker",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
