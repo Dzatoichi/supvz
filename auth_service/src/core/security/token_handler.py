@@ -2,9 +2,9 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import jwt
-from auth_service.src.schemas.tokens import TokenTypesEnum
 
 from settings.config import settings
+from src.schemas.tokens import TokenTypesEnum
 
 
 class TokenHandler:

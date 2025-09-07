@@ -1,5 +1,5 @@
-from auth_service.src.dao.baseDAO import BaseDAO
-from auth_service.src.models.pvzs.PVZs import PVZs
+from src.dao.baseDAO import BaseDAO
+from src.models.pvzs.PVZs import PVZs
 
 
 class PVZsDAO(BaseDAO[PVZs]):

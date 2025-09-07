@@ -1,7 +1,8 @@
 from enum import StrEnum
 
-from auth_service.src.dao.tokensDAO import AccessTokensDAO, RefreshTokensDAO
 from pydantic import BaseModel
+
+from src.dao.tokensDAO import AccessTokensDAO, RefreshTokensDAO
 
 
 class TokenTypesEnum(StrEnum):

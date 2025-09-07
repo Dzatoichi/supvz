@@ -1,9 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserBase
 from src.services.token_service import StatefulTokenService
 
 
@@ -29,40 +28,51 @@ class AuthService:
         if token_data.used:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token already used")
 
-        if token_data.expires_at < datetime.now():
+        if token_data.expires_at < datetime.now(timezone.utc):
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token expired")
 
         # Обновляем пароль и помечаем токен как использованный
-        result = await self.auth_repo.set_password(token_data.id, new_password)
+        result = await self.auth_repo.set_password(token_data.user_id, new_password)
         await self.token_service.mark_token_as_used(token_data)
 
         return result
 
-    async def forgot_password(self, user: UserBase):
+    async def forgot_password(self, user_email: str):
         """
         Генерирует токен сброса пароля и инициирует отправку email через notification_service.
 
         Args:
-            user: Объект пользователя, для которого запрашивается сброс пароля
+            user_email: Почта пользователя, для которого запрашивается сброс пароля
 
         Returns:
             Сообщение о результате операции (всегда успешное)
         """
 
-        # Генерация токена
-        token = self.token_service.create_stateful_token(user)  # noqa: F841
+        try:
+            user = await self.auth_repo.get_user_by_email(user_email)
 
-        # Интеграция с notification_service
-        # reset_url = f"{self.config.frontend_base_url}/reset-password?token={token}"
-        # await self.notification_service.send_password_reset(
-        #     email=user.email,
-        #     reset_url=reset_url
-        # )
+            if user:
+                # Генерация токена
+                token = await self.token_service.create_stateful_token(user.id)
+
+                # Интеграция с notification_service (пока заглушка)
+                reset_url = f"https://frontend.example.com/reset-password?token={token}"
+                print(f"[EMAIL-FAKE] reset link={reset_url} email={user.email}")
+                # try:
+                #     await self.notification_service.send_password_reset(
+                #         email=user.email,
+                #         reset_url=reset_url
+                #     )
+                # except Exception as e:
+                #     logger.error(f"Ошибка при отправке email: {e}")
+
+        except Exception as e:
+            print(f"Ошибка при forgot_password: {e}")
 
         return None
 
     async def get_by_email(self, user_email: str):
         """Get a user by e-mail."""
-        user_or_none = await self.auth_repo.get_by_email(user_email)
+        user = await self.auth_repo.get_user_by_email(user_email)
 
-        return user_or_none
+        return user

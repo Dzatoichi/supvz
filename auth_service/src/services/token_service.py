@@ -1,10 +1,15 @@
-from datetime import datetime, timezone
+import secrets
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 from uuid import UUID
 
-from auth_service.src.core.security.hash_helper import hash_helper
-from auth_service.src.core.security.token_handler import TokenHandler
-from auth_service.src.schemas.tokens import TOKENS_DAOS_MAPPER, TokenTypesEnum
-from auth_service.src.utils.exceptions import (
+from src.core.security.hash_helper import hash_helper
+from src.core.security.token_handler import TokenHandler
+from src.dao.tokensDAO import StatefulTokenDAO
+from src.models.tokens.stateful_tokens import StatefulTokens
+from src.schemas.tokens import TOKENS_DAOS_MAPPER, TokenTypesEnum
+from src.settings.config import settings
+from src.utils.exceptions import (
     InvalidTokenException,
     TokenExpiredException,
 )
@@ -14,9 +19,9 @@ class JWTTokensService:
     """JWT tokens service."""
 
     async def create_token(
-            self,
-            token_type: TokenTypesEnum,
-            user_id: UUID,
+        self,
+        token_type: TokenTypesEnum,
+        user_id: UUID,
     ) -> str:
         """Method to create access or refresh token."""
         token_handler = TokenHandler(token_type=token_type)
@@ -35,9 +40,9 @@ class JWTTokensService:
         return token
 
     async def revoke_token(
-            self,
-            token: str,
-            token_type: TokenTypesEnum,
+        self,
+        token: str,
+        token_type: TokenTypesEnum,
     ) -> bool:
         """Method to revoke token."""
         repo = TOKENS_DAOS_MAPPER[token_type]
@@ -48,8 +53,8 @@ class JWTTokensService:
         return True
 
     async def refresh_token(
-            self,
-            refresh_token: str,
+        self,
+        refresh_token: str,
     ) -> dict[str, str]:
         """Method to refresh token with rotation of tokens."""
         token_payload = await self.validate_token(
@@ -77,9 +82,9 @@ class JWTTokensService:
         }
 
     async def validate_token(
-            self,
-            token: str,
-            token_type: TokenTypesEnum,
+        self,
+        token: str,
+        token_type: TokenTypesEnum,
     ) -> dict:
         repo = TOKENS_DAOS_MAPPER[token_type]
         token_handler = TokenHandler(token_type=token_type)
@@ -101,14 +106,34 @@ class JWTTokensService:
 
 
 class StatefulTokenService:
-    async def create_stateful_token(self, user):
-        """Создает токен и отправляет запрос на создание в репо user_id"""
-        pass
+    def __init__(self, dao: StatefulTokenDAO):
+        self.dao = dao
 
-    async def get_reset_token_data(self, token):
-        """Получает всю информацию токена из базы данных"""
-        pass
+    async def create_stateful_token(self, user_id: int):
+        """Создаёт токен и возвращает его строку."""
 
-    async def mark_token_as_used(self, token_data):
-        """Помечает токен как использованный"""
-        pass
+        token_str = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.STATEFUL_TOKEN_EXPIRE_MINUTES)
+
+        payload = {
+            "token": token_str,
+            "user_id": user_id,
+            "expires_at": expires_at,
+            "used": False,
+        }
+        return await self.dao.create(payload)
+
+    async def get_reset_token_data(self, token: str) -> Optional[StatefulTokens]:
+        """Получает данные токена и проверяет валидность."""
+        return await self.validate_token(token)
+
+    async def mark_token_as_used(self, token_obj: StatefulTokens):
+        """Помечает как использованный."""
+        await self.dao.mark_as_used(token_obj.id)
+
+    async def validate_token(self, token: str) -> Optional[StatefulTokens]:
+        """Метод для проверки валидности."""
+        token_obj = await self.dao.get_by_token(token)
+        if not token_obj or token_obj.used or token_obj.expires_at < datetime.now(timezone.utc):
+            return None
+        return token_obj

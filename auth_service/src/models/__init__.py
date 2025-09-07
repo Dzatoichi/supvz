@@ -1,9 +1,10 @@
 __all__ = [
-    "Users", "UsersRoleEnum", "PVZs", "PVZWorkers", "RefreshTokens", "AccessTokens",
+    "Users", "UsersRoleEnum", "PVZs", "PVZWorkers", "RefreshTokens", "AccessTokens", "StatefulTokens"
 ]
 
-from auth_service.src.models.pvzs.PVZ_workers import PVZWorkers
-from auth_service.src.models.pvzs.PVZs import PVZs
-from auth_service.src.models.tokens.access_tokens import AccessTokens
-from auth_service.src.models.tokens.refresh_tokens import RefreshTokens
-from auth_service.src.models.users.users import Users, UsersRoleEnum
+from src.models.pvzs.PVZ_workers import PVZWorkers
+from src.models.pvzs.PVZs import PVZs
+from src.models.tokens.access_tokens import AccessTokens
+from src.models.tokens.refresh_tokens import RefreshTokens
+from src.models.tokens.stateful_tokens import StatefulTokens
+from src.models.users.users import Users, UsersRoleEnum

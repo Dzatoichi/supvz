@@ -1,10 +1,12 @@
-from auth_service.src.settings.config import settings
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+
+from src.settings.config import settings
 
 
 class Base(DeclarativeBase):
     pass
+
 
 class DataBaseHelper:
     def __init__(self):
@@ -16,5 +18,6 @@ class DataBaseHelper:
             bind=self.engine,
             expire_on_commit=False
         )
+
 
 db_helper = DataBaseHelper()
