@@ -31,6 +31,9 @@ COPY migrations /app/migrations
 COPY alembic.ini /app/
 COPY prestart.sh /app/
 
+RUN chown -R appuser:appuser /app/migrations && \
+    chmod -R 755 /app/migrations
+
 # Создаем символическую ссылку для совместимости с импортами
 RUN mkdir -p /app/auth_service && \
     ln -s /app/src /app/auth_service/src
@@ -40,4 +43,4 @@ EXPOSE 8000
 USER appuser
 
 ENTRYPOINT ["/app/prestart.sh"]
-CMD ["uvicorn", "auth_service.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

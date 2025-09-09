@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from enum import Enum
 from typing import Annotated
@@ -6,14 +7,12 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     EmailStr,
-    Field,
-    SecretStr,
     StringConstraints,
     field_validator,
     model_validator,
 )
 
-PasswordStr = Annotated[SecretStr, StringConstraints(min_length=8, max_length=128)]
+str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
 class UserRole(str, Enum):
@@ -28,7 +27,7 @@ class UserBase(BaseModel):
     """Base Pydantic model for user data"""
 
     email: EmailStr
-    full_name: str | None = None
+    name: str | None = None
 
     @field_validator("email")
     @classmethod
@@ -42,7 +41,7 @@ class UserLogin(BaseModel):
     """Pydantic model for user login data."""
 
     email: EmailStr
-    password: PasswordStr
+    password: str
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -50,7 +49,22 @@ class UserLogin(BaseModel):
 class UserRegister(UserLogin):
     """Pydantic model for user registration data."""
 
-    confirm_password: PasswordStr
+    confirm_password: str
+    name: str
+    phone_number: str
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, values: str) -> str:
+        if not re.match(r"^\+\d{1,15}$", values):
+            raise ValueError('Номер телефона должен начинаться с "+" и содержать от 1 до 15 цифр')
+        return values
+
+    @model_validator(mode="after")
+    def check_passwords_match(self) -> "UserRegister":
+        if self.password != self.confirm_password:
+            raise ValueError("Passwords do not match")
+        return self
 
 
 class UserUpdate(BaseModel):
@@ -58,8 +72,6 @@ class UserUpdate(BaseModel):
 
     full_name: str | None = None
     phone: str | None = None
-    role: UserRole | None = None
-    pickup_points: list[int] | None = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -69,7 +81,6 @@ class UserRead(UserBase):
 
     id: int
     role: UserRole
-    pickup_points: list[int] = Field(default_factory=list)
     created_at: datetime
 
 
@@ -77,8 +88,8 @@ class PasswordResetConfirm(BaseModel):
     """Pydantic model for password reset confirmation data."""
 
     token: str
-    new_password: PasswordStr
-    confirm_new_password: PasswordStr
+    new_password: str
+    confirm_new_password: str
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "PasswordResetConfirm":
@@ -90,9 +101,9 @@ class PasswordResetConfirm(BaseModel):
 class UserPasswordUpdate(BaseModel):
     """Pydantic model for user update password."""
 
-    current_password: PasswordStr
-    new_password: PasswordStr
-    confirm_password: PasswordStr
+    current_password: str
+    new_password: str
+    confirm_password: str
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -114,3 +125,10 @@ class UserForgotPassword(BaseModel):
         return v.lower()
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
+class UserLogout(BaseModel):
+    """Pydantic model for user logout."""
+
+    refresh_token: str
+    access_token: str

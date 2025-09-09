@@ -22,7 +22,7 @@ class RefreshTokens(Base):
     )
     token_hash: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     revoked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     user: Mapped["Users"] = relationship(
@@ -32,4 +32,4 @@ class RefreshTokens(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<RefreshToken(id={self.id}, user_id={self.user_id}, revoked={self.revoked})>"
+        return f"<RefreshToken(id={self.id}, user_id={self.user_id}, revoked={self.revoked}), expires_at={self.expires_at})>"

@@ -1,6 +1,4 @@
-__all__ = [
-    "Users", "UsersRoleEnum", "PVZs", "PVZWorkers", "RefreshTokens", "AccessTokens", "StatefulTokens"
-]
+__all__ = ["Users", "UsersRoleEnum", "PVZs", "PVZWorkers", "RefreshTokens", "AccessTokens", "StatefulTokens"]
 
 from src.models.pvzs.PVZ_workers import PVZWorkers
 from src.models.pvzs.PVZs import PVZs
