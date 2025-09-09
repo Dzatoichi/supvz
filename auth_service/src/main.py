@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 
-from src.dao.usersDAO import UsersDAO
-
 from .routers import api_router
 
 app = FastAPI()
