@@ -25,7 +25,7 @@ class JWTTokensService:
     ) -> str:
         """Method to create access or refresh token."""
         token_handler = TokenHandler(token_type=token_type)
-        repo = TOKENS_DAOS_MAPPER[token_type]
+        repo = TOKENS_DAOS_MAPPER[token_type]()
 
         token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
@@ -106,10 +106,11 @@ class JWTTokensService:
 
 
 class StatefulTokenService:
-    def __init__(self, dao: StatefulTokenDAO):
-        self.dao = dao
-
-    async def create_stateful_token(self, user_id: int):
+    async def create_stateful_token(
+        self,
+        user_id: int,
+        dao: StatefulTokenDAO,
+    ):
         """Создаёт токен и возвращает его строку."""
 
         token_str = secrets.token_urlsafe(32)
@@ -121,19 +122,27 @@ class StatefulTokenService:
             "expires_at": expires_at,
             "used": False,
         }
-        return await self.dao.create(payload)
+        return await dao.create(payload)
 
     async def get_reset_token_data(self, token: str) -> Optional[StatefulTokens]:
         """Получает данные токена и проверяет валидность."""
         return await self.validate_token(token)
 
-    async def mark_token_as_used(self, token_obj: StatefulTokens):
+    async def mark_token_as_used(
+        self,
+        token_obj: StatefulTokens,
+        dao: StatefulTokenDAO,
+    ) -> None:
         """Помечает как использованный."""
-        await self.dao.mark_as_used(token_obj.id)
+        await dao.mark_as_used(token_obj.id)
 
-    async def validate_token(self, token: str) -> Optional[StatefulTokens]:
+    async def validate_token(
+        self,
+        token: str,
+        dao: StatefulTokenDAO,
+    ) -> Optional[StatefulTokens]:
         """Метод для проверки валидности."""
-        token_obj = await self.dao.get_by_token(token)
+        token_obj = await dao.get_by_token(token)
         if not token_obj or token_obj.used or token_obj.expires_at < datetime.now(timezone.utc):
             return None
         return token_obj

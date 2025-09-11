@@ -3,8 +3,8 @@ from uuid import UUID
 
 import jwt
 
-from settings.config import settings
 from src.schemas.tokens import TokenTypesEnum
+from src.settings.config import settings
 
 
 class TokenHandler:
@@ -16,7 +16,7 @@ class TokenHandler:
         """
         Init function.
         """
-        self.algorithm, self.key, self.expire_time = settings.get_jwt_params(token=token_type)
+        self.algorithm, self.key, self.expire_time = settings.get_jwt_params(token_type=token_type).values()
 
     def sign_jwt(self, user_id: UUID) -> str:
         """

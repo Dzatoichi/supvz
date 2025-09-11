@@ -10,8 +10,9 @@ class TokenTypesEnum(StrEnum):
     refresh = "refresh"
 
 
-class TokenResponse(BaseModel):
+class TokenSchema(BaseModel):
     access_token: str
+    refresh_token: str
 
 
 TOKENS_DAOS_MAPPER = {
