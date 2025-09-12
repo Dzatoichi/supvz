@@ -2,6 +2,8 @@ import re
 from datetime import datetime
 from enum import Enum
 from typing import Annotated
+from wsgiref.validate import validator
+from src.core.security.permissions import PermissionEnum, get_permissions_for_role
 
 from pydantic import (
     BaseModel,
@@ -11,6 +13,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
@@ -81,7 +84,17 @@ class UserRead(UserBase):
 
     id: int
     role: UserRole
+    permissions: list[PermissionEnum] = []
     created_at: datetime
+
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_permissions_based_on_role(cls, values):
+        """Устанавливает permissions на основе роли."""
+        if 'role' in values and 'permissions' not in values:
+            values['permissions'] = get_permissions_for_role(values['role'])
+        return values
 
 
 class PasswordResetConfirm(BaseModel):

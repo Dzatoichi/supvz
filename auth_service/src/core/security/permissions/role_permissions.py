@@ -1,0 +1,117 @@
+from .permissions import PermissionEnum
+
+ROLE_PERMISSIONS = {
+    "owner": [
+        # Все permissions
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.CONFIGURE_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.CREATE_SCHEDULE,
+        PermissionEnum.EDIT_SCHEDULE,
+        PermissionEnum.DELETE_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.MANAGE_SHIFT_REQUESTS,
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.CALCULATE_SALARY,
+        PermissionEnum.PROCESS_SALARY_PAYMENTS,
+        PermissionEnum.MANAGE_SALARY_FORMULAS,
+        PermissionEnum.VIEW_SALARY_ADVANCE,
+        PermissionEnum.PROCESS_ADVANCE_PAYMENTS,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.EDIT_REQUESTS,
+        PermissionEnum.DELETE_REQUESTS,
+        PermissionEnum.PROCESS_REQUESTS,
+        PermissionEnum.MANAGE_REQUEST_TYPES,
+        PermissionEnum.VIEW_FINANCE,
+        PermissionEnum.CREATE_TRANSACTIONS,
+        PermissionEnum.EDIT_TRANSACTIONS,
+        PermissionEnum.DELETE_TRANSACTIONS,
+        PermissionEnum.VIEW_FINANCIAL_REPORTS,
+        PermissionEnum.MANAGE_PAYMENT_METHODS,
+        PermissionEnum.VIEW_DISPUTES,
+        PermissionEnum.CREATE_DISPUTES,
+        PermissionEnum.PROCESS_DISPUTES,
+        PermissionEnum.VIEW_EMPLOYEES,
+        PermissionEnum.CREATE_EMPLOYEES,
+        PermissionEnum.EDIT_EMPLOYEES,
+        PermissionEnum.DELETE_EMPLOYEES,
+        PermissionEnum.MANAGE_EMPLOYEE_ROLES,
+        PermissionEnum.VIEW_EMPLOYEE_DETAILS,
+        PermissionEnum.VIEW_PVZS,
+        PermissionEnum.CREATE_PVZS,
+        PermissionEnum.EDIT_PVZS,
+        PermissionEnum.DELETE_PVZS,
+        PermissionEnum.MANAGE_PVZ_GROUPS,
+        PermissionEnum.VIEW_PVZ_DETAILS,
+        PermissionEnum.MANAGE_PVZ_RENT,
+        PermissionEnum.VIEW_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.MANAGE_SYSTEM_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+        PermissionEnum.MANAGE_NOTIFICATIONS,
+        PermissionEnum.VIEW_AUDIT_LOGS,
+    ],
+    "curator": [
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.CREATE_SCHEDULE,
+        PermissionEnum.EDIT_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.MANAGE_SHIFT_REQUESTS,
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.CALCULATE_SALARY,
+        PermissionEnum.VIEW_SALARY_ADVANCE,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.EDIT_REQUESTS,
+        PermissionEnum.PROCESS_REQUESTS,
+        PermissionEnum.VIEW_FINANCE,
+        PermissionEnum.CREATE_TRANSACTIONS,
+        PermissionEnum.VIEW_FINANCIAL_REPORTS,
+        PermissionEnum.VIEW_DISPUTES,
+        PermissionEnum.CREATE_DISPUTES,
+        PermissionEnum.VIEW_EMPLOYEES,
+        PermissionEnum.CREATE_EMPLOYEES,
+        PermissionEnum.EDIT_EMPLOYEES,
+        PermissionEnum.VIEW_EMPLOYEE_DETAILS,
+        PermissionEnum.VIEW_PVZS,
+        PermissionEnum.EDIT_PVZS,
+        PermissionEnum.VIEW_PVZ_DETAILS,
+        PermissionEnum.VIEW_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+    ],
+    "employee": [
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+    ],
+}
+
+
+def get_permissions_for_role(role: 'UserRole') -> list[PermissionEnum]:
+    """Получить permissions для роли (отложенный импорт)."""
+    from src.schemas.users_schemas import UserRole  # Импорт внутри функции
+
+    # Конвертируем enum в строку для поиска
+    role_str = role.value if isinstance(role, UserRole) else role
+    return ROLE_PERMISSIONS.get(role_str, [])
+
+
+def has_permission(role: 'UserRole', permission: PermissionEnum) -> bool:
+    """Проверить наличие permission у роли (отложенный импорт)."""
+    from src.schemas.users_schemas import UserRole  # Импорт внутри функции
+
+    # Конвертируем enum в строку для поиска
+    role_str = role.value if isinstance(role, UserRole) else role
+    return permission in ROLE_PERMISSIONS.get(role_str, [])
