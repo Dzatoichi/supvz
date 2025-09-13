@@ -19,6 +19,11 @@ class UserRole(str, Enum):
     """Pydantic model for user's roles ."""
 
     owner = "owner"
+    test_owner = "test_owner"
+    administrator = "administrator"
+    manager = "manager"
+    helper = "helper"
+    intern = "intern"
     curator = "curator"
     employee = "employee"
 

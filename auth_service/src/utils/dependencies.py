@@ -1,6 +1,7 @@
 from src.dao.tokensDAO import StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.services.token_service import JWTTokensService, StatefulTokenService
+from src.services.user_service import UserService
 
 
 def get_users_dao() -> UsersDAO:
@@ -23,6 +24,11 @@ def get_auth_service() -> "AuthService":  # type: ignore # noqa: F821
     from src.services.auth_service import AuthService
 
     return AuthService()
+
+
+def get_user_service() -> "UserService":
+    """Создает сервис для работы с пользователями."""
+    return UserService()
 
 
 def get_jwt_tokens_service() -> JWTTokensService:
