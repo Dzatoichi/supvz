@@ -1,8 +1,8 @@
-"""Init
+"""empty message
 
-Revision ID: f681bf350b70
+Revision ID: 147bdb0b7d3b
 Revises:
-Create Date: 2025-08-21 23:42:33.789927
+Create Date: 2025-09-13 02:58:26.660333
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "f681bf350b70"
+revision: str = "147bdb0b7d3b"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,8 +26,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("phone_number", sa.String(length=32), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("hashed_password", sa.String(length=255), nullable=False),
-        sa.Column("role", sa.Enum("OWNER", "CURATOR", "EMPLOYEE", name="user_role", native_enum=False), nullable=False),
+        sa.Column("role", sa.Enum("owner", "curator", "employee", name="user_role", native_enum=False), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("last_login", sa.DateTime(timezone=True), nullable=True),
@@ -50,30 +51,6 @@ def upgrade() -> None:
     op.create_index(op.f("ix_access_tokens_token_hash"), "access_tokens", ["token_hash"], unique=False)
     op.create_index(op.f("ix_access_tokens_user_id"), "access_tokens", ["user_id"], unique=False)
     op.create_table(
-        "pvzs",
-        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("code", sa.String(length=64), nullable=False),
-        sa.Column("city", sa.String(length=64), nullable=True),
-        sa.Column("address", sa.String(length=512), nullable=True),
-        sa.Column("phone", sa.String(length=64), nullable=True),
-        sa.Column("is_active", sa.Boolean(), nullable=False),
-        sa.Column("owner_id", sa.Integer(), nullable=True),
-        sa.Column("curator_id", sa.Integer(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["curator_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["owner_id"],
-            ["users.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(op.f("ix_pvzs_code"), "pvzs", ["code"], unique=True)
-    op.create_index(op.f("ix_pvzs_curator_id"), "pvzs", ["curator_id"], unique=False)
-    op.create_index(op.f("ix_pvzs_owner_id"), "pvzs", ["owner_id"], unique=False)
-    op.create_table(
         "refresh_tokens",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
@@ -84,42 +61,37 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_index(op.f("ix_refresh_tokens_expires_at"), "refresh_tokens", ["expires_at"], unique=False)
     op.create_index(op.f("ix_refresh_tokens_token_hash"), "refresh_tokens", ["token_hash"], unique=False)
     op.create_index(op.f("ix_refresh_tokens_user_id"), "refresh_tokens", ["user_id"], unique=False)
     op.create_table(
-        "pvz_workers",
-        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("pvz_id", sa.Integer(), nullable=False),
-        sa.Column("worker_id", sa.Integer(), nullable=False),
-        sa.Column("assigned_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["pvz_id"],
-            ["pvzs.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["worker_id"],
-            ["users.id"],
-        ),
+        "stateful_tokens",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("token", sa.String(length=128), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("used", sa.Boolean(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_pvz_workers_pvz_id"), "pvz_workers", ["pvz_id"], unique=False)
-    op.create_index(op.f("ix_pvz_workers_worker_id"), "pvz_workers", ["worker_id"], unique=False)
+    op.create_index(op.f("ix_stateful_tokens_id"), "stateful_tokens", ["id"], unique=False)
+    op.create_index(op.f("ix_stateful_tokens_token"), "stateful_tokens", ["token"], unique=True)
+    op.create_index(op.f("ix_stateful_tokens_user_id"), "stateful_tokens", ["user_id"], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_index(op.f("ix_pvz_workers_worker_id"), table_name="pvz_workers")
-    op.drop_index(op.f("ix_pvz_workers_pvz_id"), table_name="pvz_workers")
-    op.drop_table("pvz_workers")
+    op.drop_index(op.f("ix_stateful_tokens_user_id"), table_name="stateful_tokens")
+    op.drop_index(op.f("ix_stateful_tokens_token"), table_name="stateful_tokens")
+    op.drop_index(op.f("ix_stateful_tokens_id"), table_name="stateful_tokens")
+    op.drop_table("stateful_tokens")
     op.drop_index(op.f("ix_refresh_tokens_user_id"), table_name="refresh_tokens")
     op.drop_index(op.f("ix_refresh_tokens_token_hash"), table_name="refresh_tokens")
+    op.drop_index(op.f("ix_refresh_tokens_expires_at"), table_name="refresh_tokens")
     op.drop_table("refresh_tokens")
-    op.drop_index(op.f("ix_pvzs_owner_id"), table_name="pvzs")
-    op.drop_index(op.f("ix_pvzs_curator_id"), table_name="pvzs")
-    op.drop_index(op.f("ix_pvzs_code"), table_name="pvzs")
-    op.drop_table("pvzs")
     op.drop_index(op.f("ix_access_tokens_user_id"), table_name="access_tokens")
     op.drop_index(op.f("ix_access_tokens_token_hash"), table_name="access_tokens")
     op.drop_table("access_tokens")
