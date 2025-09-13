@@ -11,8 +11,8 @@ users_router = APIRouter(prefix="/users", tags=["users"])
 @users_router.post("/{user_id}/set-role-owner", response_model=UserRead)
 async def set_role_owner(
         user_id: int,
-        user_service: UserService = Depends(get_user_service),
-        repo: UsersDAO = Depends(get_users_dao),
+        user_service: UserService = Depends(get_user_service),  # noqa: B008
+        repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
     """
     Обновляет роль конкретного юзера с test_owner → owner.
