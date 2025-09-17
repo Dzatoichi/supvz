@@ -8,7 +8,6 @@ transport = ASGITransport(app=app)
 
 @pytest.mark.anyio
 async def test_register_user_passwords_do_not_match():
-    transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post("/auth/register", json={
             "email": "test@example.com",
@@ -18,8 +17,7 @@ async def test_register_user_passwords_do_not_match():
             "phone_number": "+1234567890"
         })
     assert response.status_code == 422
-    data = response.json()
-    assert any("Passwords do not match" in str(err.get("msg", "")) for err in data["detail"])
+    assert "Passwords do not match" in response.text
 
 
 @pytest.mark.anyio
@@ -68,7 +66,6 @@ async def test_register_user_invalid_phone():
 @pytest.mark.anyio
 async def test_register_user_missing_required_field():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        # Нет поля confirm_password
         response = await ac.post("/auth/register", json={
             "email": "test@example.com",
             "username": "testuser",
@@ -94,7 +91,6 @@ async def test_login_missing_password():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post("/auth/login", json={
             "email": "test@example.com"
-            # Нет пароля
         })
     assert response.status_code == 422
 
@@ -124,7 +120,6 @@ async def test_reset_password_passwords_do_not_match():
 async def test_reset_password_missing_token():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post("/auth/reset_password", json={
-            # Нет токена
             "new_password": "newpassword123",
             "confirm_new_password": "newpassword123"
         })
@@ -135,7 +130,6 @@ async def test_reset_password_missing_token():
 async def test_logout_missing_refresh_token():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post("/auth/logout", json={
-            # Нет refresh_token
             "access_token": "access"
         })
     assert response.status_code == 422
@@ -146,7 +140,6 @@ async def test_logout_missing_access_token():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post("/auth/logout", json={
             "refresh_token": "refresh"
-            # Нет access_token
         })
     assert response.status_code == 422
 
@@ -154,6 +147,5 @@ async def test_logout_missing_access_token():
 @pytest.mark.anyio
 async def test_refresh_token_missing_token():
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        # Пустой json
         response = await ac.post("/auth/refresh_token", json={})
     assert response.status_code == 422
