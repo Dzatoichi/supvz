@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, Request
-from rate_limiter import limiter
 
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenSchema
@@ -19,6 +18,7 @@ from src.utils.dependencies import (
     get_stateful_token_service,
     get_users_dao,
 )
+from src.utils.rate_limiter import limiter
 
 auth_router = APIRouter(prefix="/auth")
 
