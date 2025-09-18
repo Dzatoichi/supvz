@@ -28,7 +28,7 @@ class Users(Base):
             native_enum=False,
         ),
         nullable=False,
-        default=UserRole.employee,
+        default=UserRole.test_owner,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
