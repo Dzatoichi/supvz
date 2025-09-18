@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, Request
-from rate_limiter import limiter
 
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenSchema
@@ -19,6 +18,7 @@ from src.utils.dependencies import (
     get_stateful_token_service,
     get_users_dao,
 )
+from src.utils.rate_limiter import limiter
 
 auth_router = APIRouter(prefix="/auth")
 
@@ -81,7 +81,7 @@ async def reset_password(
     await auth_service.reset_password(confirm_data.token, confirm_data.new_password, token_service, repo)
 
 
-@auth_router.post("/logout", responses={200: {"description": "Logged out successfully"}})
+@auth_router.post("/logout", response_model=dict, status_code=200)
 async def logout(
     request: Request,
     logout_data: UserLogout,
@@ -90,6 +90,7 @@ async def logout(
 ):
     """Reset user password."""
     await auth_service.logout_user(logout_data.refresh_token, logout_data.access_token, token_service)
+    return {"description": "Logged out successfully"}
 
 
 @auth_router.post("/refresh_token", response_model=TokenSchema)
