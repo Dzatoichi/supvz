@@ -19,5 +19,5 @@ async def set_role_owner(
     Обычно вызывается после успешной оплаты (например из webhook платёжки).
     """
 
-    result = await user_service.set_role_owner(user_id, repo)
+    result = await user_service.set_role_owner(user_id=user_id, repo=repo)
     return result
