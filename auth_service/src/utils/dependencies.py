@@ -1,3 +1,5 @@
+from auth_service.src.dao.tokensDAO import RefreshTokensDAO
+
 from src.dao.tokensDAO import StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -11,6 +13,11 @@ def get_users_dao() -> UsersDAO:
 def get_token_dao() -> StatefulTokenDAO:
     """Создаём DAO для работы с stateful токенами."""
     return StatefulTokenDAO()
+
+
+def get_refresh_token_dao() -> RefreshTokensDAO:
+    """Создаём DAO для работы с refresh токенами"""
+    return RefreshTokensDAO()
 
 
 def get_stateful_token_service() -> StatefulTokenService:

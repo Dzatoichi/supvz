@@ -1,3 +1,5 @@
+from auth_service.src.dao.tokensDAO import RefreshTokensDAO
+from auth_service.src.utils.dependencies import get_refresh_token_dao
 from fastapi import APIRouter, Depends
 
 from src.dao.usersDAO import UsersDAO
@@ -86,7 +88,8 @@ async def logout(
 async def refresh_token(
     refresh_token: str,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
+    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
 ):
     """Обновить refresh токен."""
-    result = await token_service.refresh_token(refresh_token=refresh_token)
+    result = await token_service.refresh_token(refresh_token=refresh_token, repo=repo)
     return result
