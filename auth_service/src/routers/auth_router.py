@@ -1,7 +1,6 @@
-from auth_service.src.dao.tokensDAO import RefreshTokensDAO
-from auth_service.src.utils.dependencies import get_refresh_token_dao
 from fastapi import APIRouter, Depends, Request
 
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenSchema
 from src.schemas.users_schemas import (
@@ -17,6 +16,7 @@ from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
+    get_refresh_token_dao,
     get_stateful_token_service,
     get_users_dao,
 )
@@ -104,5 +104,5 @@ async def refresh_token(
     repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
 ):
     """Обновить refresh токен."""
-    result = await token_service.refresh_token(refresh_token=refresh_token, repo=repo)
+    result = await token_service.refresh_token(token=refresh_token, repo=repo)
     return result

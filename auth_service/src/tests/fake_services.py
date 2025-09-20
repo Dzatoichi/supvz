@@ -28,7 +28,7 @@ class FakeAuthService:
 
 
 class FakeJWTTokensService:
-    async def refresh_token(self, refresh_token):
+    async def refresh_token(self, token, repo):
         return {
             "refresh_token": "refresh",
             "access_token": "access"

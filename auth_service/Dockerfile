@@ -34,10 +34,6 @@ COPY prestart.sh /app/
 RUN chown -R appuser:appuser /app/migrations && \
     chmod -R 755 /app/migrations
 
-# Создаем символическую ссылку для совместимости с импортами
-RUN mkdir -p /app/auth_service && \
-    ln -s /app/src /app/auth_service/src
-
 RUN chmod +x /app/prestart.sh
 EXPOSE 8000
 USER appuser

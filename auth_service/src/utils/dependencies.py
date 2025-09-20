@@ -1,6 +1,4 @@
-from auth_service.src.dao.tokensDAO import RefreshTokensDAO
-
-from src.dao.tokensDAO import StatefulTokenDAO
+from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.services.user_service import UserService
