@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 
 from src.dao.usersDAO import UsersDAO
-from src.schemas.tokens import TokenSchema, LoginSchema
+from src.schemas.tokens import LoginSchema, TokenSchema
 from src.schemas.users_schemas import (
     PasswordResetConfirm,
     UserForgotPassword,
@@ -80,9 +80,9 @@ async def forgot_password(
     data: UserForgotPassword,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: StatefulTokenService = Depends(
+    token_service: StatefulTokenService = Depends(  # noqa: B008
         get_stateful_token_service
-    ),  # noqa: B008
+    ),
 ):
     """Route for func 'forgot_password'."""
     await auth_service.forgot_password(data.email, repo, token_service)
@@ -97,9 +97,9 @@ async def reset_password(
     confirm_data: PasswordResetConfirm,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: StatefulTokenService = Depends(
+    token_service: StatefulTokenService = Depends(  # noqa: B008
         get_stateful_token_service
-    ),  # noqa: B008
+    ),
 ):
     """Reset user password."""
     await auth_service.reset_password(

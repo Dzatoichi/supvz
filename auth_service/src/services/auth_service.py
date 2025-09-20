@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, status, Response
+from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
-from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenTypesEnum
 from src.schemas.users_schemas import UserLogin, UserRead, UserRegister
