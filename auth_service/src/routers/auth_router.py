@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 
-from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
-from src.schemas.tokens import TokenSchema
+from src.schemas.tokens import TokenSchema, LoginSchema
 from src.schemas.users_schemas import (
     PasswordResetConfirm,
     UserForgotPassword,
@@ -16,7 +15,6 @@ from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
-    get_refresh_token_dao,
     get_stateful_token_service,
     get_users_dao,
 )
@@ -39,7 +37,7 @@ async def register_user(
     return user
 
 
-@auth_router.post("/login", response_model=TokenSchema)
+@auth_router.post("/login", response_model=LoginSchema)
 @limiter.limit("5/minute")
 async def login(
     request: Request,
@@ -53,8 +51,18 @@ async def login(
     access_token, refresh_token = await auth_service.login_user(
         credentials, repo, token_service
     )
+
     response.set_cookie(
-        "refresh_token", refresh_token, httponly=True, max_age=3600 * 24 * 7
+        "access_token",
+        access_token,
+        httponly=True,
+        max_age=3600 * 1,
+    )
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        httponly=True,
+        max_age=3600 * 24 * 7,
     )
 
     return {"access_token": access_token}
@@ -122,11 +130,7 @@ async def refresh_token(
     request: Request,
     refresh_token_in: str,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
-    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
 ):
     """Обновить refresh токен."""
-    result = await token_service.refresh_token(
-        refresh_token=refresh_token_in,
-        repo=repo,
-    )
+    result = await token_service.refresh_token(refresh_token=refresh_token_in)
     return result

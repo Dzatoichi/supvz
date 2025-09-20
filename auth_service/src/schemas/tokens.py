@@ -2,7 +2,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from src.dao.tokensDAO import AccessTokensDAO, RefreshTokensDAO
+from src.dao.tokensDAO import RefreshTokensDAO
 
 
 class TokenTypesEnum(StrEnum):
@@ -15,7 +15,10 @@ class TokenSchema(BaseModel):
     refresh_token: str
 
 
+class LoginSchema(BaseModel):
+    access_token: str
+
+
 TOKENS_DAOS_MAPPER = {
-    TokenTypesEnum.access: AccessTokensDAO,
     TokenTypesEnum.refresh: RefreshTokensDAO,
 }

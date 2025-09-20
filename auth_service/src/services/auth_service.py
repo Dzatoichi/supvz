@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status, Response
 
 from src.core.security.hash_helper import hash_helper
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenTypesEnum
 from src.schemas.users_schemas import UserLogin, UserRead, UserRegister
@@ -52,12 +53,13 @@ class AuthService:
         ):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
 
-        refresh_token = await token_service.create_token(
-            token_type=TokenTypesEnum.refresh,
-            user_id=user.id,
-        )
         access_token = await token_service.create_token(
             token_type=TokenTypesEnum.access,
+            user_id=user.id,
+        )
+
+        refresh_token = await token_service.create_token(
+            token_type=TokenTypesEnum.refresh,
             user_id=user.id,
         )
 

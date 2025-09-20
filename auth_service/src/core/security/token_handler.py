@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import UUID
 
 import jwt
@@ -21,7 +22,7 @@ class TokenHandler:
             token_type=token_type
         ).values()
 
-    def sign_jwt(self, user_id: UUID) -> str:
+    def sign_jwt(self, user_id: int) -> tuple[Any, datetime | int | None]:
         """
         Function to encode jwt token.
         """
