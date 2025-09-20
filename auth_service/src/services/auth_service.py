@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Response
 
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
+from src.schemas.tokens import TokenTypesEnum
 from src.schemas.users_schemas import UserLogin, UserRead, UserRegister
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
@@ -46,19 +47,21 @@ class AuthService:
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        if not hash_helper.verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
+        if not hash_helper.verify_password(
+            plain_password=credentials.password, hashed_password=user.hashed_password
+        ):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
 
         refresh_token = await token_service.create_token(
-            token_type="refresh",
+            token_type=TokenTypesEnum.refresh,
             user_id=user.id,
         )
         access_token = await token_service.create_token(
-            token_type="access",
+            token_type=TokenTypesEnum.access,
             user_id=user.id,
         )
 
-        return (access_token, refresh_token)
+        return access_token, refresh_token
 
     async def reset_password(
         self,
@@ -80,7 +83,9 @@ class AuthService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token expired")
 
         hashed_password = hash_helper.hash(new_password)
-        result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)
+        result = await repo.set_password(
+            user_id=token_data.user_id, hashed_password=hashed_password
+        )
         await token_service.mark_token_as_used(token_data)
 
         return result
@@ -104,16 +109,16 @@ class AuthService:
             #
             # отправка через раббит в notification service
 
-        return token
+            return token
 
     async def logout_user(
         self,
         refresh_token: str,
-        access_token: str,
+        response: Response,
         token_service: JWTTokensService,
     ) -> bool:
         """Выход пользователя."""
-        await token_service.revoke_token(token=refresh_token, token_type="refresh")
-        await token_service.revoke_token(token=access_token, token_type="access")
-
+        await token_service.revoke_token(token=refresh_token)
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
         return True

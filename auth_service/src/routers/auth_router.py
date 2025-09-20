@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 
 from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
@@ -43,20 +43,28 @@ async def register_user(
 @limiter.limit("5/minute")
 async def login(
     request: Request,
+    response: Response,
     credentials: UserLogin,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
     """Authentication user."""
-    access_token, refresh_token = await auth_service.login_user(credentials, repo, token_service)
+    access_token, refresh_token = await auth_service.login_user(
+        credentials, repo, token_service
+    )
+    response.set_cookie(
+        "refresh_token", refresh_token, httponly=True, max_age=3600 * 24 * 7
+    )
 
-    return {"access_token": access_token, "refresh_token": refresh_token}
+    return {"access_token": access_token}
 
 
 @auth_router.post(
     "/forgot_password",
-    responses={200: {"description": "If the email is registered, a reset link has been sent"}},
+    responses={
+        200: {"description": "If the email is registered, a reset link has been sent"}
+    },
 )
 @limiter.limit("5/hour")
 async def forgot_password(
@@ -64,34 +72,47 @@ async def forgot_password(
     data: UserForgotPassword,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: StatefulTokenService = Depends(get_stateful_token_service),  # noqa: B008
+    token_service: StatefulTokenService = Depends(
+        get_stateful_token_service
+    ),  # noqa: B008
 ):
     """Route for func 'forgot_password'."""
     await auth_service.forgot_password(data.email, repo, token_service)
 
 
-@auth_router.post("/reset_password", responses={200: {"description": "Password successfully reset"}})
+@auth_router.post(
+    "/reset_password", responses={200: {"description": "Password successfully reset"}}
+)
 @limiter.limit("5/minute")
 async def reset_password(
     request: Request,
     confirm_data: PasswordResetConfirm,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: StatefulTokenService = Depends(get_stateful_token_service),  # noqa: B008
+    token_service: StatefulTokenService = Depends(
+        get_stateful_token_service
+    ),  # noqa: B008
 ):
     """Reset user password."""
-    await auth_service.reset_password(confirm_data.token, confirm_data.new_password, token_service, repo)
+    await auth_service.reset_password(
+        confirm_data.token, confirm_data.new_password, token_service, repo
+    )
 
 
 @auth_router.post("/logout", response_model=dict, status_code=200)
 async def logout(
     request: Request,
+    response: Response,
     logout_data: UserLogout,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
     """Reset user password."""
-    await auth_service.logout_user(logout_data.refresh_token, logout_data.access_token, token_service)
+    await auth_service.logout_user(
+        refresh_token=logout_data.refresh_token,
+        response=response,
+        token_service=token_service,
+    )
     return {"description": "Logged out successfully"}
 
 
@@ -99,10 +120,13 @@ async def logout(
 @limiter.limit("60/minute")
 async def refresh_token(
     request: Request,
-    refresh_token: str,
+    refresh_token_in: str,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
     repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
 ):
     """Обновить refresh токен."""
-    result = await token_service.refresh_token(token=refresh_token, repo=repo)
+    result = await token_service.refresh_token(
+        refresh_token=refresh_token_in,
+        repo=repo,
+    )
     return result
