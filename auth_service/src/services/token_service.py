@@ -5,7 +5,7 @@ from uuid import UUID
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
-from src.dao.tokensDAO import StatefulTokenDAO
+from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.models.tokens.stateful_tokens import StatefulTokens
 from src.schemas.tokens import TOKENS_DAOS_MAPPER, TokenTypesEnum
 from src.settings.config import settings
@@ -29,7 +29,7 @@ class JWTTokensService:
 
         token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
-        token_hash = hash_helper.hash(plain_str=token)
+        token_hash = hash_helper.hash_token(token=token)
         payload = {
             "user_id": user_id,
             "token_hash": token_hash,
@@ -42,12 +42,11 @@ class JWTTokensService:
     async def revoke_token(
         self,
         token: str,
-        token_type: TokenTypesEnum,
+        repo: RefreshTokensDAO,
     ) -> bool:
         """Method to revoke token."""
-        repo = TOKENS_DAOS_MAPPER[token_type]
 
-        token_hash = hash_helper.hash(plain_str=token)
+        token_hash = hash_helper.hash_token(token=token)
         await repo.set_token_revoked(token_hash=token_hash)
 
         return True
@@ -55,11 +54,13 @@ class JWTTokensService:
     async def refresh_token(
         self,
         refresh_token: str,
+        repo: RefreshTokensDAO,
     ) -> dict[str, str]:
         """Method to refresh token with rotation of tokens."""
         token_payload = await self.validate_token(
             token=refresh_token,
             token_type=TokenTypesEnum.refresh,
+            repo=repo,
         )
 
         access_token = await self.create_token(
@@ -69,7 +70,7 @@ class JWTTokensService:
 
         await self.revoke_token(
             token=refresh_token,
-            token_type=TokenTypesEnum.refresh,
+            repo=repo,
         )
 
         new_refresh_token = await self.create_token(
@@ -81,25 +82,20 @@ class JWTTokensService:
             "refresh_token": new_refresh_token,
         }
 
-    async def validate_token(
-        self,
-        token: str,
-        token_type: TokenTypesEnum,
-    ) -> dict:
-        repo = TOKENS_DAOS_MAPPER[token_type]
+    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: RefreshTokensDAO) -> dict:
         token_handler = TokenHandler(token_type=token_type)
 
         token_payload = token_handler.decode_jwt(token=token)
         if not token_payload:
             raise InvalidTokenException("Invalid token.")
 
-        if token_payload.get("exp") < datetime.now(timezone.utc):
+        if datetime.fromtimestamp(token_payload.get("exp"), tz=timezone.utc) < datetime.now(timezone.utc):
             raise TokenExpiredException("Token expired.")
 
-        token_hash = hash_helper.hash(plain_str=token)
+        token_hash = hash_helper.hash_token(token=token)
         token_info = await repo.get_token_by_token_hash(token_hash=token_hash)
 
-        if not token_info or token_info.get("revoked"):
+        if not token_info or token_info.revoked:
             raise InvalidTokenException("Invalid token.")
 
         return token_payload

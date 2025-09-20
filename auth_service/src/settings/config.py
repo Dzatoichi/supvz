@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     STATEFUL_TOKEN_EXPIRE_MINUTES: int = 15
 
-    model_config = SettingsConfigDict(env_file="auth_service/.env")
+    model_config = SettingsConfigDict(env_file=".env")
 
     def CONNECT_ASYNC(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
