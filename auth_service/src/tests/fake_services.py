@@ -1,5 +1,3 @@
-
-
 class FakeUsersDAO:
     pass
 
@@ -29,10 +27,7 @@ class FakeAuthService:
 
 class FakeJWTTokensService:
     async def refresh_token(self, token, repo):
-        return {
-            "refresh_token": "refresh",
-            "access_token": "access"
-        }
+        return {"refresh_token": "refresh", "access_token": "access"}
 
 
 class FakeStatefulTokenService:

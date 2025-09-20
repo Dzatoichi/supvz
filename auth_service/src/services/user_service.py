@@ -5,7 +5,6 @@ from src.schemas.users_schemas import UserRead, UserRole
 
 
 class UserService:
-
     async def set_role_owner(self, user_id: int, repo: UsersDAO) -> UserRead:
         """Обновляет роль конкретного юзера с test_owner → owner."""
 

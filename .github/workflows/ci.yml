@@ -30,6 +30,8 @@ jobs:
         working-directory: ${{ env.SERVICE_DIR }}
         run: |
           poetry run ruff check .
+          poetry run ruff format --check --diff
+          poetry run ruff format
 
   test:
     name: Tests (${{ matrix.service }})
