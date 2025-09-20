@@ -29,7 +29,7 @@ class JWTTokensService:
 
         token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
-        token_hash = hash_helper.hash(plain_str=token)
+        token_hash = hash_helper.hash_token(token=token)
         payload = {
             "user_id": user_id,
             "token_hash": token_hash,
@@ -46,7 +46,7 @@ class JWTTokensService:
     ) -> bool:
         """Method to revoke token."""
 
-        token_hash = hash_helper.hash(plain_str=token)
+        token_hash = hash_helper.hash_token(token=token)
         await repo.set_token_revoked(token_hash=token_hash)
 
         return True
@@ -92,10 +92,10 @@ class JWTTokensService:
         if datetime.fromtimestamp(token_payload.get("exp"), tz=timezone.utc) < datetime.now(timezone.utc):
             raise TokenExpiredException("Token expired.")
 
-        token_hash = hash_helper.hash(plain_str=token)
+        token_hash = hash_helper.hash_token(token=token)
         token_info = await repo.get_token_by_token_hash(token_hash=token_hash)
 
-        if not token_info or token_info.get("revoked"):
+        if not token_info or token_info.revoked:
             raise InvalidTokenException("Invalid token.")
 
         return token_payload
