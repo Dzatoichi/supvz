@@ -1,20 +1,18 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
-
-from src.main import app
 
 
 @pytest.mark.anyio
-async def test_register_user():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/auth/register", json={
+async def test_register_user(client):
+    response = await client.post(
+        "/auth/register",
+        json={
             "email": "test@example.com",
             "password": "12345678",
             "confirm_password": "12345678",
             "name": "Test User",
-            "phone_number": "+1234567890"
-        })
+            "phone_number": "+1234567890",
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "test@example.com"
@@ -22,13 +20,8 @@ async def test_register_user():
 
 
 @pytest.mark.anyio
-async def test_login():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/auth/login", json={
-            "email": "test@example.com",
-            "password": "12345678"
-        })
+async def test_login(client):
+    response = await client.post("/auth/login", json={"email": "test@example.com", "password": "12345678"})
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
@@ -36,45 +29,36 @@ async def test_login():
 
 
 @pytest.mark.anyio
-async def test_forgot_password():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/auth/forgot_password", json={
-            "email": "test@example.com"
-        })
+async def test_forgot_password(client):
+    response = await client.post("/auth/forgot_password", json={"email": "test@example.com"})
     assert response.status_code == 200
 
 
 @pytest.mark.anyio
-async def test_reset_password():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/auth/reset_password", json={
-            "token": "sometoken",
-            "new_password": "newpassword123",
-            "confirm_new_password": "newpassword123"
-        })
+async def test_reset_password(client):
+    response = await client.post(
+        "/auth/reset_password",
+        json={"token": "sometoken", "new_password": "newpassword123", "confirm_new_password": "newpassword123"},
+    )
     assert response.status_code == 200
 
 
 @pytest.mark.anyio
-async def test_logout():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/auth/logout", json={
-            "refresh_token": "refresh_token_new_shma",
-            "access_token": "access_token_new_shma"
-        })
+async def test_logout(client):
+    response = await client.post(
+        "/auth/logout", json={"refresh_token": "refresh_token_new_shma", "access_token": "access_token_new_shma"}
+    )
     assert response.status_code == 200
 
 
 @pytest.mark.anyio
-async def test_refresh_token():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.post("/auth/refresh_token", params={
+async def test_refresh_token(client):
+    response = await client.post(
+        "/auth/refresh_token",
+        params={
             "refresh_token": "new_refresh_token",
-        })
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
