@@ -1,16 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Request
+
 from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenSchema
 from src.schemas.users_schemas import (
     PasswordResetConfirm,
+    UserAuthRequest,
     UserAuthResponse,
     UserForgotPassword,
     UserLogin,
     UserLogout,
     UserRead,
     UserRegister,
-    UserAuthRequest,
 )
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -114,27 +115,18 @@ async def authorize_user(
         auth_request: UserAuthRequest,
         auth_service: AuthService = Depends(get_auth_service),
         users_dao: UsersDAO = Depends(get_users_dao),
+        token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ):
     """
     Авторизация пользователя по access токену.
     """
     # Получаем роль и permissions
-    role, permissions = await auth_service.authorize_user(auth_request)
-
-    # Получаем user_id из токена
-    from src.core.security.token_handler import TokenHandler
-    token_handler = TokenHandler(token_type="access")
-    token_payload = token_handler.decode_jwt(auth_request.access_token)
-    user_id = token_payload.get("user_id")
-
-    # Получаем пользователя
-    user = await users_dao.get_user_by_id(user_id)
-
+    role, permissions = await auth_service.authorize_user(
+        auth_request,
+        token_service,
+        users_dao
+    )
     return UserAuthResponse(
-        id=user.id,
-        email=user.email,
-        name=user.name,
         role=role,
-        permissions=permissions,
-        is_active=user.is_active
+        permissions=permissions
     )

@@ -1,5 +1,5 @@
 from ..core.security.permissions import get_permissions_for_role
-from ..schemas.users_schemas import UserRole, UserRead
+from ..schemas.users_schemas import UserRead, UserRole
 
 print(f"Direct call: {get_permissions_for_role(UserRole.employee)}")
 

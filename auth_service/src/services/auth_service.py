@@ -1,16 +1,15 @@
 from datetime import datetime, timezone
-from typing import Optional, Tuple
-from uuid import UUID
+from typing import Tuple
 
-from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import HTTPException, status
+from fastapi.security import HTTPBearer
 
 from src.core.security.hash_helper import hash_helper
-from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserLogin, UserRead, UserRegister, UserRole, UserAuthRequest
-from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.core.security.permissions import PermissionEnum, get_permissions_for_role
-from src.models.users.users import Users
+from src.dao.usersDAO import UsersDAO
+from src.schemas.tokens import TokenTypesEnum
+from src.schemas.users_schemas import UserAuthRequest, UserLogin, UserRead, UserRegister, UserRole
+from src.services.token_service import JWTTokensService, StatefulTokenService
 
 security = HTTPBearer()
 
@@ -72,47 +71,19 @@ class AuthService:
             auth_request: UserAuthRequest,  # Изменяем параметр на схему
             token_service: JWTTokensService,
             users_dao: UsersDAO,
+
     ) -> Tuple[UserRole, list[PermissionEnum]]:
         """
         Авторизация пользователя по access токену.
         Валидирует токен, получает пользователя и возвращает его роль и permissions.
         """
         # Используем переданные зависимости или инициализируем стандартные
-        token_service = token_service or self.token_service
-        users_dao = users_dao or self.users_dao
-
-        # Если зависимости не предоставлены, пытаемся создать их через Depends
-        if token_service is None:
-            from src.utils.dependencies import get_jwt_tokens_service
-            token_service = get_jwt_tokens_service()
-
-        if users_dao is None:
-            from src.utils.dependencies import get_users_dao
-            users_dao = get_users_dao()
-
-        token = auth_request.access_token  # Берем токен из схем
-
-        # Валидация токена
-        try:
-            token_payload = await token_service.validate_token(
-                token=token,
-                token_type="access"
-            )
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token",
-            )
-
-        # Получение пользователя
+        token_payload = await token_service.validate_token(
+            auth_request.access_token,
+            TokenTypesEnum.access,
+        )
         user_id = token_payload.get("user_id")
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload",
-            )
-
-        user = await users_dao.get_user_by_id(user_id)
+        user = await users_dao.get_by_id(user_id)
         if not user or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

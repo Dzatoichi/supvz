@@ -2,8 +2,6 @@ import re
 from datetime import datetime
 from enum import Enum
 from typing import Annotated
-from wsgiref.validate import validator
-from src.core.security.permissions import PermissionEnum, get_permissions_for_role
 
 from pydantic import (
     BaseModel,
@@ -14,6 +12,7 @@ from pydantic import (
     model_validator,
 )
 
+from src.core.security.permissions import PermissionEnum, get_permissions_for_role
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
@@ -109,12 +108,8 @@ class UserAuthRequest(BaseModel):
 
 class UserAuthResponse(BaseModel):
     """Pydantic model for user authorization response."""
-    id: int
-    email: str
-    name: str
     role: UserRole
     permissions: list[PermissionEnum]
-    is_active: bool
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 

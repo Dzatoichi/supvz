@@ -82,15 +82,27 @@ class JWTTokensService:
             "refresh_token": new_refresh_token,
         }
 
-    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: RefreshTokensDAO) -> dict:
+    async def validate_token(self, token: str, token_type: TokenTypesEnum,
+                             repo: Optional[RefreshTokensDAO] = None) -> dict:
         token_handler = TokenHandler(token_type=token_type)
 
+        # Декодируем JWT токен
         token_payload = token_handler.decode_jwt(token=token)
         if not token_payload:
             raise InvalidTokenException("Invalid token.")
 
-        if datetime.fromtimestamp(token_payload.get("exp"), tz=timezone.utc) < datetime.now(timezone.utc):
+        # Проверяем expiration
+        exp_time = datetime.fromtimestamp(token_payload.get("exp"), tz=timezone.utc)
+        if exp_time < datetime.now(timezone.utc):
             raise TokenExpiredException("Token expired.")
+
+        # Для access токенов пропускаем проверку в БД
+        if token_type == TokenTypesEnum.access:
+            return token_payload
+
+        # Для refresh токенов проверяем в БД (требуется repo)
+        if repo is None:
+            raise InvalidTokenException("Repository required for refresh token validation")
 
         token_hash = hash_helper.hash_token(token=token)
         token_info = await repo.get_token_by_token_hash(token_hash=token_hash)
