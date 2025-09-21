@@ -1,9 +1,11 @@
+import hashlib
+
 from passlib.context import CryptContext
 
 
 class HashHelper:
     """
-    Class to handle password hashing.
+    Class to handle password and token hashing.
     """
 
     def __init__(self):
@@ -14,9 +16,15 @@ class HashHelper:
 
     def hash(self, plain_str: str) -> str:
         """
-        Function to hash string.
+        Function to hash string (for passwords).
         """
         return self.pwd_context.hash(plain_str)
+
+    def hash_token(self, token: str) -> str:
+        """
+        Function to hash tokens (deterministic).
+        """
+        return hashlib.sha256(token.encode()).hexdigest()
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """

@@ -9,8 +9,6 @@ from src.database.base import Base
 from src.schemas.users_schemas import UserRole
 
 if TYPE_CHECKING:
-    from src.models.pvzs.PVZ_workers import PVZWorkers
-    from src.models.pvzs.PVZs import PVZs
     from src.models.tokens.access_tokens import AccessTokens
     from src.models.tokens.refresh_tokens import RefreshTokens
 
@@ -30,7 +28,7 @@ class Users(Base):
             native_enum=False,
         ),
         nullable=False,
-        default=UserRole.employee,
+        default=UserRole.test_owner,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -47,27 +45,6 @@ class Users(Base):
     access_tokens: Mapped[List["AccessTokens"]] = relationship(
         "AccessTokens",
         back_populates="user",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-    pvz_owned: Mapped[List["PVZs"]] = relationship(
-        "PVZs",
-        back_populates="owner",
-        foreign_keys="[PVZs.owner_id]",
-        lazy="selectin",
-    )
-
-    pvz_curated: Mapped[List["PVZs"]] = relationship(
-        "PVZs",
-        back_populates="curator",
-        foreign_keys="[PVZs.curator_id]",
-        lazy="selectin",
-    )
-
-    pvz_worker_links: Mapped[List["PVZWorkers"]] = relationship(
-        "PVZWorkers",
-        back_populates="worker",
         cascade="all, delete-orphan",
         lazy="selectin",
     )

@@ -21,9 +21,13 @@ str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 class UserRole(str, Enum):
     """Pydantic model for user's roles ."""
 
+    administrator = "administrator"
     owner = "owner"
+    test_owner = "test_owner"
     curator = "curator"
     employee = "employee"
+    intern = "intern"
+    handyman = "handyman"
 
 
 class UserBase(BaseModel):

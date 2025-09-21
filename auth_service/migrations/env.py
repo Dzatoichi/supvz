@@ -1,10 +1,3 @@
-import sys
-from pathlib import Path
-
-HERE = Path(__file__).resolve()
-PROJECT_ROOT = HERE.parents[2]
-sys.path.insert(0, str(PROJECT_ROOT))
-
 import asyncio  # noqa: E402
 from logging.config import fileConfig  # noqa: E402
 
