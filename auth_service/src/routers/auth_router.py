@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 
 from src.dao.usersDAO import UsersDAO
-from src.schemas.tokens import LoginSchema, TokenSchema
+from src.schemas.tokens import TokenSchema
 from src.schemas.users_schemas import (
     PasswordResetConfirm,
     UserForgotPassword,
@@ -37,7 +37,7 @@ async def register_user(
     return user
 
 
-@auth_router.post("/login", response_model=LoginSchema)
+@auth_router.post("/login", response_model=dict, status_code=200)
 @limiter.limit("5/minute")
 async def login(
     request: Request,
@@ -48,9 +48,7 @@ async def login(
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
     """Authentication user."""
-    access_token, refresh_token = await auth_service.login_user(
-        credentials, repo, token_service
-    )
+    access_token, refresh_token = await auth_service.login_user(credentials, repo, token_service)
 
     response.set_cookie(
         "access_token",
@@ -65,14 +63,12 @@ async def login(
         max_age=3600 * 24 * 7,
     )
 
-    return {"access_token": access_token}
+    return {"description": "Log In successfully"}
 
 
 @auth_router.post(
     "/forgot_password",
-    responses={
-        200: {"description": "If the email is registered, a reset link has been sent"}
-    },
+    responses={200: {"description": "If the email is registered, a reset link has been sent"}},
 )
 @limiter.limit("5/hour")
 async def forgot_password(
@@ -88,9 +84,7 @@ async def forgot_password(
     await auth_service.forgot_password(data.email, repo, token_service)
 
 
-@auth_router.post(
-    "/reset_password", responses={200: {"description": "Password successfully reset"}}
-)
+@auth_router.post("/reset_password", responses={200: {"description": "Password successfully reset"}})
 @limiter.limit("5/minute")
 async def reset_password(
     request: Request,
@@ -102,9 +96,7 @@ async def reset_password(
     ),
 ):
     """Reset user password."""
-    await auth_service.reset_password(
-        confirm_data.token, confirm_data.new_password, token_service, repo
-    )
+    await auth_service.reset_password(confirm_data.token, confirm_data.new_password, token_service, repo)
 
 
 @limiter.limit("5/minute")

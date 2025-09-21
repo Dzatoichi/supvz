@@ -1,3 +1,6 @@
+from fastapi import Response
+
+
 class FakeUsersDAO:
     pass
 
@@ -21,7 +24,12 @@ class FakeAuthService:
     async def reset_password(self, token, new_password, token_service, repo):
         return None
 
-    async def logout_user(self, *args, **kwargs):
+    async def logout_user(
+        self,
+        refresh_token: str,
+        response: Response,
+        token_service,
+    ):
         return {"description": "Logged out successfully"}
 
 

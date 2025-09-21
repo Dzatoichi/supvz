@@ -6,7 +6,7 @@ from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.models.tokens.stateful_tokens import StatefulTokens
-from src.schemas.tokens import TOKENS_DAOS_MAPPER, TokenTypesEnum
+from src.schemas.tokens import TokenTypesEnum
 from src.settings.config import settings
 from src.utils.exceptions import (
     InvalidTokenException,
@@ -30,16 +30,14 @@ class JWTTokensService:
         token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
         if token_type == TokenTypesEnum.refresh:
-            repo = TOKENS_DAOS_MAPPER[token_type]()
             token_hash = hash_helper.hash_token(token=token)
-            print(token_hash)
             payload = {
                 "user_id": user_id,
                 "token_hash": token_hash,
                 "issued_at": datetime.now(timezone.utc),
                 "expires_at": expires_at,
             }
-            await repo.create(payload=payload)
+            await self.repo.create(payload=payload)
 
         return token
 
@@ -93,9 +91,7 @@ class JWTTokensService:
         if not token_payload:
             raise InvalidTokenException("Invalid token.")
 
-        if datetime.fromtimestamp(
-            token_payload.get("exp"), tz=timezone.utc
-        ) < datetime.now(timezone.utc):
+        if datetime.fromtimestamp(token_payload.get("exp"), tz=timezone.utc) < datetime.now(timezone.utc):
             raise TokenExpiredException("Token expired.")
 
         token_hash = hash_helper.hash_token(token=token)
@@ -118,9 +114,7 @@ class StatefulTokenService:
         """Создаёт токен и возвращает его строку."""
 
         token_str = secrets.token_urlsafe(32)
-        expires_at = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.STATEFUL_TOKEN_EXPIRE_MINUTES
-        )
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.STATEFUL_TOKEN_EXPIRE_MINUTES)
 
         payload = {
             "token": token_str,
@@ -147,10 +141,6 @@ class StatefulTokenService:
     ) -> Optional[StatefulTokens]:
         """Метод для проверки валидности."""
         token_obj = await self.dao.get_by_token(token)
-        if (
-            not token_obj
-            or token_obj.used
-            or token_obj.expires_at < datetime.now(timezone.utc)
-        ):
+        if not token_obj or token_obj.used or token_obj.expires_at < datetime.now(timezone.utc):
             return None
         return token_obj

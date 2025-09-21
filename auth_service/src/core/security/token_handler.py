@@ -17,9 +17,7 @@ class TokenHandler:
         Init function.
         """
         self.token_type = token_type
-        self.algorithm, self.key, self.expire_time = settings.get_jwt_params(
-            token_type=token_type
-        ).values()
+        self.algorithm, self.key, self.expire_time = settings.get_jwt_params(token_type=token_type).values()
 
     def sign_jwt(self, user_id: int) -> tuple[Any, datetime | int | None]:
         """
