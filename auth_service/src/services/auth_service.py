@@ -1,18 +1,34 @@
 from datetime import datetime, timezone
+from typing import Optional, Tuple
+from uuid import UUID
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserLogin, UserRead, UserRegister
+from src.schemas.users_schemas import UserLogin, UserRead, UserRegister, UserRole
 from src.services.token_service import JWTTokensService, StatefulTokenService
+from src.core.security.permissions import PermissionEnum, get_permissions_for_role
+
+security = HTTPBearer()
 
 
 class AuthService:
+    def __init__(
+            self,
+            users_dao: Optional[UsersDAO] = None,
+            token_service: Optional[JWTTokensService] = None,
+            stateful_token_service: Optional[StatefulTokenService] = None
+    ):
+        self.users_dao = users_dao
+        self.token_service = token_service
+        self.stateful_token_service = stateful_token_service
+
     async def register_user(
-        self,
-        data: UserRegister,
-        repo: UsersDAO,
+            self,
+            data: UserRegister,
+            repo: UsersDAO,
     ) -> UserRead:
         """Регистрация пользователя."""
         user = await repo.get_user_by_email(data.email)
@@ -36,10 +52,10 @@ class AuthService:
         )
 
     async def login_user(
-        self,
-        credentials: UserLogin,
-        repo: UsersDAO,
-        token_service: JWTTokensService,
+            self,
+            credentials: UserLogin,
+            repo: UsersDAO,
+            token_service: JWTTokensService,
     ) -> tuple[str, str]:
         """Авторизация пользователя."""
         user = await repo.get_user_by_email(credentials.email)
@@ -60,12 +76,70 @@ class AuthService:
 
         return (access_token, refresh_token)
 
+    async def authorize_user(
+            self,
+            credentials: HTTPAuthorizationCredentials,
+            token_service: Optional[JWTTokensService] = None,
+            users_dao: Optional[UsersDAO] = None,
+    ) -> Tuple[UserRole, list[PermissionEnum]]:
+        """
+        Авторизация пользователя по access токену.
+        Валидирует токен, получает пользователя и возвращает его роль и permissions.
+        """
+        # Используем переданные зависимости или инициализируем стандартные
+        token_service = token_service or self.token_service
+        users_dao = users_dao or self.users_dao
+
+        # Если зависимости не предоставлены, пытаемся создать их через Depends
+        if token_service is None:
+            from src.utils.dependencies import get_jwt_tokens_service
+            token_service = get_jwt_tokens_service()
+
+        if users_dao is None:
+            from src.utils.dependencies import get_users_dao
+            users_dao = get_users_dao()
+
+        token = credentials.credentials
+
+        # Валидация токена
+        try:
+            token_payload = await token_service.validate_token(
+                token=token,
+                token_type="access"
+            )
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Получение пользователя
+        user_id = token_payload.get("user_id")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload",
+            )
+
+        user = await users_dao.get_user_by_id(user_id)
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found or inactive",
+            )
+
+        # Получение permissions для роли
+        permissions = get_permissions_for_role(user.role)
+
+        return user.role, permissions
+
     async def reset_password(
-        self,
-        token: str,
-        new_password: str,
-        token_service: StatefulTokenService,
-        repo: UsersDAO,
+            self,
+            token: str,
+            new_password: str,
+            token_service: StatefulTokenService,
+            repo: UsersDAO,
     ) -> bool:
         """Сброс пароля пользователя."""
         token_data = await token_service.get_reset_token_data(token)
@@ -87,10 +161,10 @@ class AuthService:
 
     # TODO: доделать после реализации notification service
     async def forgot_password(
-        self,
-        user_email: str,
-        repo: UsersDAO,
-        token_service: StatefulTokenService,
+            self,
+            user_email: str,
+            repo: UsersDAO,
+            token_service: StatefulTokenService,
     ) -> str:
         """Генерирует токен сброса пароля и инициирует отправку email через notification_service."""
 
@@ -107,10 +181,10 @@ class AuthService:
         return token
 
     async def logout_user(
-        self,
-        refresh_token: str,
-        access_token: str,
-        token_service: JWTTokensService,
+            self,
+            refresh_token: str,
+            access_token: str,
+            token_service: JWTTokensService,
     ) -> bool:
         """Выход пользователя."""
         await token_service.revoke_token(token=refresh_token, token_type="refresh")
