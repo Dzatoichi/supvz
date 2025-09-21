@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenSchema
 from src.schemas.users_schemas import (
     PasswordResetConfirm,
+    UserAuthResponse,
     UserForgotPassword,
     UserLogin,
     UserLogout,
     UserRead,
     UserRegister,
+    UserAuthRequest,
 )
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -20,6 +23,7 @@ from src.utils.dependencies import (
 )
 
 auth_router = APIRouter(prefix="/auth")
+security = HTTPBearer()
 
 
 @auth_router.post("/register", response_model=UserRead)
@@ -90,3 +94,34 @@ async def refresh_token(
     """Обновить refresh токен."""
     result = await token_service.refresh_token(refresh_token=refresh_token)
     return result
+
+
+@auth_router.post("/authorize", response_model=UserAuthResponse)
+async def authorize_user(
+        auth_request: UserAuthRequest,
+        auth_service: AuthService = Depends(get_auth_service),
+        users_dao: UsersDAO = Depends(get_users_dao),
+):
+    """
+    Авторизация пользователя по access токену.
+    """
+    # Получаем роль и permissions
+    role, permissions = await auth_service.authorize_user(auth_request)
+
+    # Получаем user_id из токена
+    from src.core.security.token_handler import TokenHandler
+    token_handler = TokenHandler(token_type="access")
+    token_payload = token_handler.decode_jwt(auth_request.access_token)
+    user_id = token_payload.get("user_id")
+
+    # Получаем пользователя
+    user = await users_dao.get_user_by_id(user_id)
+
+    return UserAuthResponse(
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        role=role,
+        permissions=permissions,
+        is_active=user.is_active
+    )

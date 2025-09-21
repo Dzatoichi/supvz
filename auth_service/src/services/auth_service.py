@@ -7,24 +7,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserLogin, UserRead, UserRegister, UserRole
+from src.schemas.users_schemas import UserLogin, UserRead, UserRegister, UserRole, UserAuthRequest
 from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.core.security.permissions import PermissionEnum, get_permissions_for_role
+from src.models.users.users import Users
 
 security = HTTPBearer()
 
 
 class AuthService:
-    def __init__(
-            self,
-            users_dao: Optional[UsersDAO] = None,
-            token_service: Optional[JWTTokensService] = None,
-            stateful_token_service: Optional[StatefulTokenService] = None
-    ):
-        self.users_dao = users_dao
-        self.token_service = token_service
-        self.stateful_token_service = stateful_token_service
-
     async def register_user(
             self,
             data: UserRegister,
@@ -78,9 +69,9 @@ class AuthService:
 
     async def authorize_user(
             self,
-            credentials: HTTPAuthorizationCredentials,
-            token_service: Optional[JWTTokensService] = None,
-            users_dao: Optional[UsersDAO] = None,
+            auth_request: UserAuthRequest,  # Изменяем параметр на схему
+            token_service: JWTTokensService,
+            users_dao: UsersDAO,
     ) -> Tuple[UserRole, list[PermissionEnum]]:
         """
         Авторизация пользователя по access токену.
@@ -99,7 +90,7 @@ class AuthService:
             from src.utils.dependencies import get_users_dao
             users_dao = get_users_dao()
 
-        token = credentials.credentials
+        token = auth_request.access_token  # Берем токен из схем
 
         # Валидация токена
         try:
@@ -111,7 +102,6 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired token",
-                headers={"WWW-Authenticate": "Bearer"},
             )
 
         # Получение пользователя

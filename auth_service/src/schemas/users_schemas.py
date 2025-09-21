@@ -97,6 +97,24 @@ class UserRead(UserBase):
         return values
 
 
+class UserAuthRequest(BaseModel):
+    """Pydantic model for user authorization request."""
+    access_token: str
+
+    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+class UserAuthResponse(BaseModel):
+    """Pydantic model for user authorization response."""
+    id: int
+    email: str
+    name: str
+    role: UserRole
+    permissions: list[PermissionEnum]
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
 class PasswordResetConfirm(BaseModel):
     """Pydantic model for password reset confirmation data."""
 
