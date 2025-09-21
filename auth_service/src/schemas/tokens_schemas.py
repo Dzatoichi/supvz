@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class TokenTypesEnum(StrEnum):
     """
-    Типы токенов. Эминем.
+    Перечисление типов токена.
     """
     access = "access"
     refresh = "refresh"
@@ -13,7 +13,7 @@ class TokenTypesEnum(StrEnum):
 
 class TokenSchema(BaseModel):
     """
-    Схема для токенов.
+    Схема токенов.
     """
     access_token: str
     refresh_token: str

@@ -7,6 +7,9 @@ from src.database.base import Base
 
 
 class StatefulTokens(Base):
+    """
+    Класс модели-сущности stateful-токена.
+    """
     __tablename__ = "stateful_tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -28,4 +31,7 @@ class StatefulTokens(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     def __repr__(self) -> str:
+        """
+        Метод возвращения stateful-токена в виде строки.
+        """
         return f"<StatefulTokens(id={self.id}, user_id={self.user_id}, used={self.used})>"
