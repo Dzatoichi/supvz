@@ -17,7 +17,7 @@ from src.utils.exceptions import (
 class JWTTokensService:
     """JWT tokens service."""
 
-    def __init__(self, repo: RefreshTokensDAO | None = RefreshTokensDAO()):
+    def __init__(self, repo: RefreshTokensDAO | None = None):
         self.repo = repo
 
     async def create_token(
@@ -108,7 +108,7 @@ class JWTTokensService:
 
 
 class StatefulTokenService:
-    def __init__(self, dao: StatefulTokenDAO | None = StatefulTokenDAO()):
+    def __init__(self, dao: StatefulTokenDAO | None = None):
         self.dao = dao
 
     async def create_stateful_token(
