@@ -24,7 +24,6 @@ from src.utils.dependencies import (
 from src.utils.rate_limiter import limiter
 
 auth_router = APIRouter(prefix="/auth")
-security = HTTPBearer()
 
 
 @auth_router.post("/register", response_model=UserRead)
