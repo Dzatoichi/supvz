@@ -107,6 +107,7 @@ async def reset_password(
     )
 
 
+@limiter.limit("5/minute")
 @auth_router.post("/logout", response_model=dict, status_code=200)
 async def logout(
     request: Request,
@@ -128,9 +129,19 @@ async def logout(
 @limiter.limit("60/minute")
 async def refresh_token(
     request: Request,
+    response: Response,
     refresh_token_in: str,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
     """Обновить refresh токен."""
     result = await token_service.refresh_token(refresh_token=refresh_token_in)
+    refresh_token = result["refresh_token"]
+
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        httponly=True,
+        max_age=3600 * 24 * 7,
+    )
+
     return result
