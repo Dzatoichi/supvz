@@ -99,19 +99,11 @@ ROLE_PERMISSIONS = {
 }
 
 
-def get_permissions_for_role(role: 'UserRole') -> list[PermissionEnum]:
-    """Получить permissions для роли (отложенный импорт)."""
-    from src.schemas.users_schemas import UserRole  # Импорт внутри функции
-
-    # Конвертируем enum в строку для поиска
-    role_str = role.value if isinstance(role, UserRole) else role
-    return ROLE_PERMISSIONS.get(role_str, [])
+def get_permissions_for_role(role: str) -> list[PermissionEnum]:  # Изменить на str
+    """Получить permissions для роли."""
+    return ROLE_PERMISSIONS.get(role, [])
 
 
-def has_permission(role: 'UserRole', permission: PermissionEnum) -> bool:
-    """Проверить наличие permission у роли (отложенный импорт)."""
-    from src.schemas.users_schemas import UserRole  # Импорт внутри функции
-
-    # Конвертируем enum в строку для поиска
-    role_str = role.value if isinstance(role, UserRole) else role
-    return permission in ROLE_PERMISSIONS.get(role_str, [])
+def has_permission(role: str, permission: PermissionEnum) -> bool:  # Изменить на str
+    """Проверить наличие permission у роли."""
+    return permission in ROLE_PERMISSIONS.get(role, [])

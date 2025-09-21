@@ -12,7 +12,7 @@ from pydantic import (
     model_validator,
 )
 
-from src.core.security.permissions import PermissionEnum, get_permissions_for_role
+from src.core.security.permissions import PermissionEnum
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
@@ -87,27 +87,20 @@ class UserRead(UserBase):
 
     id: int
     role: UserRole
-    permissions: list[PermissionEnum] = []
     created_at: datetime
-
-
-    @model_validator(mode="before")
-    @classmethod
-    def set_permissions_based_on_role(cls, values):
-        """Устанавливает permissions на основе роли."""
-        if 'role' in values and 'permissions' not in values:
-            values['permissions'] = get_permissions_for_role(values['role'])
-        return values
 
 
 class UserAuthRequest(BaseModel):
     """Pydantic model for user authorization request."""
+
     access_token: str
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
+
 class UserAuthResponse(BaseModel):
     """Pydantic model for user authorization response."""
+
     role: UserRole
     permissions: list[PermissionEnum]
 

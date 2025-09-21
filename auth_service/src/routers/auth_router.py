@@ -112,21 +112,14 @@ async def refresh_token(
 
 @auth_router.post("/authorize", response_model=UserAuthResponse)
 async def authorize_user(
-        auth_request: UserAuthRequest,
-        auth_service: AuthService = Depends(get_auth_service),
-        users_dao: UsersDAO = Depends(get_users_dao),
-        token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    auth_request: UserAuthRequest,
+    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
+    users_dao: UsersDAO = Depends(get_users_dao),  # noqa: B008
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
     """
     Авторизация пользователя по access токену.
     """
     # Получаем роль и permissions
-    role, permissions = await auth_service.authorize_user(
-        auth_request,
-        token_service,
-        users_dao
-    )
-    return UserAuthResponse(
-        role=role,
-        permissions=permissions
-    )
+    role, permissions = await auth_service.authorize_user(auth_request, token_service, users_dao)
+    return UserAuthResponse(role=role, permissions=permissions)

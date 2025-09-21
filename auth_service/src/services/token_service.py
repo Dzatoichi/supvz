@@ -82,8 +82,9 @@ class JWTTokensService:
             "refresh_token": new_refresh_token,
         }
 
-    async def validate_token(self, token: str, token_type: TokenTypesEnum,
-                             repo: Optional[RefreshTokensDAO] = None) -> dict:
+    async def validate_token(
+        self, token: str, token_type: TokenTypesEnum, repo: Optional[RefreshTokensDAO] = None
+    ) -> dict:
         token_handler = TokenHandler(token_type=token_type)
 
         # Декодируем JWT токен

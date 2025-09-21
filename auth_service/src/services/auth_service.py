@@ -16,9 +16,9 @@ security = HTTPBearer()
 
 class AuthService:
     async def register_user(
-            self,
-            data: UserRegister,
-            repo: UsersDAO,
+        self,
+        data: UserRegister,
+        repo: UsersDAO,
     ) -> UserRead:
         """Регистрация пользователя."""
         user = await repo.get_user_by_email(data.email)
@@ -42,10 +42,10 @@ class AuthService:
         )
 
     async def login_user(
-            self,
-            credentials: UserLogin,
-            repo: UsersDAO,
-            token_service: JWTTokensService,
+        self,
+        credentials: UserLogin,
+        repo: UsersDAO,
+        token_service: JWTTokensService,
     ) -> tuple[str, str]:
         """Авторизация пользователя."""
         user = await repo.get_user_by_email(credentials.email)
@@ -67,11 +67,10 @@ class AuthService:
         return (access_token, refresh_token)
 
     async def authorize_user(
-            self,
-            auth_request: UserAuthRequest,  # Изменяем параметр на схему
-            token_service: JWTTokensService,
-            users_dao: UsersDAO,
-
+        self,
+        auth_request: UserAuthRequest,  # Изменяем параметр на схему
+        token_service: JWTTokensService,
+        users_dao: UsersDAO,
     ) -> Tuple[UserRole, list[PermissionEnum]]:
         """
         Авторизация пользователя по access токену.
@@ -96,11 +95,11 @@ class AuthService:
         return user.role, permissions
 
     async def reset_password(
-            self,
-            token: str,
-            new_password: str,
-            token_service: StatefulTokenService,
-            repo: UsersDAO,
+        self,
+        token: str,
+        new_password: str,
+        token_service: StatefulTokenService,
+        repo: UsersDAO,
     ) -> bool:
         """Сброс пароля пользователя."""
         token_data = await token_service.get_reset_token_data(token)
@@ -122,10 +121,10 @@ class AuthService:
 
     # TODO: доделать после реализации notification service
     async def forgot_password(
-            self,
-            user_email: str,
-            repo: UsersDAO,
-            token_service: StatefulTokenService,
+        self,
+        user_email: str,
+        repo: UsersDAO,
+        token_service: StatefulTokenService,
     ) -> str:
         """Генерирует токен сброса пароля и инициирует отправку email через notification_service."""
 
@@ -142,10 +141,10 @@ class AuthService:
         return token
 
     async def logout_user(
-            self,
-            refresh_token: str,
-            access_token: str,
-            token_service: JWTTokensService,
+        self,
+        refresh_token: str,
+        access_token: str,
+        token_service: JWTTokensService,
     ) -> bool:
         """Выход пользователя."""
         await token_service.revoke_token(token=refresh_token, token_type="refresh")
