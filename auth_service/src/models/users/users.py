@@ -16,6 +16,7 @@ class Users(Base):
     """
     Класс модели-сущности пользователя.
     """
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

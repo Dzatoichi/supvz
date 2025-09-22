@@ -10,6 +10,7 @@ class StatefulTokens(Base):
     """
     Класс модели-сущности stateful-токена.
     """
+
     __tablename__ = "stateful_tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)

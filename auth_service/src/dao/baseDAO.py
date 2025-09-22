@@ -15,6 +15,7 @@ class BaseDAO(Generic[T]):
     """
     Базовый класс DAO для работы с ORM-моделями.
     """
+
     def __init__(self, model: Optional[Type[T]] = None):
         """
         Метод инициализации.
@@ -46,6 +47,7 @@ class BaseDAO(Generic[T]):
         """
         Декоратор, оборачивающий метод для обработки и проброса исключения дальше.
         """
+
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             try:

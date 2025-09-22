@@ -26,10 +26,10 @@ auth_router = APIRouter(prefix="/auth")
 @auth_router.post("/register", response_model=UserReadSchema)
 @limiter.limit("3/hour")
 async def register_user(
-        request: Request,
-        user_in: UserRegisterSchema,
-        auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
-        repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
+    request: Request,
+    user_in: UserRegisterSchema,
+    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
+    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
     """
     Ручка регистрации пользователя.
@@ -72,8 +72,9 @@ async def login(
     return {"description": "Log In successfully"}
 
 
-@auth_router.post("/forgot_password",
-                  responses={200: {"description": "If the email is registered, a reset link has been sent"}})
+@auth_router.post(
+    "/forgot_password", responses={200: {"description": "If the email is registered, a reset link has been sent"}}
+)
 @limiter.limit("5/hour")
 async def forgot_password(
     request: Request,
@@ -131,9 +132,8 @@ async def logout(
 async def refresh_token(
     request: Request,
     response: Response,
-    refresh_token: str,
+    refresh_token_in: str,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
-    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
 ):
     """
     Ручка для обновления access-токена, выдачи нового refresh-токена.

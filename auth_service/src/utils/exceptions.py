@@ -67,6 +67,7 @@ class BaseTokenException(Exception):
     """
     Базовый класс для всех исключений, связанных с токенами.
     """
+
     pass
 
 
@@ -74,6 +75,7 @@ class TokenExpiredException(BaseTokenException):
     """
     Исключение для истёкших токенов.
     """
+
     pass
 
 
@@ -81,4 +83,5 @@ class InvalidTokenException(BaseTokenException):
     """
     Исключение для недействительных токенов.
     """
+
     pass

@@ -14,6 +14,7 @@ class RefreshTokens(Base):
     """
     Класс модели-сущности refresh-токена.
     """
+
     __tablename__ = "refresh_tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

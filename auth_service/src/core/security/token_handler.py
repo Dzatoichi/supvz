@@ -14,7 +14,7 @@ class TokenHandler:
 
     def __init__(self, token_type: TokenTypesEnum) -> None:
         """
-        Метод инициализаци.
+        Метод инициализации.
         """
         self.token_type = token_type
         self.algorithm, self.key, self.expire_time = settings.get_jwt_params(token_type=token_type).values()

@@ -5,6 +5,7 @@ class FakeUsersDAO:
     """
     Класс-заглушка (mock) для DAO пользователей.
     """
+
     pass
 
 
@@ -12,6 +13,7 @@ class FakeAuthService:
     """
     Класс-заглушка (mock) для сервиса аутентификации пользователей.
     """
+
     async def register_user(self, user_in, repo):
         """
         Метод регистрации пользователя.
@@ -58,6 +60,7 @@ class FakeJWTTokensService:
     """
     Класс-заглушка (mock) для сервиса работы с JWT токенами.
     """
+
     async def refresh_token(self, refresh_token):
         return {"refresh_token": "refresh", "access_token": "access"}
 
@@ -66,4 +69,5 @@ class FakeStatefulTokenService:
     """
     Класс-заглушка (mock) для stateful сервиса токенов.
     """
+
     pass

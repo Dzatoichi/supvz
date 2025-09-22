@@ -12,6 +12,7 @@ class StatefulTokenDAO(BaseDAO[StatefulTokens]):
     """
     Класс, наследующий базовый DAO для работы с сущностями stateful-токенов.
     """
+
     def __init__(self):
         super().__init__(model=StatefulTokens)
 
@@ -38,6 +39,7 @@ class RefreshTokensDAO(BaseDAO[RefreshTokens]):
     """
     Класс, наследующий базовый DAO для работы с сущностями refresh-токенов.
     """
+
     def __init__(self):
         super().__init__(model=RefreshTokens)
 

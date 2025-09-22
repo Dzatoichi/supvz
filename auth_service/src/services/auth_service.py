@@ -4,7 +4,7 @@ from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
-from src.schemas.tokens import TokenTypesEnum
+from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
@@ -15,9 +15,9 @@ class AuthService:
     """
 
     async def register_user(
-            self,
-            data: UserRegisterSchema,
-            repo: UsersDAO,
+        self,
+        data: UserRegisterSchema,
+        repo: UsersDAO,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.
@@ -43,10 +43,10 @@ class AuthService:
         )
 
     async def login_user(
-            self,
-            credentials: UserLoginSchema,
-            repo: UsersDAO,
-            token_service: JWTTokensService,
+        self,
+        credentials: UserLoginSchema,
+        repo: UsersDAO,
+        token_service: JWTTokensService,
     ) -> tuple[str, str]:
         """
         Метод аутентификации пользователя.
@@ -71,11 +71,11 @@ class AuthService:
         return access_token, refresh_token
 
     async def reset_password(
-            self,
-            token: str,
-            new_password: str,
-            token_service: StatefulTokenService,
-            repo: UsersDAO,
+        self,
+        token: str,
+        new_password: str,
+        token_service: StatefulTokenService,
+        repo: UsersDAO,
     ) -> bool:
         """
         Метод сброса пароля пользователя.
@@ -99,10 +99,10 @@ class AuthService:
 
     # TODO: доделать после реализации notification service
     async def forgot_password(
-            self,
-            user_email: str,
-            repo: UsersDAO,
-            token_service: StatefulTokenService,
+        self,
+        user_email: str,
+        repo: UsersDAO,
+        token_service: StatefulTokenService,
     ) -> str:
         """
         Метод генерации токена сброса пароля и инициации его отправки на email через notification_service.

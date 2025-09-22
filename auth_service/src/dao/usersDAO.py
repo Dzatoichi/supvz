@@ -9,6 +9,7 @@ class UsersDAO(BaseDAO[Users]):
     """
     Класс, наслдующий базовый DAO для работы с сущностями пользователя.
     """
+
     def __init__(self):
         super().__init__(model=Users)
 

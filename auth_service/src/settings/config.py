@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     """
     Класс конфига для работы с БД.
     """
+
     DB_HOST: str
     DB_PORT: str
     DB_USER: str
