@@ -95,8 +95,8 @@ class UserRead(UserBase):
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
-    @model_validator(mode='after')
-    def set_permissions(self) -> 'UserRead':
+    @model_validator(mode="after")
+    def set_permissions(self) -> "UserRead":
         self.permissions = get_permissions_for_role(self.role)
         return self
 
@@ -166,4 +166,3 @@ class UserLogout(BaseModel):
 
     refresh_token: str
     access_token: str
-

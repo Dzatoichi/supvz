@@ -46,19 +46,22 @@ class UserService:
             created_at=user.created_at,
         )
 
-    async def get_users(self,repo: UsersDAO) -> list[UserRead]:
+    async def get_users(self, repo: UsersDAO) -> list[UserRead]:
         """Получает всех юзеров"""
 
         users = await repo.get_all()
 
-        return [UserRead(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            role=user.role,
-            permissions=get_permissions_for_role(user.role),
-            created_at=user.created_at,
-        ) for user in users]
+        return [
+            UserRead(
+                id=user.id,
+                email=user.email,
+                name=user.name,
+                role=user.role,
+                permissions=get_permissions_for_role(user.role),
+                created_at=user.created_at,
+            )
+            for user in users
+        ]
 
     async def update_user(self, user: UserUpdate, repo: UsersDAO) -> UserUpdate:
         """Обновляет данные пользователя"""
