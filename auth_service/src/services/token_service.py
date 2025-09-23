@@ -6,7 +6,7 @@ from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.models.tokens.stateful_tokens import StatefulTokens
-from src.schemas.tokens import TokenTypesEnum
+from src.schemas.tokens_schemas import TokenTypesEnum
 from src.settings.config import settings
 from src.utils.exceptions import (
     InvalidTokenException,
@@ -15,7 +15,9 @@ from src.utils.exceptions import (
 
 
 class JWTTokensService:
-    """JWT tokens service."""
+    """
+    Класс сервиса для работы с jwt токенами.
+    """
 
     def __init__(self, repo: RefreshTokensDAO | None = None):
         self.repo = repo
@@ -25,7 +27,9 @@ class JWTTokensService:
         token_type: TokenTypesEnum,
         user_id: int,
     ) -> str:
-        """Method to create access or refresh token."""
+        """
+        Функция генерации access или refresh токена.
+        """
         token_handler = TokenHandler(token_type=token_type)
         token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
@@ -45,7 +49,9 @@ class JWTTokensService:
         self,
         token: str,
     ) -> bool:
-        """Method to revoke token."""
+        """
+        Функция для обозначения токена, как отозванного.
+        """
 
         token_hash = hash_helper.hash_token(token=token)
         await self.repo.set_token_revoked(token_hash=token_hash)
@@ -56,7 +62,9 @@ class JWTTokensService:
         self,
         refresh_token: str,
     ) -> dict[str, str]:
-        """Method to refresh token with rotation of tokens."""
+        """
+        Функция для обновления access-токена, выдачи нового refresh-токена.
+        """
         token_payload = await self.validate_token(
             token=refresh_token,
             token_type=TokenTypesEnum.refresh,
@@ -85,6 +93,9 @@ class JWTTokensService:
         token: str,
         token_type: TokenTypesEnum,
     ) -> dict:
+        """
+        Функция для валидации refresh или access токена.
+        """
         token_handler = TokenHandler(token_type=token_type)
 
         token_payload = token_handler.decode_jwt(token=token)
@@ -104,6 +115,10 @@ class JWTTokensService:
 
 
 class StatefulTokenService:
+    """
+    Класс сервиса обработки stateful токенов.
+    """
+
     def __init__(self, dao: StatefulTokenDAO | None = None):
         self.dao = dao
 
@@ -111,7 +126,9 @@ class StatefulTokenService:
         self,
         user_id: int,
     ):
-        """Создаёт токен и возвращает его строку."""
+        """
+        Метод генерации stateful токена и его возвращении в виде строки.
+        """
 
         token_str = secrets.token_urlsafe(32)
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.STATEFUL_TOKEN_EXPIRE_MINUTES)
@@ -125,21 +142,27 @@ class StatefulTokenService:
         return await self.dao.create(payload)
 
     async def get_reset_token_data(self, token: str) -> Optional[StatefulTokens]:
-        """Получает данные токена и проверяет валидность."""
+        """
+        Метод получения данных токена и его валиадации.
+        """
         return await self.validate_token(token)
 
     async def mark_token_as_used(
         self,
         token_obj: StatefulTokens,
     ) -> None:
-        """Помечает как использованный."""
+        """
+        Метод пометки токена, как использованного.
+        """
         await self.dao.mark_as_used(token_obj.id)
 
     async def validate_token(
         self,
         token: str,
     ) -> Optional[StatefulTokens]:
-        """Метод для проверки валидности."""
+        """
+        Метод валидации stateful токена.
+        """
         token_obj = await self.dao.get_by_token(token)
         if not token_obj or token_obj.used or token_obj.expires_at < datetime.now(timezone.utc):
             return None

@@ -4,18 +4,24 @@ from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
-from src.schemas.tokens import TokenTypesEnum
-from src.schemas.users_schemas import UserLogin, UserRead, UserRegister
+from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
 
 class AuthService:
+    """
+    Класс сервиса аутентификации.
+    """
+
     async def register_user(
         self,
-        data: UserRegister,
+        data: UserRegisterSchema,
         repo: UsersDAO,
-    ) -> UserRead:
-        """Регистрация пользователя."""
+    ) -> UserReadSchema:
+        """
+        Метод регистрации пользователя.
+        """
         user = await repo.get_user_by_email(data.email)
         if user:
             raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
@@ -28,7 +34,7 @@ class AuthService:
             "hashed_password": hashed_password,
         }
         user = await repo.create(payload)
-        return UserRead(
+        return UserReadSchema(
             id=user.id,
             email=user.email,
             name=user.name,
@@ -38,11 +44,13 @@ class AuthService:
 
     async def login_user(
         self,
-        credentials: UserLogin,
+        credentials: UserLoginSchema,
         repo: UsersDAO,
         token_service: JWTTokensService,
     ) -> tuple[str, str]:
-        """Авторизация пользователя."""
+        """
+        Метод аутентификации пользователя.
+        """
         user = await repo.get_user_by_email(credentials.email)
         if not user:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
@@ -69,7 +77,9 @@ class AuthService:
         token_service: StatefulTokenService,
         repo: UsersDAO,
     ) -> bool:
-        """Сброс пароля пользователя."""
+        """
+        Метод сброса пароля пользователя.
+        """
         token_data = await token_service.get_reset_token_data(token)
 
         if not token_data:
@@ -94,7 +104,9 @@ class AuthService:
         repo: UsersDAO,
         token_service: StatefulTokenService,
     ) -> str:
-        """Генерирует токен сброса пароля и инициирует отправку email через notification_service."""
+        """
+        Метод генерации токена сброса пароля и инициации его отправки на email через notification_service.
+        """
 
         user = await repo.get_user_by_email(user_email)
 
@@ -114,7 +126,9 @@ class AuthService:
         response: Response,
         token_service: JWTTokensService,
     ) -> bool:
-        """Выход пользователя."""
+        """
+        Метод завершения сессии/выхода пользователя.
+        """
         await token_service.revoke_token(token=refresh_token)
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")

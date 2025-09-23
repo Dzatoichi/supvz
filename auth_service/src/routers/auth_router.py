@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, Request, Response
 
 from src.dao.usersDAO import UsersDAO
-from src.schemas.tokens import TokenSchema
+from src.schemas.tokens_schemas import TokenSchema
 from src.schemas.users_schemas import (
-    PasswordResetConfirm,
-    UserForgotPassword,
-    UserLogin,
-    UserLogout,
-    UserRead,
-    UserRegister,
+    PasswordResetConfirmSchema,
+    UserForgotPasswordSchema,
+    UserLoginSchema,
+    UserLogoutSchema,
+    UserReadSchema,
+    UserRegisterSchema,
 )
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -23,15 +23,18 @@ from src.utils.rate_limiter import limiter
 auth_router = APIRouter(prefix="/auth")
 
 
-@auth_router.post("/register", response_model=UserRead)
+@auth_router.post("/register", response_model=UserReadSchema)
 @limiter.limit("3/hour")
 async def register_user(
     request: Request,
-    user_in: UserRegister,
+    user_in: UserRegisterSchema,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
-    """Registration user."""
+    """
+    Ручка регистрации пользователя.
+    POST [/auth/register]
+    """
     user = await auth_service.register_user(user_in, repo)
 
     return user
@@ -42,12 +45,15 @@ async def register_user(
 async def login(
     request: Request,
     response: Response,
-    credentials: UserLogin,
+    credentials: UserLoginSchema,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
-    """Authentication user."""
+    """
+    Ручка аутентификации пользователя.
+    POST [/auth/login]
+    """
     access_token, refresh_token = await auth_service.login_user(credentials, repo, token_service)
 
     response.set_cookie(
@@ -67,20 +73,22 @@ async def login(
 
 
 @auth_router.post(
-    "/forgot_password",
-    responses={200: {"description": "If the email is registered, a reset link has been sent"}},
+    "/forgot_password", responses={200: {"description": "If the email is registered, a reset link has been sent"}}
 )
 @limiter.limit("5/hour")
 async def forgot_password(
     request: Request,
-    data: UserForgotPassword,
+    data: UserForgotPasswordSchema,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
     token_service: StatefulTokenService = Depends(  # noqa: B008
         get_stateful_token_service
     ),
 ):
-    """Route for func 'forgot_password'."""
+    """
+    Ручка запроса на изменение-сброс пароля пользователя в случае, если пользователь забыл пароль.
+    POST [/auth/forgot_password]
+    """
     await auth_service.forgot_password(data.email, repo, token_service)
 
 
@@ -88,14 +96,17 @@ async def forgot_password(
 @limiter.limit("5/minute")
 async def reset_password(
     request: Request,
-    confirm_data: PasswordResetConfirm,
+    confirm_data: PasswordResetConfirmSchema,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
     token_service: StatefulTokenService = Depends(  # noqa: B008
         get_stateful_token_service
     ),
 ):
-    """Reset user password."""
+    """
+    Ручка сброса пароля.
+    POST [/auth/reset_password]
+    """
     await auth_service.reset_password(confirm_data.token, confirm_data.new_password, token_service, repo)
 
 
@@ -104,16 +115,15 @@ async def reset_password(
 async def logout(
     request: Request,
     response: Response,
-    logout_data: UserLogout,
+    logout_data: UserLogoutSchema,
     auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
-    """Reset user password."""
-    await auth_service.logout_user(
-        refresh_token=logout_data.refresh_token,
-        response=response,
-        token_service=token_service,
-    )
+    """
+    Ручка завершения сессии/выхода пользователя.
+    POST [/auth/logout]
+    """
+    await auth_service.logout_user(logout_data.refresh_token, logout_data.access_token, token_service)
     return {"description": "Logged out successfully"}
 
 
@@ -125,7 +135,10 @@ async def refresh_token(
     refresh_token_in: str,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
-    """Обновить refresh токен."""
+    """
+    Ручка для обновления access-токена, выдачи нового refresh-токена.
+    POST [/auth/refresh_token]
+    """
     result = await token_service.refresh_token(refresh_token=refresh_token_in)
     refresh_token = result["refresh_token"]
 

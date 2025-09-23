@@ -13,6 +13,10 @@ if TYPE_CHECKING:
 
 
 class Users(Base):
+    """
+    Класс модели-сущности пользователя.
+    """
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -59,4 +63,7 @@ class Users(Base):
     )
 
     def __repr__(self) -> str:
+        """
+        Метод возвращения пользователя в виде строки.
+        """
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"
