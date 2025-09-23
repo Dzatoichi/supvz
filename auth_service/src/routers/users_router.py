@@ -32,6 +32,7 @@ async def get_user(
     """
     Получает все данные о юзере по id
     """
+
     result = await user_service.get_user_by_id(user_id=user_id, repo=repo)
     return result
 
@@ -42,6 +43,7 @@ async def get_users(
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
     """Получает список данных о каждом юзере"""
+
     result = await user_service.get_users(repo=repo)
     return result
 
@@ -53,5 +55,18 @@ async def update_user(
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
     """Заменяет имя и номер телефона существующего пользователя"""
+
     result = await user_service.update_user(user=user, repo=repo)
+    return result
+
+
+@users_router.post("/{user_id}/delete-user", response_model=UserRead)
+async def delete_user(
+    user_id: int,
+    user_service: UserService = Depends(get_user_service),  # noqa: B008
+    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
+):
+    """Удаление пользователя по id"""
+
+    result = await user_service.delete_user(user_id=user_id, repo=repo)
     return result

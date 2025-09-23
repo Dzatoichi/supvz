@@ -77,3 +77,21 @@ class UserService:
             phone_number=upated_user.phone_number,
             email=upated_user.email,
         )
+
+    async def delete_user(self, user_id: int, repo: UsersDAO) -> UserRead:
+        """Удаляет пользователя по id"""
+
+        user = await repo.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+        del_user = await repo.delete(user.id)
+        return UserRead(
+            id=del_user.id,
+            email=del_user.email,
+            name=del_user.name,
+            role=del_user.role,
+            permissions=get_permissions_for_role(del_user.role),
+            created_at=del_user.created_at,
+            deleted_at=del_user.deleted_at,
+        )
