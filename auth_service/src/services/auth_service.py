@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
+from src.schemas.tokens import TokenTypesEnum
 from src.schemas.users_schemas import UserLogin, UserRead, UserRegister
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
@@ -49,16 +50,17 @@ class AuthService:
         if not hash_helper.verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
 
-        refresh_token = await token_service.create_token(
-            token_type="refresh",
-            user_id=user.id,
-        )
         access_token = await token_service.create_token(
-            token_type="access",
+            token_type=TokenTypesEnum.access,
             user_id=user.id,
         )
 
-        return (access_token, refresh_token)
+        refresh_token = await token_service.create_token(
+            token_type=TokenTypesEnum.refresh,
+            user_id=user.id,
+        )
+
+        return access_token, refresh_token
 
     async def reset_password(
         self,
@@ -104,16 +106,16 @@ class AuthService:
             #
             # отправка через раббит в notification service
 
-        return token
+            return token
 
     async def logout_user(
         self,
         refresh_token: str,
-        access_token: str,
+        response: Response,
         token_service: JWTTokensService,
     ) -> bool:
         """Выход пользователя."""
-        await token_service.revoke_token(token=refresh_token, token_type="refresh")
-        await token_service.revoke_token(token=access_token, token_type="access")
-
+        await token_service.revoke_token(token=refresh_token)
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
         return True

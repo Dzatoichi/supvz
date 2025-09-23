@@ -1,7 +1,11 @@
+from fastapi import Depends
+
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.services.user_service import UserService
+
+# DAO
 
 
 def get_users_dao() -> UsersDAO:
@@ -9,7 +13,7 @@ def get_users_dao() -> UsersDAO:
     return UsersDAO()
 
 
-def get_token_dao() -> StatefulTokenDAO:
+def get_stateful_token_dao() -> StatefulTokenDAO:
     """Создаём DAO для работы с stateful токенами."""
     return StatefulTokenDAO()
 
@@ -19,9 +23,14 @@ def get_refresh_token_dao() -> RefreshTokensDAO:
     return RefreshTokensDAO()
 
 
-def get_stateful_token_service() -> StatefulTokenService:
+# Сервисы
+
+
+def get_stateful_token_service(
+    dao: StatefulTokenDAO = Depends(get_stateful_token_dao),  # noqa: B008
+) -> StatefulTokenService:
     """Создает сервис для работы с stateful токенами."""
-    return StatefulTokenService()
+    return StatefulTokenService(dao=dao)
 
 
 def get_auth_service() -> "AuthService":  # type: ignore # noqa: F821
@@ -36,6 +45,8 @@ def get_user_service() -> "UserService":
     return UserService()
 
 
-def get_jwt_tokens_service() -> JWTTokensService:
+def get_jwt_tokens_service(
+    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
+) -> JWTTokensService:
     """Создаёт сервис для работы с JWT токенами."""
-    return JWTTokensService()
+    return JWTTokensService(repo=repo)
