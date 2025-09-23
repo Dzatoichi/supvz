@@ -18,7 +18,7 @@ class AuthService:
         """Регистрация пользователя."""
         user = await repo.get_user_by_email(data.email)
         if user:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User already exists")
+            raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
 
         hashed_password = hash_helper.hash(data.password)
         payload = {
@@ -45,7 +45,7 @@ class AuthService:
         """Авторизация пользователя."""
         user = await repo.get_user_by_email(credentials.email)
         if not user:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
         if not hash_helper.verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
@@ -73,13 +73,13 @@ class AuthService:
         token_data = await token_service.get_reset_token_data(token)
 
         if not token_data:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid token")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
 
         if token_data.used:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token already used")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token already used")
 
         if token_data.expires_at < datetime.now(timezone.utc):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token expired")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
 
         hashed_password = hash_helper.hash(new_password)
         result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)

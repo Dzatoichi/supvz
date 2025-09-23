@@ -10,7 +10,7 @@ class UserService:
 
         user = await repo.get_by_id(user_id)
         if not user:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
         if user.role != UserRole.test_owner:
             raise HTTPException(
