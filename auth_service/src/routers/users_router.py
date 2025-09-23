@@ -23,7 +23,7 @@ async def set_role_owner(
     return result
 
 
-@users_router.post("/{user_id}/get-user", response_model=UserRead)
+@users_router.get("/{user_id}/get-user", response_model=UserRead)
 async def get_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),  # noqa: B008
@@ -37,7 +37,7 @@ async def get_user(
     return result
 
 
-@users_router.post("/get-users", response_model=list[UserRead])
+@users_router.get("/get-users", response_model=list[UserRead])
 async def get_users(
     user_service: UserService = Depends(get_user_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
