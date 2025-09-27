@@ -54,7 +54,9 @@ async def login(
     Ручка аутентификации пользователя.
     POST [/auth/login]
     """
-    access_token, refresh_token = await auth_service.login_user(credentials, repo, token_service)
+    access_token, refresh_token = await auth_service.login_user(
+        credentials, repo, token_service
+    )
 
     response.set_cookie(
         "access_token",
@@ -73,7 +75,10 @@ async def login(
 
 
 @auth_router.post(
-    "/forgot_password", responses={200: {"description": "If the email is registered, a reset link has been sent"}}
+    "/forgot_password",
+    responses={
+        200: {"description": "If the email is registered, a reset link has been sent"}
+    },
 )
 @limiter.limit("5/hour")
 async def forgot_password(
@@ -92,7 +97,9 @@ async def forgot_password(
     await auth_service.forgot_password(data.email, repo, token_service)
 
 
-@auth_router.post("/reset_password", responses={200: {"description": "Password successfully reset"}})
+@auth_router.post(
+    "/reset_password", responses={200: {"description": "Password successfully reset"}}
+)
 @limiter.limit("5/minute")
 async def reset_password(
     request: Request,
@@ -107,7 +114,9 @@ async def reset_password(
     Ручка сброса пароля.
     POST [/auth/reset_password]
     """
-    await auth_service.reset_password(confirm_data.token, confirm_data.new_password, token_service, repo)
+    await auth_service.reset_password(
+        confirm_data.token, confirm_data.new_password, token_service, repo
+    )
 
 
 @limiter.limit("5/minute")
@@ -123,7 +132,11 @@ async def logout(
     Ручка завершения сессии/выхода пользователя.
     POST [/auth/logout]
     """
-    await auth_service.logout_user(logout_data.refresh_token, logout_data.access_token, token_service)
+    await auth_service.logout_user(
+        refresh_token=logout_data.refresh_token,
+        response=response,
+        token_service=token_service,
+    )
     return {"description": "Logged out successfully"}
 
 
