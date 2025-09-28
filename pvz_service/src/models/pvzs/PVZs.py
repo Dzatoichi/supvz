@@ -12,6 +12,7 @@ class PVZs(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    address: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     group: Mapped[Optional[str]] = mapped_column(String(255), nullable=False)
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, index=True)
     curator_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, index=True)
