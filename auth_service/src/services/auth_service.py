@@ -68,7 +68,7 @@ class AuthService:
 
     async def authorize_user(
         self,
-        auth_request: UserAuthRequest,  # Изменяем параметр на схему
+        auth_request: UserAuthRequest,
         token_service: JWTTokensService,
         users_dao: UsersDAO,
     ) -> Tuple[UserRole, list[PermissionEnum]]:

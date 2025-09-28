@@ -2,7 +2,9 @@ from fastapi import HTTPException, status
 
 from src.core.security.permissions import get_permissions_for_role
 from src.dao.usersDAO import UsersDAO
+from src.schemas.tokens import TokenTypesEnum
 from src.schemas.users_schemas import UserRead, UserRole, UserUpdate
+from src.services.token_service import JWTTokensService
 
 
 class UserService:
@@ -63,13 +65,32 @@ class UserService:
             for user in users
         ]
 
-    async def update_user(self, user: UserUpdate, repo: UsersDAO) -> UserUpdate:
+    async def update_user(
+        self,
+        token: str,
+        token_service: JWTTokensService,
+        user: UserUpdate,
+        repo: UsersDAO,
+    ) -> UserUpdate:
         """Обновляет данные пользователя"""
 
+        token_payload = await token_service.validate_token(
+            token.access_token,
+            TokenTypesEnum.access,
+        )
+
+        current_user_id = token_payload.get("user_id")
+
+        # Проверяем, что пользователь обновляет свои данные
+        if current_user_id != user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Можно обновлять только свои данные")
+
+        # Проверяем существование пользователя
         prev_user = await repo.get_by_id(user.id)
         if not prev_user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
+        # Обновляем данные
         upated_user = await repo.update(prev_user.id, name=user.name, phone_number=user.phone_number, email=user.email)
         return UserUpdate(
             id=upated_user.id,
@@ -85,13 +106,12 @@ class UserService:
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        del_user = await repo.delete(user.id)
+        await repo.delete(user.id)
         return UserRead(
-            id=del_user.id,
-            email=del_user.email,
-            name=del_user.name,
-            role=del_user.role,
-            permissions=get_permissions_for_role(del_user.role),
-            created_at=del_user.created_at,
-            deleted_at=del_user.deleted_at,
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            role=user.role,
+            permissions=get_permissions_for_role(user.role),
+            created_at=user.created_at,
         )
