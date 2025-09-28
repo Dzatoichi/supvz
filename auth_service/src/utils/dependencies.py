@@ -1,3 +1,5 @@
+from fastapi import HTTPException, Request, status
+
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -39,3 +41,11 @@ def get_user_service() -> "UserService":
 def get_jwt_tokens_service() -> JWTTokensService:
     """Создаёт сервис для работы с JWT токенами."""
     return JWTTokensService()
+
+
+def get_access_token_from_cookie(request: Request) -> str:
+    """Зависимость для получения access токена из куки"""
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token not found in cookies")
+    return access_token
