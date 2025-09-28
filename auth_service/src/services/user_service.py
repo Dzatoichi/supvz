@@ -3,7 +3,7 @@ from fastapi import HTTPException, status
 from src.core.security.permissions import get_permissions_for_role
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens import TokenTypesEnum
-from src.schemas.users_schemas import UserRead, UserRole, UserUpdate
+from src.schemas.users_schemas import UserAuthRequest, UserRead, UserRole, UserUpdate
 from src.services.token_service import JWTTokensService
 
 
@@ -67,7 +67,7 @@ class UserService:
 
     async def update_user(
         self,
-        token: str,
+        token: UserAuthRequest,
         token_service: JWTTokensService,
         user: UserUpdate,
         repo: UsersDAO,
@@ -79,24 +79,23 @@ class UserService:
             TokenTypesEnum.access,
         )
 
-        current_user_id = token_payload.get("user_id")
-
-        # Проверяем, что пользователь обновляет свои данные
-        if current_user_id != user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Можно обновлять только свои данные")
-
         # Проверяем существование пользователя
         prev_user = await repo.get_by_id(user.id)
         if not prev_user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
+        # Проверяем, что пользователь обновляет свои данные
+        current_user_id = token_payload.get("user_id")
+        if current_user_id != user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Можно обновлять только свои данные")
+
         # Обновляем данные
-        upated_user = await repo.update(prev_user.id, name=user.name, phone_number=user.phone_number, email=user.email)
+        updated_user = await repo.update(prev_user.id, name=user.name, phone_number=user.phone_number, email=user.email)
         return UserUpdate(
-            id=upated_user.id,
-            name=upated_user.name,
-            phone_number=upated_user.phone_number,
-            email=upated_user.email,
+            id=updated_user.id,
+            name=updated_user.name,
+            phone_number=updated_user.phone_number,
+            email=updated_user.email,
         )
 
     async def delete_user(self, user_id: int, repo: UsersDAO) -> UserRead:

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
@@ -7,7 +7,13 @@ from src.schemas.users_schemas import UserAuthRequest, UserRead, UserUpdate
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService
 from src.services.user_service import UserService
-from src.utils.dependencies import get_auth_service, get_jwt_tokens_service, get_user_service, get_users_dao
+from src.utils.dependencies import (
+    get_access_token_from_cookie,
+    get_auth_service,
+    get_jwt_tokens_service,
+    get_user_service,
+    get_users_dao,
+)
 
 users_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -54,36 +60,36 @@ async def get_users(
     return result
 
 
-@users_router.post("/update-user", response_model=UserUpdate)
+@users_router.patch("/update-user", response_model=UserUpdate)
 async def update_user(
     user: UserUpdate,
-    credentials: HTTPAuthorizationCredentials = Depends(security),   # noqa: B008
+    access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
     user_service: UserService = Depends(get_user_service),  # noqa: B008
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
     """Заменяет имя и номер телефона существующего пользователя"""
 
-    token = UserAuthRequest(access_token=credentials.credentials)
+    token = UserAuthRequest(access_token=access_token)
     result = await user_service.update_user(token=token, token_service=token_service, user=user, repo=repo)
     return result
 
 
-@users_router.post("/{user_id}/delete-user", response_model=UserRead)
+@users_router.delete("/{user_id}/delete-user", response_model=UserRead)
 async def delete_user(
     user_id: int,
-    credentials: HTTPAuthorizationCredentials = Depends(security),    # noqa: B008
-    auth_service: AuthService = Depends(get_auth_service),   # noqa: B008
+    access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
+    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
     user_service: UserService = Depends(get_user_service),  # noqa: B008
-    repo: UsersDAO = Depends(get_users_dao),   # noqa: B008
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),   # noqa: B008
+    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
     """Удаление пользователя по id (только с правом DELETE_EMPLOYEES)"""
 
-    # Используем токен из credentials
-    auth_request = UserAuthRequest(access_token=credentials.credentials)
+    # Используем зависимость get_access_token_from_cookie
+    auth_request = UserAuthRequest(access_token=access_token)
 
-    # Используем вашу авторизацию
+    # Используем авторизацию
     role, permissions = await auth_service.authorize_user(auth_request, token_service, repo)
 
     # Проверяем наличие права на удаление сотрудников
