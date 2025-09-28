@@ -62,15 +62,15 @@ async def get_users(
 
 @users_router.patch("", response_model=UserUpdateSchema)
 async def update_user(
-    user: UserUpdateSchema,
-    access_token: str = Depends(get_access_token_from_cookie),
-    user_service: UserService = Depends(get_user_service),
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
-    repo: UsersDAO = Depends(get_users_dao),
+    user: UserUpdate,
+    access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
+    user_service: UserService = Depends(get_user_service),  # noqa: B008
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
+    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
     """Заменяет имя и номер телефона существующего пользователя"""
 
-    token = UserAuthRequestSchema(access_token=access_token)
+    token = UserAuthRequest(access_token=access_token)
     result = await user_service.update_user(token=token, token_service=token_service, user=user, repo=repo)
     return result
 
@@ -78,18 +78,21 @@ async def update_user(
 @users_router.delete("/{user_id}", response_model=UserReadSchema)
 async def delete_user(
     user_id: int,
-    access_token: str = Depends(get_access_token_from_cookie),
-    auth_service: AuthService = Depends(get_auth_service),
-    user_service: UserService = Depends(get_user_service),
-    repo: UsersDAO = Depends(get_users_dao),
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
+    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
+    user_service: UserService = Depends(get_user_service),  # noqa: B008
+    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
 ):
-    """Удаление пользователя по id"""
+    """Удаление пользователя по id (только с правом DELETE_EMPLOYEES)"""
 
-    auth_request = UserAuthRequestSchema(access_token=access_token)
+    # Используем зависимость get_access_token_from_cookie
+    auth_request = UserAuthRequest(access_token=access_token)
 
+    # Используем авторизацию
     role, permissions = await auth_service.authorize_user(auth_request, token_service, repo)
 
+    # Проверяем наличие права на удаление сотрудников
     if PermissionEnum.DELETE_EMPLOYEES not in permissions:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав для удаления пользователей"
