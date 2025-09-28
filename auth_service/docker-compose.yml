@@ -16,7 +16,7 @@ services:
     command: postgres -c shared_preload_libraries=pg_cron -c cron.database_name=auth_db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 15s
       timeout: 10s
       retries: 3
@@ -33,6 +33,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./migrations:/app/migrations
+      - ./logs:/app/logs
     environment:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@postgres:5432/${DB_NAME}
     depends_on:
@@ -48,4 +49,4 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      -  auth_service
+      - auth_service
