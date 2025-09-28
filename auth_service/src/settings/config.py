@@ -2,6 +2,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """
+    Класс конфига для работы с БД.
+    """
+
     DB_HOST: str
     DB_PORT: str
     DB_USER: str
@@ -18,9 +22,15 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
     def CONNECT_ASYNC(self):
+        """
+        Функция создания соединения с БД.
+        """
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     def get_jwt_params(self, token_type):
+        """
+        Функция получения параметров jwt токена.
+        """
         jwt_params = {
             "algorithm": self.JWT_ALGORITHM,
         }

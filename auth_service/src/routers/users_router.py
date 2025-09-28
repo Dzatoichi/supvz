@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 
 from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserAuthRequest, UserRead, UserUpdate
+from src.schemas.users_schemas import UserAuthRequest, UserReadSchema, UserUpdate
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService
 from src.services.user_service import UserService
@@ -14,20 +13,23 @@ from src.utils.dependencies import (
     get_user_service,
     get_users_dao,
 )
+from src.utils.rate_limiter import limiter
 
 users_router = APIRouter(prefix="/users", tags=["users"])
 
 security = HTTPBearer()
 
 
-@users_router.post("/{user_id}/set-role-owner", response_model=UserRead)
+@limiter.limit("5/minute")
+@users_router.post("/{user_id}/set-role-owner", response_model=UserReadSchema)
 async def set_role_owner(
+    request: Request,
     user_id: int,
     user_service: UserService = Depends(get_user_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
 ):
     """
-    Обновляет роль конкретного юзера с test_owner → owner.
+    Ручка обновления роли юзера с test_owner → owner.
     Обычно вызывается после успешной оплаты (например из webhook платёжки).
     """
 

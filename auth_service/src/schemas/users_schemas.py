@@ -19,7 +19,9 @@ str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
 class UserRole(str, Enum):
-    """Pydantic model for user's roles ."""
+    """
+    Перечисление ролей пользователя.
+    """
 
     administrator = "administrator"
     owner = "owner"
@@ -30,8 +32,10 @@ class UserRole(str, Enum):
     handyman = "handyman"
 
 
-class UserBase(BaseModel):
-    """Base Pydantic model for user data"""
+class UserBaseSchema(BaseModel):
+    """
+    Базовая схема пользователя.
+    """
 
     email: EmailStr
     name: str | None = None
@@ -44,8 +48,10 @@ class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
-class UserLogin(BaseModel):
-    """Pydantic model for user login data."""
+class UserLoginSchema(BaseModel):
+    """
+    Схема аутентификации пользователя.
+    """
 
     email: EmailStr
     password: str
@@ -53,8 +59,10 @@ class UserLogin(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
-class UserRegister(UserLogin):
-    """Pydantic model for user registration data."""
+class UserRegisterSchema(UserLoginSchema):
+    """
+    Схема регистрации пользователя.
+    """
 
     confirm_password: str
     name: str
@@ -63,19 +71,27 @@ class UserRegister(UserLogin):
     @field_validator("phone_number")
     @classmethod
     def validate_phone_number(cls, values: str) -> str:
+        """
+        Функция валиадации номера телефона.
+        """
         if not re.match(r"^\+\d{1,15}$", values):
             raise ValueError('Номер телефона должен начинаться с "+" и содержать от 1 до 15 цифр')
         return values
 
     @model_validator(mode="after")
-    def check_passwords_match(self) -> "UserRegister":
+    def check_passwords_match(self) -> "UserRegisterSchema":
+        """
+        Метод проверки на совпадение пароля.
+        """
         if self.password != self.confirm_password:
             raise ValueError("Passwords do not match")
         return self
 
 
-class UserUpdate(BaseModel):
-    """Pydantic model for user update data."""
+class UserUpdateSchema(BaseModel):
+    """
+    Схема изменения пользователя.
+    """
 
     id: int
     name: str | None = None
@@ -85,8 +101,10 @@ class UserUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
-class UserRead(UserBase):
-    """Pydantic model for response user data."""
+class UserReadSchema(UserBaseSchema):
+    """
+    Схема получения пользователя.
+    """
 
     id: int
     role: UserRole
@@ -118,22 +136,29 @@ class UserAuthResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
-class PasswordResetConfirm(BaseModel):
-    """Pydantic model for password reset confirmation data."""
+class PasswordResetConfirmSchema(BaseModel):
+    """
+    Схема подтверждения сброса пароля пользователя.
+    """
 
     token: str
     new_password: str
     confirm_new_password: str
 
     @model_validator(mode="after")
-    def check_passwords_match(self) -> "PasswordResetConfirm":
+    def check_passwords_match(self) -> "PasswordResetConfirmSchema":
+        """
+        Метод проверки на совпадение пароля.
+        """
         if self.new_password != self.confirm_new_password:
             raise ValueError("Passwords do not match")
         return self
 
 
-class UserPasswordUpdate(BaseModel):
-    """Pydantic model for user update password."""
+class UserPasswordUpdateSchema(BaseModel):
+    """
+    Схема изменения пароля пользователя.
+    """
 
     current_password: str
     new_password: str
@@ -142,14 +167,19 @@ class UserPasswordUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
     @model_validator(mode="after")
-    def check_passwords_match(self) -> "UserPasswordUpdate":
+    def check_passwords_match(self) -> "UserPasswordUpdateSchema":
+        """
+        Метод проверки на совпадение пароля.
+        """
         if self.new_password != self.confirm_password:
             raise ValueError("Passwords do not match")
         return self
 
 
-class UserForgotPassword(BaseModel):
-    """Pydantic model for user reset password."""
+class UserForgotPasswordSchema(BaseModel):
+    """
+    Схема запроса на изменение пароля в случае, если пользователь забыл пароль.
+    """
 
     email: EmailStr
 
@@ -161,8 +191,10 @@ class UserForgotPassword(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
-class UserLogout(BaseModel):
-    """Pydantic model for user logout."""
+class UserLogoutSchema(BaseModel):
+    """
+    Схема завершения сессии/выхода пользователя.
+    """
 
     refresh_token: str
     access_token: str

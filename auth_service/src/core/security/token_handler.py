@@ -1,30 +1,35 @@
 from datetime import datetime, timedelta, timezone
-from uuid import UUID
+from typing import Any
 
 import jwt
 
-from src.schemas.tokens import TokenTypesEnum
+from src.schemas.tokens_schemas import TokenTypesEnum
 from src.settings.config import settings
 
 
 class TokenHandler:
     """
-    Class to handle jwt tokens.
+    Класс для обработки jwt токенов.
     """
 
     def __init__(self, token_type: TokenTypesEnum) -> None:
         """
-        Init function.
+        Метод инициализации.
         """
+        self.token_type = token_type
         self.algorithm, self.key, self.expire_time = settings.get_jwt_params(token_type=token_type).values()
 
-    def sign_jwt(self, user_id: UUID) -> str:
+    def sign_jwt(self, user_id: int) -> tuple[Any, datetime | int | None]:
         """
-        Function to encode jwt token.
+        Метод шифрования jwt токена.
         """
+        if self.token_type == "refresh":
+            expire_time = timedelta(days=self.expire_time)
+        else:
+            expire_time = timedelta(minutes=self.expire_time)
         payload = {
             "user_id": user_id,
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=self.expire_time),
+            "exp": datetime.now(timezone.utc) + expire_time,
         }
         token = jwt.encode(
             payload=payload,
@@ -35,7 +40,7 @@ class TokenHandler:
 
     def decode_jwt(self, token: str) -> dict | None:
         """
-        Function to decode jwt token.
+        Метод дешифрования jwt токена.
         """
         try:
             return jwt.decode(
