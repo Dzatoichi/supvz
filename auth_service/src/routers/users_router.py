@@ -83,7 +83,7 @@ async def delete_user(
     # Используем токен из credentials
     auth_request = UserAuthRequest(access_token=credentials.credentials)
 
-    # Используем вашу авторизацию
+    # Используем авторизацию
     role, permissions = await auth_service.authorize_user(auth_request, token_service, repo)
 
     # Проверяем наличие права на удаление сотрудников
