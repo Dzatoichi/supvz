@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserAuthRequest, UserReadSchema, UserUpdate
+from src.schemas.users_schemas import UserAuthRequest, UserReadSchema, UserUpdateSchema
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService
 from src.services.user_service import UserService
@@ -60,9 +60,9 @@ async def get_users(
     return result
 
 
-@users_router.patch("/update-user", response_model=UserUpdate)
+@users_router.patch("/update-user", response_model=UserUpdateSchema)
 async def update_user(
-    user: UserUpdate,
+    user: UserUpdateSchema,
     access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
     user_service: UserService = Depends(get_user_service),  # noqa: B008
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008

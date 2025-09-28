@@ -2,8 +2,8 @@ from fastapi import HTTPException, status
 
 from src.core.security.permissions import get_permissions_for_role
 from src.dao.usersDAO import UsersDAO
-from src.schemas.tokens import TokenTypesEnum
-from src.schemas.users_schemas import UserAuthRequest, UserReadSchema, UserRole, UserUpdate
+from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import UserAuthRequest, UserReadSchema, UserRole, UserUpdateSchema
 from src.services.token_service import JWTTokensService
 
 
@@ -75,9 +75,9 @@ class UserService:
         self,
         token: UserAuthRequest,
         token_service: JWTTokensService,
-        user: UserUpdate,
+        user: UserUpdateSchema,
         repo: UsersDAO,
-    ) -> UserUpdate:
+    ) -> UserUpdateSchema:
         """Обновляет данные пользователя"""
 
         token_payload = await token_service.validate_token(
@@ -97,7 +97,7 @@ class UserService:
 
         # Обновляем данные
         updated_user = await repo.update(prev_user.id, name=user.name, phone_number=user.phone_number, email=user.email)
-        return UserUpdate(
+        return UserUpdateSchema(
             id=updated_user.id,
             name=updated_user.name,
             phone_number=updated_user.phone_number,
