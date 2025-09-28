@@ -6,12 +6,9 @@ from fastapi import HTTPException, Response, status
 from src.core.security.hash_helper import hash_helper
 from src.core.security.permissions import PermissionEnum, get_permissions_for_role
 from src.dao.usersDAO import UsersDAO
-
 from src.schemas.tokens import TokenTypesEnum
 from src.schemas.users_schemas import UserAuthRequest, UserLoginSchema, UserReadSchema, UserRegisterSchema, UserRole
-
 from src.services.token_service import JWTTokensService, StatefulTokenService
-
 
 
 class AuthService:

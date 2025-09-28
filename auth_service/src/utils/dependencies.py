@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Request, status, Depends
+from fastapi import Depends, HTTPException, Request, status
 
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
@@ -59,4 +59,3 @@ def get_access_token_from_cookie(request: Request) -> str:
     if not access_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token not found in cookies")
     return access_token
-

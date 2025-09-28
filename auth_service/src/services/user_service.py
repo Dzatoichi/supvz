@@ -7,7 +7,6 @@ from src.schemas.users_schemas import UserAuthRequest, UserReadSchema, UserRole,
 from src.services.token_service import JWTTokensService
 
 
-
 class UserService:
     """
     Класс сервиса для работы с пользователями.
@@ -39,14 +38,14 @@ class UserService:
             created_at=updated_user.created_at,
         )
 
-    async def get_user_by_id(self, user_id: int, repo: UsersDAO) -> UserRead:
+    async def get_user_by_id(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
         """Получает юзера по id"""
 
         user = await repo.get_by_id(user_id)
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        return UserRead(
+        return UserReadSchema(
             id=user.id,
             email=user.email,
             name=user.name,
@@ -55,13 +54,13 @@ class UserService:
             created_at=user.created_at,
         )
 
-    async def get_users(self, repo: UsersDAO) -> list[UserRead]:
+    async def get_users(self, repo: UsersDAO) -> list[UserReadSchema]:
         """Получает всех юзеров"""
 
         users = await repo.get_all()
 
         return [
-            UserRead(
+            UserReadSchema(
                 id=user.id,
                 email=user.email,
                 name=user.name,
@@ -105,7 +104,7 @@ class UserService:
             email=updated_user.email,
         )
 
-    async def delete_user(self, user_id: int, repo: UsersDAO) -> UserRead:
+    async def delete_user(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
         """Удаляет пользователя по id"""
 
         user = await repo.get_by_id(user_id)
@@ -113,7 +112,7 @@ class UserService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
         await repo.delete(user.id)
-        return UserRead(
+        return UserReadSchema(
             id=user.id,
             email=user.email,
             name=user.name,

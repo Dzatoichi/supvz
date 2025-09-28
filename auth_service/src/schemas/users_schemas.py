@@ -114,7 +114,7 @@ class UserReadSchema(UserBaseSchema):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
     @model_validator(mode="after")
-    def set_permissions(self) -> "UserRead":
+    def set_permissions(self) -> "UserReadSchema":
         self.permissions = get_permissions_for_role(self.role)
         return self
 

@@ -11,7 +11,6 @@ from src.schemas.users_schemas import (
     UserLogoutSchema,
     UserReadSchema,
     UserRegisterSchema,
-
 )
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService, StatefulTokenService

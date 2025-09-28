@@ -1,77 +1,261 @@
-from enum import Enum
+from .permissions import PermissionEnum
+
+ROLE_PERMISSIONS = {
+    "administrator": [
+        # Все permissions как у owner
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.CONFIGURE_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.CREATE_SCHEDULE,
+        PermissionEnum.EDIT_SCHEDULE,
+        PermissionEnum.DELETE_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.MANAGE_SHIFT_REQUESTS,
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.CALCULATE_SALARY,
+        PermissionEnum.PROCESS_SALARY_PAYMENTS,
+        PermissionEnum.MANAGE_SALARY_FORMULAS,
+        PermissionEnum.VIEW_SALARY_ADVANCE,
+        PermissionEnum.PROCESS_ADVANCE_PAYMENTS,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.EDIT_REQUESTS,
+        PermissionEnum.DELETE_REQUESTS,
+        PermissionEnum.PROCESS_REQUESTS,
+        PermissionEnum.MANAGE_REQUEST_TYPES,
+        PermissionEnum.VIEW_FINANCE,
+        PermissionEnum.CREATE_TRANSACTIONS,
+        PermissionEnum.EDIT_TRANSACTIONS,
+        PermissionEnum.DELETE_TRANSACTIONS,
+        PermissionEnum.VIEW_FINANCIAL_REPORTS,
+        PermissionEnum.MANAGE_PAYMENT_METHODS,
+        PermissionEnum.VIEW_DISPUTES,
+        PermissionEnum.CREATE_DISPUTES,
+        PermissionEnum.PROCESS_DISPUTES,
+        PermissionEnum.VIEW_EMPLOYEES,
+        PermissionEnum.CREATE_EMPLOYEES,
+        PermissionEnum.EDIT_EMPLOYEES,
+        PermissionEnum.DELETE_EMPLOYEES,
+        PermissionEnum.MANAGE_EMPLOYEE_ROLES,
+        PermissionEnum.VIEW_EMPLOYEE_DETAILS,
+        PermissionEnum.VIEW_PVZS,
+        PermissionEnum.CREATE_PVZS,
+        PermissionEnum.EDIT_PVZS,
+        PermissionEnum.DELETE_PVZS,
+        PermissionEnum.MANAGE_PVZ_GROUPS,
+        PermissionEnum.VIEW_PVZ_DETAILS,
+        PermissionEnum.MANAGE_PVZ_RENT,
+        PermissionEnum.VIEW_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.MANAGE_SYSTEM_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+        PermissionEnum.MANAGE_NOTIFICATIONS,
+        PermissionEnum.VIEW_AUDIT_LOGS,
+    ],
+    "owner": [
+        # Все permissions
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.CONFIGURE_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.CREATE_SCHEDULE,
+        PermissionEnum.EDIT_SCHEDULE,
+        PermissionEnum.DELETE_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.MANAGE_SHIFT_REQUESTS,
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.CALCULATE_SALARY,
+        PermissionEnum.PROCESS_SALARY_PAYMENTS,
+        PermissionEnum.MANAGE_SALARY_FORMULAS,
+        PermissionEnum.VIEW_SALARY_ADVANCE,
+        PermissionEnum.PROCESS_ADVANCE_PAYMENTS,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.EDIT_REQUESTS,
+        PermissionEnum.DELETE_REQUESTS,
+        PermissionEnum.PROCESS_REQUESTS,
+        PermissionEnum.MANAGE_REQUEST_TYPES,
+        PermissionEnum.VIEW_FINANCE,
+        PermissionEnum.CREATE_TRANSACTIONS,
+        PermissionEnum.EDIT_TRANSACTIONS,
+        PermissionEnum.DELETE_TRANSACTIONS,
+        PermissionEnum.VIEW_FINANCIAL_REPORTS,
+        PermissionEnum.MANAGE_PAYMENT_METHODS,
+        PermissionEnum.VIEW_DISPUTES,
+        PermissionEnum.CREATE_DISPUTES,
+        PermissionEnum.PROCESS_DISPUTES,
+        PermissionEnum.VIEW_EMPLOYEES,
+        PermissionEnum.CREATE_EMPLOYEES,
+        PermissionEnum.EDIT_EMPLOYEES,
+        PermissionEnum.DELETE_EMPLOYEES,
+        PermissionEnum.MANAGE_EMPLOYEE_ROLES,
+        PermissionEnum.VIEW_EMPLOYEE_DETAILS,
+        PermissionEnum.VIEW_PVZS,
+        PermissionEnum.CREATE_PVZS,
+        PermissionEnum.EDIT_PVZS,
+        PermissionEnum.DELETE_PVZS,
+        PermissionEnum.MANAGE_PVZ_GROUPS,
+        PermissionEnum.VIEW_PVZ_DETAILS,
+        PermissionEnum.MANAGE_PVZ_RENT,
+        PermissionEnum.VIEW_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.MANAGE_SYSTEM_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+        PermissionEnum.MANAGE_NOTIFICATIONS,
+        PermissionEnum.VIEW_AUDIT_LOGS,
+    ],
+    "test_owner": [
+        # Тестовый владелец - те же права что у owner
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.CONFIGURE_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.CREATE_SCHEDULE,
+        PermissionEnum.EDIT_SCHEDULE,
+        PermissionEnum.DELETE_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.MANAGE_SHIFT_REQUESTS,
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.CALCULATE_SALARY,
+        PermissionEnum.PROCESS_SALARY_PAYMENTS,
+        PermissionEnum.MANAGE_SALARY_FORMULAS,
+        PermissionEnum.VIEW_SALARY_ADVANCE,
+        PermissionEnum.PROCESS_ADVANCE_PAYMENTS,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.EDIT_REQUESTS,
+        PermissionEnum.DELETE_REQUESTS,
+        PermissionEnum.PROCESS_REQUESTS,
+        PermissionEnum.MANAGE_REQUEST_TYPES,
+        PermissionEnum.VIEW_FINANCE,
+        PermissionEnum.CREATE_TRANSACTIONS,
+        PermissionEnum.EDIT_TRANSACTIONS,
+        PermissionEnum.DELETE_TRANSACTIONS,
+        PermissionEnum.VIEW_FINANCIAL_REPORTS,
+        PermissionEnum.MANAGE_PAYMENT_METHODS,
+        PermissionEnum.VIEW_DISPUTES,
+        PermissionEnum.CREATE_DISPUTES,
+        PermissionEnum.PROCESS_DISPUTES,
+        PermissionEnum.VIEW_EMPLOYEES,
+        PermissionEnum.CREATE_EMPLOYEES,
+        PermissionEnum.EDIT_EMPLOYEES,
+        PermissionEnum.DELETE_EMPLOYEES,
+        PermissionEnum.MANAGE_EMPLOYEE_ROLES,
+        PermissionEnum.VIEW_EMPLOYEE_DETAILS,
+        PermissionEnum.VIEW_PVZS,
+        PermissionEnum.CREATE_PVZS,
+        PermissionEnum.EDIT_PVZS,
+        PermissionEnum.DELETE_PVZS,
+        PermissionEnum.MANAGE_PVZ_GROUPS,
+        PermissionEnum.VIEW_PVZ_DETAILS,
+        PermissionEnum.MANAGE_PVZ_RENT,
+        PermissionEnum.VIEW_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PAYMENT_SCHEDULE,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.MANAGE_SYSTEM_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+        PermissionEnum.MANAGE_NOTIFICATIONS,
+        PermissionEnum.VIEW_AUDIT_LOGS,
+    ],
+    "curator": [
+        # Dashboard permissions
+        PermissionEnum.VIEW_DASHBOARD,
+        # Schedule permissions (только для прикрепленных ПВЗ)
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.CREATE_SCHEDULE,
+        PermissionEnum.EDIT_SCHEDULE,
+        PermissionEnum.DELETE_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.MANAGE_SHIFT_REQUESTS,
+        # Salary permissions (просмотр и расчет)
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.CALCULATE_SALARY,
+        PermissionEnum.VIEW_SALARY_ADVANCE,
+        # Requests permissions (для прикрепленных ПВЗ)
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.EDIT_REQUESTS,
+        PermissionEnum.DELETE_REQUESTS,
+        PermissionEnum.PROCESS_REQUESTS,
+        # Finance permissions (только просмотр для своих ПВЗ)
+        PermissionEnum.VIEW_FINANCE,
+        PermissionEnum.CREATE_TRANSACTIONS,
+        PermissionEnum.VIEW_FINANCIAL_REPORTS,
+        # Disputes permissions
+        PermissionEnum.VIEW_DISPUTES,
+        PermissionEnum.CREATE_DISPUTES,
+        # Employees permissions (для прикрепленных ПВЗ)
+        PermissionEnum.VIEW_EMPLOYEES,
+        PermissionEnum.CREATE_EMPLOYEES,
+        PermissionEnum.EDIT_EMPLOYEES,
+        PermissionEnum.VIEW_EMPLOYEE_DETAILS,
+        # PVZ permissions (для прикрепленных ПВЗ)
+        PermissionEnum.VIEW_PVZS,
+        PermissionEnum.EDIT_PVZS,
+        PermissionEnum.VIEW_PVZ_DETAILS,
+        # Payment Schedule permissions
+        PermissionEnum.VIEW_PAYMENT_SCHEDULE,
+        # Settings permissions
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+        # Audit permissions (только для своих ПВЗ)
+        PermissionEnum.VIEW_AUDIT_LOGS,
+    ],
+    "employee": [
+        # Dashboard permissions
+        PermissionEnum.VIEW_DASHBOARD,
+        # Schedule permissions (только свои смены)
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        # Requests permissions (только свои заявки)
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        # Salary permissions (только свои начисления)
+        PermissionEnum.VIEW_SALARY,
+        # Settings permissions
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+    ],
+    "intern": [
+        # Минимальные права для стажера
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+    ],
+    "handyman": [
+        # Права для разнорабочего (расширенные compared to employee)
+        PermissionEnum.VIEW_DASHBOARD,
+        PermissionEnum.VIEW_SCHEDULE,
+        PermissionEnum.OPEN_SHIFT,
+        PermissionEnum.CLOSE_SHIFT,
+        PermissionEnum.VIEW_REQUESTS,
+        PermissionEnum.CREATE_REQUESTS,
+        PermissionEnum.EDIT_REQUESTS,  # Может редактировать свои заявки
+        PermissionEnum.VIEW_SALARY,
+        PermissionEnum.MANAGE_PERSONAL_SETTINGS,
+        PermissionEnum.VIEW_NOTIFICATIONS,
+        # Дополнительные права для хозяйственных работ
+        PermissionEnum.VIEW_PVZS,  # Может просматривать ПВЗ для выполнения работ
+    ],
+}
 
 
-class PermissionEnum(str, Enum):
-    # Dashboard permissions
-    VIEW_DASHBOARD = "dashboard:view"
-    CONFIGURE_DASHBOARD = "dashboard:configure"
+def get_permissions_for_role(role: str) -> list[PermissionEnum]:
+    """Получить permissions для роли."""
+    return ROLE_PERMISSIONS.get(role, [])
 
-    # Schedule permissions
-    VIEW_SCHEDULE = "schedule:view"
-    CREATE_SCHEDULE = "schedule:create"
-    EDIT_SCHEDULE = "schedule:edit"
-    DELETE_SCHEDULE = "schedule:delete"
-    OPEN_SHIFT = "schedule:open"
-    CLOSE_SHIFT = "schedule:close"
-    MANAGE_SHIFT_REQUESTS = "schedule:manage_requests"
 
-    # Salary permissions
-    VIEW_SALARY = "salary:view"
-    CALCULATE_SALARY = "salary:calculate"
-    PROCESS_SALARY_PAYMENTS = "salary:process_payments"
-    MANAGE_SALARY_FORMULAS = "salary:manage_formulas"
-    VIEW_SALARY_ADVANCE = "salary:view_advance"
-    PROCESS_ADVANCE_PAYMENTS = "salary:process_advance"
-
-    # Requests permissions
-    VIEW_REQUESTS = "requests:view"
-    CREATE_REQUESTS = "requests:create"
-    EDIT_REQUESTS = "requests:edit"
-    DELETE_REQUESTS = "requests:delete"
-    PROCESS_REQUESTS = "requests:process"
-    MANAGE_REQUEST_TYPES = "requests:manage_types"
-
-    # Finance permissions
-    VIEW_FINANCE = "finance:view"
-    CREATE_TRANSACTIONS = "finance:create_transactions"
-    EDIT_TRANSACTIONS = "finance:edit_transactions"
-    DELETE_TRANSACTIONS = "finance:delete_transactions"
-    VIEW_FINANCIAL_REPORTS = "finance:view_reports"
-    MANAGE_PAYMENT_METHODS = "finance:manage_payment_methods"
-
-    # Disputes permissions
-    VIEW_DISPUTES = "disputes:view"
-    CREATE_DISPUTES = "disputes:create"
-    PROCESS_DISPUTES = "disputes:process"
-
-    # Employees permissions
-    VIEW_EMPLOYEES = "employees:view"
-    CREATE_EMPLOYEES = "employees:create"
-    EDIT_EMPLOYEES = "employees:edit"
-    DELETE_EMPLOYEES = "employees:delete"
-    MANAGE_EMPLOYEE_ROLES = "employees:manage_roles"
-    VIEW_EMPLOYEE_DETAILS = "employees:view_details"
-
-    # PVZ permissions
-    VIEW_PVZS = "pvzs:view"
-    CREATE_PVZS = "pvzs:create"
-    EDIT_PVZS = "pvzs:edit"
-    DELETE_PVZS = "pvzs:delete"
-    MANAGE_PVZ_GROUPS = "pvzs:manage_groups"
-    VIEW_PVZ_DETAILS = "pvzs:view_details"
-    MANAGE_PVZ_RENT = "pvzs:manage_rent"
-
-    # Payment Schedule permissions
-    VIEW_PAYMENT_SCHEDULE = "payment_schedule:view"
-    MANAGE_PAYMENT_SCHEDULE = "payment_schedule:manage"
-
-    # Settings permissions
-    MANAGE_PERSONAL_SETTINGS = "settings:personal"
-    MANAGE_SYSTEM_SETTINGS = "settings:system"
-
-    # Notifications permissions
-    VIEW_NOTIFICATIONS = "notifications:view"
-    MANAGE_NOTIFICATIONS = "notifications:manage"
-
-    # Audit permissions
-    VIEW_AUDIT_LOGS = "audit:view"
+def has_permission(role: str, permission: PermissionEnum) -> bool:
+    """Проверить наличие permission у роли."""
+    return permission in ROLE_PERMISSIONS.get(role, [])

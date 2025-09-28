@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
@@ -16,8 +16,6 @@ from src.utils.dependencies import (
 from src.utils.rate_limiter import limiter
 
 users_router = APIRouter(prefix="/users", tags=["users"])
-
-security = HTTPBearer()
 
 
 @limiter.limit("5/minute")
@@ -37,7 +35,7 @@ async def set_role_owner(
     return result
 
 
-@users_router.get("/{user_id}/get-user", response_model=UserRead)
+@users_router.get("/{user_id}/get-user", response_model=UserReadSchema)
 async def get_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),  # noqa: B008
@@ -51,7 +49,7 @@ async def get_user(
     return result
 
 
-@users_router.get("/get-users", response_model=list[UserRead])
+@users_router.get("/get-users", response_model=list[UserReadSchema])
 async def get_users(
     user_service: UserService = Depends(get_user_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
@@ -77,7 +75,7 @@ async def update_user(
     return result
 
 
-@users_router.delete("/{user_id}/delete-user", response_model=UserRead)
+@users_router.delete("/{user_id}/delete-user", response_model=UserReadSchema)
 async def delete_user(
     user_id: int,
     access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
