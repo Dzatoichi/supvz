@@ -1,22 +1,18 @@
 services:
   postgres:
-    build:
-      context: ./postgres
-      dockerfile: Dockerfile
+    image: postgres:17
     container_name: pvz_postgres
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_HOST_PORT}:${DB_PORT}"
     volumes:
       - ./pg_data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: postgres -c shared_preload_libraries=pg_cron -c cron.database_name=pvz_db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 15s
       timeout: 10s
       retries: 3
