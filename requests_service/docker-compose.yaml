@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_DB=requests
+      - POSTGRES_PASSWORD=developer
+      - POSTGRES_USER=developer
+    ports:
+      - "5438:5432"

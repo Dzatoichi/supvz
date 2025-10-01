@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: requests_service
+  liquibase:
+    change-log: migrations/db.changelog-master.yaml
