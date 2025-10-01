@@ -14,6 +14,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         http_version = request.scope.get("http_version", "1.1")
         response = await call_next(request)
         status_code = response.status_code
+        log_type = "access"
         process_time = (time.time() - start_time) * 1000
 
         logger.bind(
@@ -24,6 +25,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             http_version=http_version,
             status_code=status_code,
             process_time=f"{process_time:.2f}ms",
+            log_type=log_type,
         ).info("HTTP Request")
 
         return response
