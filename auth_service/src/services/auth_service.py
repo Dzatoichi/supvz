@@ -31,7 +31,7 @@ class AuthService:
         if user:
             logger.warning(
                 "Попытка регистрации с уже существующим email",
-                email=data.email,
+                user_id=user.id,
             )
             raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
 
@@ -47,7 +47,6 @@ class AuthService:
             "Новый пользователь успешно зарегистрирован!",
             user_id=user.id,
             email=self._mask_email(user.email),
-            log_type="business",
         )
         return UserReadSchema(
             id=user.id,
@@ -68,16 +67,16 @@ class AuthService:
         """
         user = await repo.get_user_by_email(credentials.email)
         if not user:
-            logger.warning(
-                "Попытка аутентификации с несуществующим email",
-                email=user.email,
-            )
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
         if not hash_helper.verify_password(
             plain_password=credentials.password,
             hashed_password=user.hashed_password,
         ):
+            logger.warning(
+                "Неудачная попытка входа: неправильный пароль",
+                email=self._mask_email(user.email),
+            )
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
 
         access_token = await token_service.create_token(
@@ -91,10 +90,9 @@ class AuthService:
         )
 
         logger.info(
-            "Пользователь {email} успешно вошел в свой аккаунт!",
+            "Пользователь успешно вошел в свой аккаунт!",
             user_id=user.id,
             email=self._mask_email(user.email),
-            log_type="business",
         )
 
         return access_token, refresh_token
@@ -121,14 +119,18 @@ class AuthService:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
 
         hashed_password = hash_helper.hash(new_password)
-        result = await repo.set_password(
-            user_id=token_data.user_id, hashed_password=hashed_password
+        result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)
+
+        logger.info(
+            "Пользователь успешно сменил свой пароль!",
+            user_id=token_data.user_id,
         )
+
         await token_service.mark_token_as_used(token_data)
 
         return result
 
-    # TODO: доделать после реализации notification service
+    # TODO: доделать после реализации notification service+логирование
     async def forgot_password(
         self,
         user_email: str,
