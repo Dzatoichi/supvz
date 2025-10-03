@@ -3,6 +3,8 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
+from src.utils.logger_settings import logger
+
 
 def setup_exception_handlers(app: FastAPI):
     """
@@ -14,9 +16,23 @@ def setup_exception_handlers(app: FastAPI):
         """
         Функция обработчика стандартных HTTP-исключений.
         """
+
+        logger.warning(
+            "HTTPException",
+            method=request.method,
+            path=request.url.path,
+            status_code=exc.status_code,
+            detail=exc.detail,
+            client_ip=request.client.host if request.client else None,
+        )
+
         return JSONResponse(
             status_code=exc.status_code,
-            content={"error": "http_error", "detail": exc.detail, "path": request.url.path},
+            content={
+                "error": "http_error",
+                "detail": exc.detail,
+                "path": request.url.path,
+            },
         )
 
     @app.exception_handler(RequestValidationError)
@@ -29,8 +45,17 @@ def setup_exception_handlers(app: FastAPI):
             ctx = err.get("ctx")
             if ctx and "error" in ctx and isinstance(ctx["error"], Exception):
                 ctx["error"] = str(ctx["error"])
+
+        logger.warning(
+            "ValidationError",
+            method=request.method,
+            path=request.url.path,
+            errors=errors,
+            client_ip=request.client.host if request.client else None,
+        )
+
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content={
                 "error": "validation_error",
                 "detail": errors,
@@ -44,7 +69,13 @@ def setup_exception_handlers(app: FastAPI):
         """
         Функция обработчика ошибок SQLAlchemy.
         """
-        print("Database error: %s", exc)
+        logger.error(
+            "Database error",
+            method=request.method,
+            path=request.url.path,
+            error=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": "database_error", "detail": "DB operation failed"},
@@ -55,10 +86,19 @@ def setup_exception_handlers(app: FastAPI):
         """
         Функция обработчика для всех остальных непойманных исключений.
         """
-        print("Unexpected error: %s", exc)
+        logger.exception(
+            "Unexpected error",
+            method=request.method,
+            path=request.url.path,
+            error=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": "internal_server_error", "detail": "Something went wrong"},
+            content={
+                "error": "internal_server_error",
+                "detail": "Something went wrong",
+            },
         )
 
 
