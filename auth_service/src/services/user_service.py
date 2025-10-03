@@ -20,6 +20,11 @@ class UserService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
         if user.role != UserRole.test_owner:
+            logger.error(
+                "Пользователю не удалось выдать роль владельца, так как у него не была роль test_owner!",
+                user_id=user.id,
+            )
+
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 "User is not test_owner",

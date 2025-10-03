@@ -29,7 +29,7 @@ class AuthService:
         """
         user = await repo.get_user_by_email(data.email)
         if user:
-            logger.warning(
+            logger.error(
                 "Попытка регистрации с уже существующим email",
                 user_id=user.id,
             )
@@ -73,7 +73,7 @@ class AuthService:
             plain_password=credentials.password,
             hashed_password=user.hashed_password,
         ):
-            logger.warning(
+            logger.error(
                 "Неудачная попытка входа: неправильный пароль",
                 email=self._mask_email(user.email),
             )

@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     LOG_LEVEL: str
     LOG_TO_CONSOLE: bool
+    LOGS_DIR: str
 
     STATEFUL_TOKEN_EXPIRE_MINUTES: int = 15
 

@@ -1,14 +1,14 @@
 import os
 import sys
 
-from dotenv import load_dotenv
 from loguru import logger
 
-load_dotenv()
+from src.settings.config import settings
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-LOG_TO_CONSOLE = os.getenv("LOG_TO_CONSOLE", "True").lower() in ("true", "1", "yes")
-LOGS_DIR = os.getenv("LOGS_DIR", "logs")
+LOG_LEVEL = settings.LOG_LEVEL
+LOG_TO_CONSOLE = settings.LOG_TO_CONSOLE
+LOGS_DIR = settings.LOGS_DIR
+
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 
@@ -27,7 +27,7 @@ if LOG_TO_CONSOLE:
 logger.add(
     f"{LOGS_DIR}/app.log",
     serialize=True,
-    rotation="10 MB",
+    rotation="100 KB",
     retention="10 days",
     level=LOG_LEVEL,
     enqueue=True,
