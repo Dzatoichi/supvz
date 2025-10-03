@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record RequestPayload (
-        @NotNull int pvzId,
+        @NotNull Integer pvzId,
         @NotNull UUID appellantId,
         String description
 ) {
