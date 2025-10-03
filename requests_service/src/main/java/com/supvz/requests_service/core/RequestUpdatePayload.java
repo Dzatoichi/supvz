@@ -1,8 +1,10 @@
 package com.supvz.requests_service.core;
 
 
+import jakarta.validation.constraints.NotNull;
+
 public record RequestUpdatePayload(
-        Integer pvzId,
+        @NotNull Integer pvzId,
         String description
 ) {
 }

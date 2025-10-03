@@ -22,14 +22,6 @@ public class RequestController {
         return ResponseEntity.ok(body);
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> delete(
-            @PathVariable(name = "id") long id
-    ) {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @PutMapping
     public ResponseEntity<?> update(
             @PathVariable(name = "id") long id,
@@ -37,5 +29,13 @@ public class RequestController {
     ) {
         RequestDto body = service.update(id, payload);
         return ResponseEntity.ok(body);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> delete(
+            @PathVariable(name = "id") long id
+    ) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,13 +1,11 @@
 package com.supvz.requests_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.supvz.requests_service.core.PageDto;
 import com.supvz.requests_service.core.RequestDto;
+import com.supvz.requests_service.core.RequestFilter;
 import com.supvz.requests_service.core.RequestPayload;
 import com.supvz.requests_service.service.RequestService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,13 +37,6 @@ class RequestsControllerTest {
     private RequestService service;
 
     private static final String URI = "/api/v1/requests";
-
-    @BeforeEach
-    void setup() {
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.registerModule(new Jdk8Module());
-    }
-
 
     @Test
     void create__ValidPayload__ReturnsOk() throws Exception {
@@ -84,21 +75,20 @@ class RequestsControllerTest {
     void readAll__ReturnsOk() throws Exception {
         int page = 0;
         int size = 5;
+        RequestFilter filter = RequestFilter.builder().build();
 
         PageDto<RequestDto> body = new PageDto<>(List.of(), page, size, 1, false, false);
 
-        when(service.readAll(page, size, null)).thenReturn(body);
+        when(service.readAll(page, size, filter))
+                .thenReturn(new PageDto<>(List.of(), page, size, 1, false, false));
 
-        MvcResult result = mvc.perform(get(URI)
+        mvc.perform(get(URI)
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size)))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(body)))
-                .andReturn();
+                .andExpect(content().json(objectMapper.writeValueAsString(body)));
 
-        System.out.println("Response: " + result.getResponse().getContentAsString());
 
+        verify(service, times(1)).readAll(page, size, filter);
     }
-
-
 }
