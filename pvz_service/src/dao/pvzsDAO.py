@@ -1,8 +1,8 @@
 from typing import Optional
 
-from sqlalchemy import select, update
-from src.dao.baseDAO import BaseDAO
+from sqlalchemy import select
 
+from src.dao.baseDAO import BaseDAO
 from src.models.pvzs.PVZs import PVZs
 
 
