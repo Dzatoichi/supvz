@@ -24,6 +24,7 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     private final RequestService requestService;
 
     @Override
+    @Transactional
     public RequestAssignmentDto create(long requestId, RequestAssignmentPayload payload) {
         log.info("CREATE REQUEST [{}] ASSIGNMENT BY HANDYMAN [{}].", requestId, payload.handymanId());
 
@@ -41,22 +42,19 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
         log.info("READ REQUEST [{}] ASSIGNMENTS PAGE. PAGE [{}], SIZE [{}].", requestId, pageNumber, size);
 
         Pageable pageable = PageRequest.of(pageNumber, size);
-        Page<RequestAssignment> page = repo.findAllByRequestId(requestId, pageable);
+        Page<RequestAssignment> page = repo.findAll(requestId, pageable);
 
         return mapper.readPage(page);
     }
 
     @Override
-    @Transactional
-    public void delete(long id) {
-        log.info("DELETE REQUEST ASSIGNMENT [{}].", id);
+    public RequestAssignmentDto read(long id) {
+        log.info("READ REQUEST ASSIGNMENT [{}].", id);
 
-        RequestAssignment found = repo.findById(id)
+        return repo.findById(id)
+                .map(mapper::read)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
                         ("REQUEST ASSIGNMENT [%s] WAS NOT FOUND.".formatted(id)));
-        repo.delete(found);
-
-        log.info("REQUEST ASSIGNMENT [{}] IS DELETED.", id);
     }
 
     @Override
@@ -75,12 +73,15 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     }
 
     @Override
-    public RequestAssignmentDto read(long id) {
-        log.info("READ REQUEST ASSIGNMENT [{}].", id);
+    @Transactional
+    public void delete(long id) {
+        log.info("DELETE REQUEST ASSIGNMENT [{}].", id);
 
-        return repo.findById(id)
-                .map(mapper::read)
+        RequestAssignment found = repo.findById(id)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
                         ("REQUEST ASSIGNMENT [%s] WAS NOT FOUND.".formatted(id)));
+        repo.delete(found);
+
+        log.info("REQUEST ASSIGNMENT [{}] IS DELETED.", id);
     }
 }

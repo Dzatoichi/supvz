@@ -12,7 +12,7 @@ public interface RequestAssignmentRepository extends CrudRepository<RequestAssig
             FROM RequestAssignment ra WHERE
             ra.request.id = :requestId
             """)
-    Page<RequestAssignment> findAllByRequestId(
+    Page<RequestAssignment> findAll(
             @Param("requestId") long requestId,
             Pageable pageable);
 }

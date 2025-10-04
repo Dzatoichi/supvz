@@ -57,6 +57,20 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    public RequestDto update(long id, RequestUpdatePayload payload) {
+        log.info("UPDATE REQUEST [{}].", id);
+
+        Request found = repo.findById(id)
+                .orElseThrow(() -> new RequestNotFoundException("REQUEST [%S] WAS NOT FOUND.".formatted(id)));
+
+        Request mapped = mapper.update(found, payload);
+        Request saved = repo.save(mapped);
+
+        log.info("REQUEST [{}] IS UPDATED.", saved.getId());
+        return mapper.read(saved);
+    }
+
+    @Override
     @Transactional
     public void delete(long id) {
         log.info("DELETE REQUEST [{}].", id);
@@ -73,19 +87,5 @@ public class RequestServiceImpl implements RequestService {
         log.info("GET REQUEST [{}].", id);
         return repo.findById(id)
                 .orElseThrow(() -> new RequestNotFoundException("REQUEST [%S] WAS NOT FOUND.".formatted(id)));
-    }
-
-    @Override
-    public RequestDto update(long id, RequestUpdatePayload payload) {
-        log.info("UPDATE REQUEST [{}].", id);
-
-        Request found = repo.findById(id)
-                .orElseThrow(() -> new RequestNotFoundException("REQUEST [%S] WAS NOT FOUND.".formatted(id)));
-
-        Request mapped = mapper.update(found, payload);
-        Request saved = repo.save(mapped);
-
-        log.info("REQUEST [{}] IS UPDATED.", saved.getId());
-        return mapper.read(saved);
     }
 }

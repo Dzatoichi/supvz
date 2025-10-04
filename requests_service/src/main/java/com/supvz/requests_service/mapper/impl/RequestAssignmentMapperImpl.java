@@ -13,6 +13,15 @@ import java.util.UUID;
 @Component
 public class RequestAssignmentMapperImpl implements RequestAssignmentMapper {
     @Override
+    public RequestAssignment create(Request request, RequestAssignmentPayload payload) {
+        return RequestAssignment.builder()
+                .request(request)
+                .handymanId(payload.handymanId())
+                .description(payload.description())
+                .build();
+    }
+
+    @Override
     public RequestAssignmentDto read(RequestAssignment assignment) {
         return RequestAssignmentDto
                 .builder()
@@ -23,15 +32,6 @@ public class RequestAssignmentMapperImpl implements RequestAssignmentMapper {
                 .completedAt(assignment.getCompletedAt())
                 .description(assignment.getDescription())
                 .requestId(assignment.getRequest().getId())
-                .build();
-    }
-
-    @Override
-    public RequestAssignment create(Request request, RequestAssignmentPayload payload) {
-        return RequestAssignment.builder()
-                .request(request)
-                .handymanId(payload.handymanId())
-                .description(payload.description())
                 .build();
     }
 

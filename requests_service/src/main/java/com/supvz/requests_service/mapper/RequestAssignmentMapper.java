@@ -9,9 +9,9 @@ import com.supvz.requests_service.entity.RequestAssignment;
 import org.springframework.data.domain.Page;
 
 public interface RequestAssignmentMapper {
-    RequestAssignmentDto read(RequestAssignment requestAssignment);
+    RequestAssignment create(Request request, RequestAssignmentPayload payload);
 
-    RequestAssignment create(Request requestId, RequestAssignmentPayload payload);
+    RequestAssignmentDto read(RequestAssignment requestAssignment);
 
     PageDto<RequestAssignmentDto> readPage(Page<RequestAssignment> page);
 
