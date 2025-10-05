@@ -7,7 +7,13 @@ from src.core.security.hash_helper import hash_helper
 from src.core.security.permissions import PermissionEnum, get_permissions_for_role
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserAuthRequest, UserLoginSchema, UserReadSchema, UserRegisterSchema, UserRole
+from src.schemas.users_schemas import (
+    UserAuthRequestSchema,
+    UserLoginSchema,
+    UserReadSchema,
+    UserRegisterSchema,
+    UserRole,
+)
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
 
@@ -74,7 +80,7 @@ class AuthService:
 
     async def authorize_user(
         self,
-        auth_request: UserAuthRequest,
+        auth_request: UserAuthRequestSchema,
         token_service: JWTTokensService,
         users_dao: UsersDAO,
     ) -> Tuple[UserRole, list[PermissionEnum]]:
