@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Response
 
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenSchema
 from src.schemas.users_schemas import (
@@ -17,12 +18,13 @@ from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
+    get_refresh_token_dao,
     get_stateful_token_service,
     get_users_dao,
 )
 from src.utils.rate_limiter import limiter
 
-auth_router = APIRouter(prefix="/auth")
+auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @auth_router.post("/register", response_model=UserReadSchema)
@@ -141,12 +143,13 @@ async def refresh_token(
     response: Response,
     refresh_token_in: str,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
+    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
 ):
     """
     Ручка для обновления access-токена, выдачи нового refresh-токена.
     POST [/auth/refresh_token]
     """
-    result = await token_service.refresh_token(refresh_token=refresh_token_in)
+    result = await token_service.refresh_token(refresh_token=refresh_token_in, repo=repo)
     refresh_token = result["refresh_token"]
 
     response.set_cookie(
