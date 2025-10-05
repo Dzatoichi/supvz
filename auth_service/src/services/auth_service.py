@@ -1,19 +1,11 @@
 from datetime import datetime, timezone
-from typing import Tuple
 
 from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
-from src.core.security.permissions import PermissionEnum, get_permissions_for_role
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import (
-    UserAuthRequestSchema,
-    UserLoginSchema,
-    UserReadSchema,
-    UserRegisterSchema,
-    UserRole,
-)
+from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
 
@@ -77,34 +69,6 @@ class AuthService:
         )
 
         return access_token, refresh_token
-
-    async def authorize_user(
-        self,
-        auth_request: UserAuthRequestSchema,
-        token_service: JWTTokensService,
-        users_dao: UsersDAO,
-    ) -> Tuple[UserRole, list[PermissionEnum]]:
-        """
-        Авторизация пользователя по access токену.
-        Валидирует токен, получает пользователя и возвращает его роль и permissions.
-        """
-        # Используем переданные зависимости или инициализируем стандартные
-        token_payload = await token_service.validate_token(
-            auth_request.access_token,
-            TokenTypesEnum.access,
-        )
-        user_id = token_payload.get("user_id")
-        user = await users_dao.get_by_id(user_id)
-        if not user or not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found or inactive",
-            )
-
-        # Получение permissions для роли
-        permissions = get_permissions_for_role(user.role)
-
-        return user.role, permissions
 
     async def reset_password(
         self,

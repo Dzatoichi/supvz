@@ -75,7 +75,8 @@ async def login(
 
 
 @auth_router.post(
-    "/forgot_password", responses={200: {"description": "If the email is registered, a reset link has been sent"}}
+    "/forgot_password",
+    responses={200: {"description": "If the email is registered, a reset link has been sent"}},
 )
 @limiter.limit("5/hour")
 async def forgot_password(
@@ -125,7 +126,11 @@ async def logout(
     Ручка завершения сессии/выхода пользователя.
     POST [/auth/logout]
     """
-    await auth_service.logout_user(logout_data.refresh_token, logout_data.access_token, token_service)
+    await auth_service.logout_user(
+        refresh_token=logout_data.refresh_token,
+        response=response,
+        token_service=token_service,
+    )
     return {"description": "Logged out successfully"}
 
 

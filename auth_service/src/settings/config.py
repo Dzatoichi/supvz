@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     JWT_ACCESS_EXPIRE_TIME: int
     JWT_REFRESH_EXPIRE_TIME: int
 
+    LOG_LEVEL: str
+    LOG_TO_CONSOLE: bool
+    LOGS_DIR: str
+
     STATEFUL_TOKEN_EXPIRE_MINUTES: int = 15
 
     model_config = SettingsConfigDict(env_file=".env")
