@@ -1,14 +1,14 @@
-import asyncio  # noqa: E402
-from logging.config import fileConfig  # noqa: E402
+import asyncio
+from logging.config import fileConfig
 
-from alembic import context  # noqa: E402
-from sqlalchemy import pool  # noqa: E402
-from sqlalchemy.engine import Connection  # noqa: E402
-from sqlalchemy.ext.asyncio import async_engine_from_config  # noqa: E402
+from alembic import context
+from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
-import src.models  # noqa: E402, F401
-from src.database.base import Base  # noqa: E402
-from src.settings.config import settings  # noqa: E402
+import src.models
+from src.database.base import Base
+from src.settings.config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -11,6 +11,10 @@ if TYPE_CHECKING:
 
 
 class RefreshTokens(Base):
+    """
+    Класс модели-сущности refresh-токена.
+    """
+
     __tablename__ = "refresh_tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -32,4 +36,7 @@ class RefreshTokens(Base):
     )
 
     def __repr__(self) -> str:
+        """
+        Метод возвращения refresh-токена в виде строки.
+        """
         return f"<RefreshToken(id={self.id}, user_id={self.user_id}, revoked={self.revoked}), expires_at={self.expires_at})>"

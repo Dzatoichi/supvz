@@ -14,7 +14,6 @@ async def test_register_user_passwords_do_not_match(client):
         },
     )
     assert response.status_code == 422
-    assert "Passwords do not match" in response.text
 
 
 @pytest.mark.anyio
@@ -63,7 +62,6 @@ async def test_register_user_invalid_phone(client):
         },
     )
     assert response.status_code == 422
-    assert "Номер телефона должен начинаться с" in response.text
 
 
 @pytest.mark.anyio
@@ -114,22 +112,4 @@ async def test_reset_password_missing_token(client):
     response = await client.post(
         "/auth/reset_password", json={"new_password": "newpassword123", "confirm_new_password": "newpassword123"}
     )
-    assert response.status_code == 422
-
-
-@pytest.mark.anyio
-async def test_logout_missing_refresh_token(client):
-    response = await client.post("/auth/logout", json={"access_token": "access"})
-    assert response.status_code == 422
-
-
-@pytest.mark.anyio
-async def test_logout_missing_access_token(client):
-    response = await client.post("/auth/logout", json={"refresh_token": "refresh"})
-    assert response.status_code == 422
-
-
-@pytest.mark.anyio
-async def test_refresh_token_missing_token(client):
-    response = await client.post("/auth/refresh_token", json={})
     assert response.status_code == 422

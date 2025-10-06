@@ -5,10 +5,18 @@ from src.settings.config import settings
 
 
 class Base(DeclarativeBase):
+    """
+    Базовый класс для моделей. Все модели наследуются от него.
+    """
+
     pass
 
 
 class DataBaseHelper:
+    """
+    Вспомогательный класс для  работы с БД.
+    """
+
     def __init__(self):
         self.engine = create_async_engine(
             url=settings.CONNECT_ASYNC(),
