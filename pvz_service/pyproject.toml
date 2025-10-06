@@ -3,7 +3,8 @@ name = "pvz-service"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "vladbily",email = "vladbilyk2005@gmail.com"}
+    { name = "vladbily", email = "vladbilyk2005@gmail.com" },
+    { name = "Danila Kashtanov", email = "kdvpd2004@gmail.com" }
 ]
 requires-python = ">=3.11,<3.12"
 dependencies = [
@@ -12,7 +13,9 @@ dependencies = [
     "ruff (>=0.13.2,<0.14.0)",
     "pydantic-settings (>=2.11.0,<3.0.0)",
     "pydantic (>=2.11.9,<3.0.0)",
-    "asyncpg (>=0.30.0,<0.31.0)"
+    "asyncpg (>=0.30.0,<0.31.0)",
+    "uvicorn (>=0.35.0,<0.36.0)",
+    "fastapi (>=0.116.1,<0.117.0)"
 ]
 
 
