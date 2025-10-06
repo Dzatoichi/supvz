@@ -5,13 +5,8 @@ from fastapi import HTTPException, Response, status
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import (
-    UserLoginSchema,
-    UserReadSchema,
-    UserRegisterSchema,
-)
+from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
 from src.services.token_service import JWTTokensService, StatefulTokenService
-from src.utils.logger_settings import logger
 
 
 class AuthService:
@@ -29,10 +24,6 @@ class AuthService:
         """
         user = await repo.get_user_by_email(data.email)
         if user:
-            logger.error(
-                "Попытка регистрации с уже существующим email",
-                user_id=user.id,
-            )
             raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
 
         hashed_password = hash_helper.hash(data.password)
@@ -43,11 +34,6 @@ class AuthService:
             "hashed_password": hashed_password,
         }
         user = await repo.create(payload)
-        logger.info(
-            "Новый пользователь успешно зарегистрирован!",
-            user_id=user.id,
-            email=self._mask_email(user.email),
-        )
         return UserReadSchema(
             id=user.id,
             email=user.email,
@@ -69,14 +55,7 @@ class AuthService:
         if not user:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
-        if not hash_helper.verify_password(
-            plain_password=credentials.password,
-            hashed_password=user.hashed_password,
-        ):
-            logger.error(
-                "Неудачная попытка входа: неправильный пароль",
-                email=self._mask_email(user.email),
-            )
+        if not hash_helper.verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
 
         access_token = await token_service.create_token(
@@ -87,12 +66,6 @@ class AuthService:
         refresh_token = await token_service.create_token(
             token_type=TokenTypesEnum.refresh,
             user_id=user.id,
-        )
-
-        logger.info(
-            "Пользователь успешно вошел в свой аккаунт!",
-            user_id=user.id,
-            email=self._mask_email(user.email),
         )
 
         return access_token, refresh_token
@@ -120,17 +93,11 @@ class AuthService:
 
         hashed_password = hash_helper.hash(new_password)
         result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)
-
-        logger.info(
-            "Пользователь успешно сменил свой пароль!",
-            user_id=token_data.user_id,
-        )
-
         await token_service.mark_token_as_used(token_data)
 
         return result
 
-    # TODO: доделать после реализации notification service+логирование
+    # TODO: доделать после реализации notification service
     async def forgot_password(
         self,
         user_email: str,
@@ -166,13 +133,3 @@ class AuthService:
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         return True
-
-    def _mask_email(self, email: str) -> str:
-        if not email or "@" not in email:
-            return "***"
-        name, domain = email.split("@", 1)
-        if len(name) <= 2:
-            masked_name = name[0] + "***"
-        else:
-            masked_name = name[:2] + "***" + name[-1]
-        return f"{masked_name}@{domain}"

@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, Request, Response
 
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenSchema
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
+    UserAuthRequestSchema,
+    UserAuthResponseSchema,
     UserForgotPasswordSchema,
     UserLoginSchema,
     UserLogoutSchema,
@@ -15,12 +18,13 @@ from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
+    get_refresh_token_dao,
     get_stateful_token_service,
     get_users_dao,
 )
 from src.utils.rate_limiter import limiter
 
-auth_router = APIRouter(prefix="/auth")
+auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @auth_router.post("/register", response_model=UserReadSchema)
@@ -28,8 +32,8 @@ auth_router = APIRouter(prefix="/auth")
 async def register_user(
     request: Request,
     user_in: UserRegisterSchema,
-    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
-    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
+    auth_service: AuthService = Depends(get_auth_service),
+    repo: UsersDAO = Depends(get_users_dao),
 ):
     """
     Ручка регистрации пользователя.
@@ -46,9 +50,9 @@ async def login(
     request: Request,
     response: Response,
     credentials: UserLoginSchema,
-    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
-    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
+    auth_service: AuthService = Depends(get_auth_service),
+    repo: UsersDAO = Depends(get_users_dao),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ):
     """
     Ручка аутентификации пользователя.
@@ -80,11 +84,9 @@ async def login(
 async def forgot_password(
     request: Request,
     data: UserForgotPasswordSchema,
-    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
-    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: StatefulTokenService = Depends(  # noqa: B008
-        get_stateful_token_service
-    ),
+    auth_service: AuthService = Depends(get_auth_service),
+    repo: UsersDAO = Depends(get_users_dao),
+    token_service: StatefulTokenService = Depends(get_stateful_token_service),
 ):
     """
     Ручка запроса на изменение-сброс пароля пользователя в случае, если пользователь забыл пароль.
@@ -98,11 +100,9 @@ async def forgot_password(
 async def reset_password(
     request: Request,
     confirm_data: PasswordResetConfirmSchema,
-    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
-    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: StatefulTokenService = Depends(  # noqa: B008
-        get_stateful_token_service
-    ),
+    auth_service: AuthService = Depends(get_auth_service),
+    repo: UsersDAO = Depends(get_users_dao),
+    token_service: StatefulTokenService = Depends(get_stateful_token_service),
 ):
     """
     Ручка сброса пароля.
@@ -117,8 +117,8 @@ async def logout(
     request: Request,
     response: Response,
     logout_data: UserLogoutSchema,
-    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
+    auth_service: AuthService = Depends(get_auth_service),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ):
     """
     Ручка завершения сессии/выхода пользователя.
@@ -138,13 +138,14 @@ async def refresh_token(
     request: Request,
     response: Response,
     refresh_token_in: str,
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
 ):
     """
     Ручка для обновления access-токена, выдачи нового refresh-токена.
     POST [/auth/refresh_token]
     """
-    result = await token_service.refresh_token(refresh_token=refresh_token_in)
+    result = await token_service.refresh_token(refresh_token=refresh_token_in, repo=repo)
     refresh_token = result["refresh_token"]
 
     response.set_cookie(
@@ -155,3 +156,17 @@ async def refresh_token(
     )
 
     return result
+
+
+@auth_router.post("/authorize", response_model=UserAuthResponseSchema)
+async def authorize_user(
+    auth_request: UserAuthRequestSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+    users_dao: UsersDAO = Depends(get_users_dao),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+):
+    """
+    Авторизация пользователя по access токену.
+    """
+    role, permissions = await auth_service.authorize_user(auth_request, token_service, users_dao)
+    return UserAuthResponseSchema(role=role, permissions=permissions)
