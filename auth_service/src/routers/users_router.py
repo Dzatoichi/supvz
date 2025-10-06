@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserAuthRequest, UserReadSchema, UserUpdateSchema
+from src.schemas.users_schemas import UserAuthRequestSchema, UserReadSchema, UserUpdateSchema
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService
 from src.services.user_service import UserService
@@ -35,7 +35,7 @@ async def set_role_owner(
     return result
 
 
-@users_router.get("/{user_id}/get-user", response_model=UserReadSchema)
+@users_router.get("/{user_id}", response_model=UserReadSchema)
 async def get_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),  # noqa: B008
@@ -49,7 +49,7 @@ async def get_user(
     return result
 
 
-@users_router.get("/get-users", response_model=list[UserReadSchema])
+@users_router.get("", response_model=list[UserReadSchema])
 async def get_users(
     user_service: UserService = Depends(get_user_service),  # noqa: B008
     repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
@@ -60,7 +60,7 @@ async def get_users(
     return result
 
 
-@users_router.patch("/update-user", response_model=UserUpdateSchema)
+@users_router.patch("", response_model=UserUpdateSchema)
 async def update_user(
     user: UserUpdateSchema,
     access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
@@ -70,12 +70,12 @@ async def update_user(
 ):
     """Заменяет имя и номер телефона существующего пользователя"""
 
-    token = UserAuthRequest(access_token=access_token)
+    token = UserAuthRequestSchema(access_token=access_token)
     result = await user_service.update_user(token=token, token_service=token_service, user=user, repo=repo)
     return result
 
 
-@users_router.delete("/{user_id}/delete-user", response_model=UserReadSchema)
+@users_router.delete("/{user_id}", response_model=UserReadSchema)
 async def delete_user(
     user_id: int,
     access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
@@ -87,7 +87,7 @@ async def delete_user(
     """Удаление пользователя по id (только с правом DELETE_EMPLOYEES)"""
 
     # Используем зависимость get_access_token_from_cookie
-    auth_request = UserAuthRequest(access_token=access_token)
+    auth_request = UserAuthRequestSchema(access_token=access_token)
 
     # Используем авторизацию
     role, permissions = await auth_service.authorize_user(auth_request, token_service, repo)

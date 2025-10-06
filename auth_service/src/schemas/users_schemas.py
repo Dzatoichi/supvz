@@ -119,7 +119,7 @@ class UserReadSchema(UserBaseSchema):
         return self
 
 
-class UserAuthRequest(BaseModel):
+class UserAuthRequestSchema(BaseModel):
     """Pydantic model for user authorization request."""
 
     access_token: str
@@ -127,7 +127,7 @@ class UserAuthRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
-class UserAuthResponse(BaseModel):
+class UserAuthResponseSchema(BaseModel):
     """Pydantic model for user authorization response."""
 
     role: UserRole
