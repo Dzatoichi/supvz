@@ -75,7 +75,7 @@ class UserRegisterSchema(UserLoginSchema):
         Функция валиадации номера телефона.
         """
         if not re.match(r"^\+\d{1,15}$", values):
-            raise ValueError('Номер телефона должен начинаться с "+" и содержать от 1 до 15 цифр')
+            raise ValueError("Invalid phone number")
         return values
 
     @model_validator(mode="after")
@@ -189,12 +189,3 @@ class UserForgotPasswordSchema(BaseModel):
         return v.lower()
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-
-class UserLogoutSchema(BaseModel):
-    """
-    Схема завершения сессии/выхода пользователя.
-    """
-
-    refresh_token: str
-    access_token: str

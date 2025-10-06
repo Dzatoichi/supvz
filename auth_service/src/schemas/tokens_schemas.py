@@ -1,7 +1,5 @@
 from enum import StrEnum
 
-from pydantic import BaseModel
-
 
 class TokenTypesEnum(StrEnum):
     """
@@ -10,12 +8,3 @@ class TokenTypesEnum(StrEnum):
 
     access = "access"
     refresh = "refresh"
-
-
-class TokenSchema(BaseModel):
-    """
-    Схема токенов.
-    """
-
-    access_token: str
-    refresh_token: str
