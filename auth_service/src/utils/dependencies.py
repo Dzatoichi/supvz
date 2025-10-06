@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, Request, status
 
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
@@ -27,13 +27,13 @@ def get_refresh_token_dao() -> RefreshTokensDAO:
 
 
 def get_stateful_token_service(
-    dao: StatefulTokenDAO = Depends(get_stateful_token_dao),  # noqa: B008
+    dao: StatefulTokenDAO = Depends(get_stateful_token_dao),
 ) -> StatefulTokenService:
     """Создает сервис для работы с stateful токенами."""
     return StatefulTokenService(dao=dao)
 
 
-def get_auth_service() -> "AuthService":  # type: ignore # noqa: F821
+def get_auth_service() -> "AuthService":  # type: ignore
     """Создаёт сервис для работы с авторизацией."""
     from src.services.auth_service import AuthService
 
@@ -46,7 +46,16 @@ def get_user_service() -> "UserService":
 
 
 def get_jwt_tokens_service(
-    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),  # noqa: B008
+    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
 ) -> JWTTokensService:
     """Создаёт сервис для работы с JWT токенами."""
+
     return JWTTokensService(repo=repo)
+
+
+def get_access_token_from_cookie(request: Request) -> str:
+    """Зависимость для получения access токена из куки"""
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token not found in cookies")
+    return access_token

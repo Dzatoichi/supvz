@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import UserReadSchema, UserRole
+from src.utils.logger_settings import logger
 
 
 class UserService:
@@ -19,12 +20,22 @@ class UserService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
         if user.role != UserRole.test_owner:
+            logger.error(
+                "Пользователю не удалось выдать роль владельца, так как у него не была роль test_owner!",
+                user_id=user.id,
+            )
+
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 "User is not test_owner",
             )
 
         updated_user = await repo.update(user_id, role=UserRole.owner)
+
+        logger.info(
+            "Пользователю успешно выдана роль владельца!",
+            user_id=user.id,
+        )
 
         return UserReadSchema(
             id=updated_user.id,

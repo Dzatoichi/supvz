@@ -12,6 +12,9 @@ from pydantic import (
     model_validator,
 )
 
+from src.core.security.permissions import PermissionEnum
+from src.core.security.permissions.role_permissions import get_permissions_for_role
+
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
@@ -90,8 +93,10 @@ class UserUpdateSchema(BaseModel):
     Схема изменения пользователя.
     """
 
-    full_name: str | None = None
-    phone: str | None = None
+    id: int
+    name: str | None = None
+    phone_number: str | None = None
+    email: EmailStr | None = None
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -103,7 +108,32 @@ class UserReadSchema(UserBaseSchema):
 
     id: int
     role: UserRole
+    permissions: list[PermissionEnum] = []
     created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+    @model_validator(mode="after")
+    def set_permissions(self) -> "UserReadSchema":
+        self.permissions = get_permissions_for_role(self.role)
+        return self
+
+
+class UserAuthRequestSchema(BaseModel):
+    """Pydantic model for user authorization request."""
+
+    access_token: str
+
+    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
+class UserAuthResponseSchema(BaseModel):
+    """Pydantic model for user authorization response."""
+
+    role: UserRole
+    permissions: list[PermissionEnum]
+
+    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
 class PasswordResetConfirmSchema(BaseModel):

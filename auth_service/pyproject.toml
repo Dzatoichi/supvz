@@ -3,7 +3,8 @@ name = "auth-service"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Egor Alexandrov",email = "dibilarts@gmail.com"}
+    {name = "Egor Alexandrov",email = "dibilarts@gmail.com"},
+    {name = "Danila Kashtanov", email = "kdvpd2004@gmail.com"}
 ]
 requires-python = ">=3.11,<3.12"
 dependencies = [
@@ -22,6 +23,7 @@ dependencies = [
     "pyjwt (>=2.10.1,<3.0.0)",
     "slowapi (>=0.1.9,<0.2.0)",
     "httpx (>=0.28.1,<0.29.0)",
+    "loguru (>=0.7.3,<0.8.0)",
 ]
 
 
@@ -32,7 +34,33 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+exclude = [
+    # Зависимости
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/.venv/**",
+    "**/venv/**",
+    "**/env/**",
+    "**/site-packages/**",
+
+    # Миграции
+    "**/migrations/**",
+    "**/alembic/versions/**",
+    "**/db/migrations/**",
+
+    # Сгенерированные файлы
+    "**/build/**",
+    "**/dist/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/*.pyo",
+
+    # Дополнительные исключения
+    "**/.git/**",
+    "**/.mypy_cache/**",
+    "**/.pytest_cache/**"
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "C4"]
-ignore = ["E501"]
+ignore = ["E501", "F821", "B008"]
