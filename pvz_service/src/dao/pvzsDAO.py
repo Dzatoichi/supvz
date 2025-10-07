@@ -10,7 +10,7 @@ class PVZsDAO(BaseDAO[PVZs]):
     def __init__(self):
         super().__init__(model=PVZs)
 
-    @BaseDAO.with_exceptions
+    @BaseDAO.with_exception
     async def get_pvz(self, *args, **kwargs) -> Optional[PVZs]:
         """
         Данный метод реализует поиск по любому аттрибуту,
@@ -26,6 +26,3 @@ class PVZsDAO(BaseDAO[PVZs]):
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
-    @BaseDAO.with_exception
-    async def add_group(self, id: int, group: str) -> Optional[PVZs]:
-        return await self.update(id, group)

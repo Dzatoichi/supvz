@@ -80,9 +80,9 @@ class BaseDAO(Generic[T]):
             return updated
 
     @with_exception
-    async def delete(self, id: int) -> bool:
+    async def delete(self, **filters) -> bool:
         async with self._get_session() as session:
-            stmt = delete(self.model).where(self.model.id == id)
+            stmt = delete(self.model).filter_by(**filters)
             result = await session.execute(stmt)
             await session.commit()
             return result.rowcount > 0
