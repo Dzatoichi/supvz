@@ -67,6 +67,7 @@ class UserRegisterSchema(UserLoginSchema):
     confirm_password: str
     name: str
     phone_number: str
+    register_token: str | None = None
 
     @field_validator("phone_number")
     @classmethod
@@ -189,3 +190,11 @@ class UserForgotPasswordSchema(BaseModel):
         return v.lower()
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+class UserRegisterEmployeeSchema(BaseModel):
+    pvz_id: int
+    owner_id: int
+    role: UserRole
+
+    class Config:
+        from_attributes = True

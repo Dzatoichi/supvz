@@ -12,6 +12,7 @@ from src.schemas.users_schemas import (
     UserLoginSchema,
     UserReadSchema,
     UserRegisterSchema,
+    UserRegisterEmployeeSchema,
 )
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -186,3 +187,19 @@ async def authorize_user(
     """
     role, permissions = await auth_service.authorize_user(auth_request, token_service, users_dao)
     return UserAuthResponseSchema(role=role, permissions=permissions)
+
+@auth_router.post("/generate_register_token", response_model=dict)
+async def generate_register_token(
+        request: Request,
+        employee_data: UserRegisterEmployeeSchema,
+        auth_service: AuthService = Depends(get_auth_service),
+        token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+):
+    """
+    Создание токена регистрации сотрудника
+    """
+    result = await auth_service.generate_register_token(
+        employee_data=employee_data,
+        token_service=token_service,
+    )
+    return result

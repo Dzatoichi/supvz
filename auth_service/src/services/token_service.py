@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Any
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
@@ -26,12 +26,19 @@ class JWTTokensService:
         self,
         token_type: TokenTypesEnum,
         user_id: int,
+        **additional_payload: Any,
     ) -> str:
         """
         Функция генерации access или refresh токена.
         """
         token_handler = TokenHandler(token_type=token_type)
-        token, expires_at = token_handler.sign_jwt(user_id=user_id)
+        if token_type == TokenTypesEnum.register:
+            token, expires_at = token_handler.sign_jwt(
+                user_id=user_id,
+                **additional_payload
+            )
+        else:
+            token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
         if token_type == TokenTypesEnum.refresh:
             token_hash = hash_helper.hash_token(token=token)
@@ -44,6 +51,26 @@ class JWTTokensService:
             await self.repo.create(payload=payload)
 
         return token
+
+    async def create_registration_token(
+            self,
+            pvz_id: int,
+            owner_id: int,
+            role: str,
+            email: Optional[str] = None,
+    ) -> str:
+        """
+        Создание JWT токена для регистрации сотрудника.
+        Использует общий метод create_token с дополнительными данными.
+        """
+        return await self.create_token(
+            token_type=TokenTypesEnum.registration,
+            user_id=owner_id,
+            pvz_id=pvz_id,
+            owner_id=owner_id,
+            role=role,  # роль сотрудника
+            email=email
+        )
 
     async def revoke_token(
         self,
@@ -105,6 +132,13 @@ class JWTTokensService:
             raise TokenExpiredException("Token expired.")
 
         if token_type == TokenTypesEnum.access:
+            return token_payload
+
+        if token_type == TokenTypesEnum.register:
+            required_fields = ["pvz_id", "owner_id", "target_role"]
+            for field in required_fields:
+                if field not in token_payload:
+                    raise InvalidTokenException(f"Missing required field: {field}")
             return token_payload
 
         if repo is None:

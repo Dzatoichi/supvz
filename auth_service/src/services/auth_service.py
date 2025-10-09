@@ -3,9 +3,13 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
+from src.core.security.token_handler import TokenHandler
+
 from src.dao.usersDAO import UsersDAO
+
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
+from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema,UserRegisterEmployeeSchema
+
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
 
@@ -27,20 +31,39 @@ class AuthService:
             raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
 
         hashed_password = hash_helper.hash(data.password)
+
         payload = {
             "email": data.email,
             "phone_number": data.phone_number,
             "name": data.name,
             "hashed_password": hashed_password,
         }
-        user = await repo.create(payload)
-        return UserReadSchema(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            role=user.role,
-            created_at=user.created_at,
-        )
+
+        if data.register_token is None:
+            user = await repo.create(payload)
+            return UserReadSchema(
+                id=user.id,
+                email=user.email,
+                name=user.name,
+                role=user.role,
+                created_at=user.created_at,
+            )
+        else:
+            token_handler = TokenHandler(token_type=TokenTypesEnum.register)
+            register_token_payload = token_handler.decode_jwt(token=data.register_token)
+            payload.update(register_token_payload)
+            user = await repo.create(payload)
+            return UserReadSchema(
+                pvz_id=user.pvz_id,
+                owner_id=user.owner_id,
+                id=user.id,
+                email=user.email,
+                name=user.name,
+                role=user.role,
+                created_at=user.created_at,
+            )
+
+
 
     async def login_user(
         self,
@@ -133,3 +156,16 @@ class AuthService:
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         return True
+
+    async def generate_register_token(
+            self,
+            employee_data: UserRegisterEmployeeSchema,
+            token_service: JWTTokensService,
+    ) -> dict:
+        register_token = await token_service.create_token(
+            token_type=TokenTypesEnum.register,
+            user_id=employee_data.owner_id,
+            owner_id=employee_data.owner_id,
+            pvz_id=employee_data.pvz_id,
+        )
+        return { "register_token": register_token }
