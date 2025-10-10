@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
+from src.models.employees.employees import Employees, employee_pvz_association
 
 
 class PVZs(Base):
@@ -16,6 +17,13 @@ class PVZs(Base):
     group: Mapped[Optional[str]] = mapped_column(String(255), nullable=False)
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, index=True)
     curator_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, index=True)
+
+    employees: Mapped[List["Employees"]] = relationship(
+        "Employees",
+        secondary=employee_pvz_association,
+        back_populates="pvzs",
+        lazy="selectin",
+    )
 
     def __repr__(self) -> str:
         return f"<PVZs(id={self.id}, code={self.code})>"
