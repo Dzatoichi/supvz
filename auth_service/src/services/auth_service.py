@@ -3,13 +3,12 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
+from src.core.security.permissions import PermissionEnum, has_permission
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema, UserAuthRequestSchema
+from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
 from src.services.token_service import JWTTokensService, StatefulTokenService
-
-from src.core.security.permissions import PermissionEnum
-from src.core.security.permissions import has_permission, get_permissions_for_role
 
 
 class AuthService:
@@ -138,15 +137,17 @@ class AuthService:
         return True
 
     async def authorize_user(
-            self,
-            token: str,
-            token_service: JWTTokensService,
-            repo: UsersDAO,
-            permission: PermissionEnum
+        self,
+        token: str,
+        token_service: JWTTokensService,
+        repo: UsersDAO,
+        token_repo: RefreshTokensDAO,
+        permission: PermissionEnum,
     ) -> dict:
         token_payload = await token_service.validate_token(
             token=token,
             token_type=TokenTypesEnum.access,
+            repo=token_repo,
         )
         user_id = token_payload.get("user_id")
         user = await repo.get_by_id(user_id)
@@ -162,4 +163,3 @@ class AuthService:
             )
 
         return {"description": "Успех"}
-

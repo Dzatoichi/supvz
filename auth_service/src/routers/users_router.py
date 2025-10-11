@@ -1,14 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request
 
-from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import UserAuthRequestSchema, UserReadSchema, UserUpdateSchema
-from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService
 from src.services.user_service import UserService
 from src.utils.dependencies import (
     get_access_token_from_cookie,
-    get_auth_service,
     get_jwt_tokens_service,
     get_user_service,
     get_users_dao,

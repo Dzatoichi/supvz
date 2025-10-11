@@ -6,8 +6,6 @@ from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
-    UserAuthRequestSchema,
-    UserAuthResponseSchema,
     UserForgotPasswordSchema,
     UserLoginSchema,
     UserReadSchema,
@@ -181,11 +179,18 @@ async def authorize_user(
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    token_repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
 ):
     """
     Авторизация пользователя по access токену.
     """
     token = request.cookies.get("access_token")
-    result = await auth_service.authorize_user(token=token, token_service=token_service, repo=repo, permission=permission)
+    result = await auth_service.authorize_user(
+        token=token,
+        token_service=token_service,
+        repo=repo,
+        token_repo=token_repo,
+        permission=permission,
+    )
 
     return result

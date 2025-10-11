@@ -90,7 +90,7 @@ class JWTTokensService:
             "refresh_token": new_refresh_token,
         }
 
-    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: Optional[RefreshTokensDAO] = None) -> dict:
+    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: RefreshTokensDAO) -> dict:
         """
         Функция для валидации refresh или access токена.
         """
@@ -106,9 +106,6 @@ class JWTTokensService:
 
         if token_type == TokenTypesEnum.access:
             return token_payload
-
-        if repo is None:
-            raise InvalidTokenException("Repository required for refresh token validation")
 
         token_hash = hash_helper.hash_token(token=token)
         token_info = await self.repo.get_token_by_token_hash(token_hash=token_hash)

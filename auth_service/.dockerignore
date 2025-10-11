@@ -206,5 +206,4 @@ marimo/_lsp/
 __marimo__/
 
 .idea/
-.vscode/pg_data/
-logs/
+.vscode/
