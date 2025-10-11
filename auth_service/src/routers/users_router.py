@@ -78,22 +78,10 @@ async def update_user(
 @users_router.delete("/{user_id}", response_model=UserReadSchema)
 async def delete_user(
     user_id: int,
-    access_token: str = Depends(get_access_token_from_cookie),
-    auth_service: AuthService = Depends(get_auth_service),
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ):
     """Удаление пользователя по id"""
-
-    auth_request = UserAuthRequestSchema(access_token=access_token)
-
-    role, permissions = await auth_service.authorize_user(auth_request, token_service, repo)
-
-    if PermissionEnum.DELETE_EMPLOYEES not in permissions:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав для удаления пользователей"
-        )
 
     result = await user_service.delete_user(user_id=user_id, repo=repo)
     return result

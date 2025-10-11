@@ -174,15 +174,18 @@ async def refresh_token(
     return {"description": "Refreshed successfully"}
 
 
-@auth_router.post("/authorize", response_model=UserAuthResponseSchema)
+@auth_router.post("/authorize", response_model=dict)
 async def authorize_user(
-    auth_request: UserAuthRequestSchema,
+    request: Request,
+    permission: str,
     auth_service: AuthService = Depends(get_auth_service),
-    users_dao: UsersDAO = Depends(get_users_dao),
+    repo: UsersDAO = Depends(get_users_dao),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ):
     """
     Авторизация пользователя по access токену.
     """
-    role, permissions = await auth_service.authorize_user(auth_request, token_service, users_dao)
-    return UserAuthResponseSchema(role=role, permissions=permissions)
+    token = request.cookies.get("access_token")
+    result = await auth_service.authorize_user(token=token, token_service=token_service, repo=repo, permission=permission)
+
+    return result

@@ -90,7 +90,7 @@ class JWTTokensService:
             "refresh_token": new_refresh_token,
         }
 
-    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: RefreshTokensDAO) -> dict:
+    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: Optional[RefreshTokensDAO] = None) -> dict:
         """
         Функция для валидации refresh или access токена.
         """
@@ -124,7 +124,7 @@ class StatefulTokenService:
     Класс сервиса обработки stateful токенов.
     """
 
-    def __init__(self, dao: StatefulTokenDAO | None = None):
+    def __init__(self, dao: Optional[StatefulTokenDAO] = None):
         self.dao = dao
 
     async def create_stateful_token(
