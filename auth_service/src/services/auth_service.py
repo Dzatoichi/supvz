@@ -5,7 +5,11 @@ from fastapi import HTTPException, Response, status
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
+from src.schemas.users_schemas import (
+    UserLoginSchema,
+    UserReadSchema,
+    UserRegisterSchema,
+)
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
 
@@ -29,15 +33,12 @@ class AuthService:
         hashed_password = hash_helper.hash(data.password)
         payload = {
             "email": data.email,
-            "phone_number": data.phone_number,
-            "name": data.name,
             "hashed_password": hashed_password,
         }
         user = await repo.create(payload)
         return UserReadSchema(
             id=user.id,
             email=user.email,
-            name=user.name,
             role=user.role,
             created_at=user.created_at,
         )
@@ -55,7 +56,9 @@ class AuthService:
         if not user:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
-        if not hash_helper.verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
+        if not hash_helper.verify_password(
+            plain_password=credentials.password, hashed_password=user.hashed_password
+        ):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
 
         access_token = await token_service.create_token(
@@ -92,7 +95,9 @@ class AuthService:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
 
         hashed_password = hash_helper.hash(new_password)
-        result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)
+        result = await repo.set_password(
+            user_id=token_data.user_id, hashed_password=hashed_password
+        )
         await token_service.mark_token_as_used(token_data)
 
         return result

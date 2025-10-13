@@ -3,10 +3,10 @@ from fastapi import APIRouter, Depends, status
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import (
-    EmployeeCreateRequest,
-    EmployeeResponse,
-    EmployeeUpdateRequest,
-    TransferRequest,
+    EmployeeCreateRequestSchema,
+    EmployeeResponseSchema,
+    EmployeeUpdateRequestSchema,
+    TransferRequestSchema,
 )
 from src.services.employees_service import EmployeesService
 from src.utils.dependencies import (
@@ -20,7 +20,7 @@ employees_router = APIRouter(prefix="/employees", tags=["Employees"])
 
 @employees_router.get(
     "/pvz/{pvz_id}",
-    response_model=list[EmployeeResponse],
+    response_model=list[EmployeeResponseSchema],
 )
 async def get_employees(
     pvz_id: int,
@@ -32,7 +32,7 @@ async def get_employees(
 
 @employees_router.get(
     "/{employee_id}",
-    response_model=EmployeeResponse,
+    response_model=EmployeeResponseSchema,
 )
 async def get_employee_by_id(
     employee_id: int,
@@ -48,11 +48,11 @@ async def get_employee_by_id(
 
 @employees_router.post(
     "",
-    response_model=EmployeeResponse,
+    response_model=EmployeeResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_employee(
-    payload: EmployeeCreateRequest,
+    payload: EmployeeCreateRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
@@ -63,11 +63,11 @@ async def create_employee(
 
 @employees_router.patch(
     "/{employee_id}",
-    response_model=EmployeeResponse,
+    response_model=EmployeeResponseSchema,
 )
 async def update_employee(
     employee_id: int,
-    payload: EmployeeUpdateRequest,
+    payload: EmployeeUpdateRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
@@ -82,14 +82,12 @@ async def update_employee(
 
 @employees_router.post(
     "/{employee_id}/assign",
-    response_model=EmployeeResponse,
+    response_model=EmployeeResponseSchema,
 )
 async def assign_employee_to_pvz(
     employee_id: int,
-    pvz_in: TransferRequest,
+    pvz_in: TransferRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
-    employees_repo: EmployeesDAO = Depends(get_employees_repo),
-    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
     return await employee_service.assign_employee_to_other_pvz(
         employee_id=employee_id,

@@ -14,6 +14,10 @@ class EmployeesService:
     Сервис для работы с сотрудниками и их привязкой к ПВЗ.
     """
 
+    def __init__(self, repo: EmployeesDAO):
+        self.repo = repo
+
+    async def create_employee(self, payload: dict) -> EmployeeResponseSchema:
     async def create_employee(
         self,
         data: EmployeeCreateRequest,
@@ -33,7 +37,7 @@ class EmployeesService:
 
         new_employee = await repo.create(payload)
 
-        return EmployeeResponse(
+        return EmployeeResponseSchema(
             id=new_employee.id,
             user_id=new_employee.user_id,
             owner_id=new_employee.owner_id,

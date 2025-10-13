@@ -1,10 +1,12 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, Table
+from sqlalchemy import Column, ForeignKey, Integer, Table, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-from src.models.pvzs.PVZs import PVZs
+
+# if TYPE_CHECKING:
+#     from src.models.pvzs.PVZs import PVZs
 
 employee_pvz_association = Table(
     "employee_pvz_association",
@@ -30,6 +32,12 @@ class Employees(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     name: Mapped[str] = mapped_column(nullable=False)
+    phone_number: Mapped[str] = mapped_column(
+        String(32),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
 
     user_id: Mapped[int] = mapped_column(index=True, nullable=False)
     owner_id: Mapped[int] = mapped_column(index=True, nullable=False)
