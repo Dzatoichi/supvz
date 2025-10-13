@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.models.employees.employees import Employees
-from src.schemas.employees_schemas import EmployeeResponse
+from src.schemas.employees_schemas import EmployeeResponseSchema
 
 
 class EmployeesService:
@@ -13,16 +13,16 @@ class EmployeesService:
     def __init__(self, repo: EmployeesDAO):
         self.repo = repo
 
-    async def create_employee(self, payload: dict) -> EmployeeResponse:
+    async def create_employee(self, payload: dict) -> EmployeeResponseSchema:
         """Создаёт нового сотрудника."""
 
-        employee = self.repo.get_by_id(payload["user_id"])
+        employee = await self.repo.get_by_id(payload["user_id"])
         if employee:
             raise HTTPException(status.HTTP_409_CONFLICT, "Employee already exists")
 
         new_employee = await self.repo.create(payload)
 
-        return EmployeeResponse(
+        return EmployeeResponseSchema(
             id=new_employee.id,
             user_id=new_employee.user_id,
             owner_id=new_employee.owner_id,
@@ -37,7 +37,9 @@ class EmployeesService:
 
         return employee
 
-    async def update_employee(self, employee_id: int, update_data: dict) -> Employees | None:
+    async def update_employee(
+        self, employee_id: int, update_data: dict
+    ) -> Employees | None:
         """Обновляет данные сотрудника."""
         updated_employee = await self.repo.update(employee_id, **update_data)
 
@@ -60,7 +62,9 @@ class EmployeesService:
 
         return await self.repo.get_employees_by_pvz_id(pvz_id)
 
-    async def assign_employee_to_other_pvz(self, employee_id: int, new_pvz_id: int) -> Employees:
+    async def assign_employee_to_other_pvz(
+        self, employee_id: int, new_pvz_id: int
+    ) -> Employees:
         """Добавляет сотруднику ещё один ПВЗ."""
 
         employee = await self.repo.get_by_id(employee_id)
@@ -76,7 +80,9 @@ class EmployeesService:
 
         return employee
 
-    async def unassign_employee_to_pvz(self, employee_id: int, pvz_id: int) -> Employees:
+    async def unassign_employee_to_pvz(
+        self, employee_id: int, pvz_id: int
+    ) -> Employees:
         """Удаляет связь между сотрудником и конкретным ПВЗ."""
 
         employee = await self.repo.get_by_id(employee_id)

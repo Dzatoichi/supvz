@@ -38,7 +38,6 @@ class UserBaseSchema(BaseModel):
     """
 
     email: EmailStr
-    name: str | None = None
 
     @field_validator("email")
     @classmethod
@@ -65,18 +64,6 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
-    name: str
-    phone_number: str
-
-    @field_validator("phone_number")
-    @classmethod
-    def validate_phone_number(cls, values: str) -> str:
-        """
-        Функция валиадации номера телефона.
-        """
-        if not re.match(r"^\+\d{1,15}$", values):
-            raise ValueError("Invalid phone number")
-        return values
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -94,8 +81,6 @@ class UserUpdateSchema(BaseModel):
     """
 
     id: int
-    name: str | None = None
-    phone_number: str | None = None
     email: EmailStr | None = None
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
