@@ -3,6 +3,9 @@ package com.supvz.requests_service.service;
 import com.supvz.requests_service.core.*;
 import com.supvz.requests_service.entity.Request;
 
+/*
+Интерфейс сервиса для работы с запросами.
+ */
 public interface RequestService {
     RequestDto create(RequestPayload payload);
 

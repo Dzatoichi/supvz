@@ -11,9 +11,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/requests/{id}")
 @RequiredArgsConstructor
+/*
+Контроллер для работы с запросом для мастера.
+ */
 public class RequestController {
     private final RequestService service;
 
+    /*
+    Ручка для получения запроса.
+     */
     @GetMapping
     public ResponseEntity<?> read(
             @PathVariable(name = "id") long id
@@ -22,7 +28,10 @@ public class RequestController {
         return ResponseEntity.ok(body);
     }
 
-    @PutMapping
+    /*
+    Ручка для обновления запроса.
+     */
+    @PatchMapping
     public ResponseEntity<?> update(
             @PathVariable(name = "id") long id,
             @RequestBody @Valid RequestUpdatePayload payload
@@ -31,6 +40,9 @@ public class RequestController {
         return ResponseEntity.ok(body);
     }
 
+    /*
+    Ручка для удаления запроса.
+     */
     @DeleteMapping
     public ResponseEntity<?> delete(
             @PathVariable(name = "id") long id

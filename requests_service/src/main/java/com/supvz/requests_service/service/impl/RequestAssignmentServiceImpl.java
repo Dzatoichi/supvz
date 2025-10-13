@@ -18,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/*
+Реализация сервиса для работы с ответами на запросы.
+ */
 public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     private final RequestAssignmentMapper mapper;
     private final RequestAssignmentRepository repo;
@@ -25,6 +28,9 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
 
     @Override
     @Transactional
+    /*
+    Метод для создания ответа-сущности по полученной нагрузке.
+     */
     public RequestAssignmentDto create(long requestId, RequestAssignmentPayload payload) {
         log.info("CREATE REQUEST [{}] ASSIGNMENT BY HANDYMAN [{}].", requestId, payload.handymanId());
 
@@ -38,6 +44,9 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     }
 
     @Override
+    /*
+    Метод для чтения страницы ответов на запрос с пагинацией.
+     */
     public PageDto<RequestAssignmentDto> readAll(long requestId, int pageNumber, int size) {
         log.info("READ REQUEST [{}] ASSIGNMENTS PAGE. PAGE [{}], SIZE [{}].", requestId, pageNumber, size);
 
@@ -48,6 +57,9 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     }
 
     @Override
+    /*
+    Метод для чтения определенного ответа на запрос по ID.
+     */
     public RequestAssignmentDto read(long id) {
         log.info("READ REQUEST ASSIGNMENT [{}].", id);
 
@@ -58,6 +70,9 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     }
 
     @Override
+    /*
+    Метод для обновления определенного ответа на запрос по ID с полезной нагрузкой.
+     */
     public RequestAssignmentDto update(long id, RequestAssignmentUpdatePayload payload) {
         log.info("UPDATE REQUEST ASSIGNMENT [{}]. Payload [{}].", id, payload);
 
@@ -74,6 +89,9 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
 
     @Override
     @Transactional
+    /*
+    Метод для удаления определенного ответа на запрос по ID.
+     */
     public void delete(long id) {
         log.info("DELETE REQUEST ASSIGNMENT [{}].", id);
 

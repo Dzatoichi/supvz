@@ -18,11 +18,17 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/*
+Реализация сервиса для работы с запросами.
+ */
 public class RequestServiceImpl implements RequestService {
     private final RequestMapper mapper;
     private final RequestRepository repo;
 
     @Override
+    /*
+    Метод для создания запроса.
+     */
     public RequestDto create(RequestPayload payload) {
         log.info("CREATE REQUEST FOR PVZ [{}]. APPELLANT [{}].", payload.pvzId(), payload.appellantId());
 
@@ -35,6 +41,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    /*
+    Метод для чтения страницы запросов с пагинацией, фильтром.
+     */
     public PageDto<RequestDto> readAll(int pageNumber, int size, RequestFilter filter) {
         Integer pvzId = filter.pvzId();
         UUID appellantId = filter.appellantId();
@@ -48,6 +57,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    /*
+    Метод для чтения определенного запроса по ID.
+     */
     public RequestDto read(long id) {
         log.info("READ REQUEST [{}].", id);
 
@@ -57,6 +69,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    /*
+    Метод для обновления определенного запроса по ID с полезной нагрузкой.
+     */
     public RequestDto update(long id, RequestUpdatePayload payload) {
         log.info("UPDATE REQUEST [{}].", id);
 
@@ -72,6 +87,9 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     @Transactional
+    /*
+    Метод для удаления определенного запроса по ID.
+     */
     public void delete(long id) {
         log.info("DELETE REQUEST [{}].", id);
 
@@ -83,6 +101,9 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    /*
+    Метод для получения определенного запроса по ID.
+     */
     public Request get(long id) {
         log.info("GET REQUEST [{}].", id);
         return repo.findById(id)

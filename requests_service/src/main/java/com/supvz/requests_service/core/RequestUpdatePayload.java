@@ -1,10 +1,11 @@
 package com.supvz.requests_service.core;
 
 
-import jakarta.validation.constraints.NotNull;
-
+/*
+Схема (Payload) для обновления запроса мастеру.
+ */
 public record RequestUpdatePayload(
-        @NotNull Integer pvzId,
+        Integer pvzId,
         String description
 ) {
 }

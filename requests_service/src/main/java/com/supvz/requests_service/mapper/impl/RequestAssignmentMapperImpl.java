@@ -11,8 +11,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Component
+/*
+Реализация маппера для работы с ответами на запросы.
+ */
 public class RequestAssignmentMapperImpl implements RequestAssignmentMapper {
+
     @Override
+    /*
+    Метод для преобразования полезной нагрузки в сущность.
+    */
     public RequestAssignment create(Request request, RequestAssignmentPayload payload) {
         return RequestAssignment.builder()
                 .request(request)
@@ -22,6 +29,9 @@ public class RequestAssignmentMapperImpl implements RequestAssignmentMapper {
     }
 
     @Override
+    /*
+    Метод для преобразования сущности в ДТО.
+     */
     public RequestAssignmentDto read(RequestAssignment assignment) {
         return RequestAssignmentDto
                 .builder()
@@ -36,6 +46,9 @@ public class RequestAssignmentMapperImpl implements RequestAssignmentMapper {
     }
 
     @Override
+    /*
+    Метод для преобразования Page из springframework.data.Page в ДТО
+     */
     public PageDto<RequestAssignmentDto> readPage(Page<RequestAssignment> page) {
         return PageDto.<RequestAssignmentDto>builder()
                 .content(page.getContent().stream().map(this::read).toList())
@@ -48,6 +61,9 @@ public class RequestAssignmentMapperImpl implements RequestAssignmentMapper {
     }
 
     @Override
+    /*
+    Метод для преобразования сущности и полезной нагрузки для обновления в сущность.
+     */
     public RequestAssignment update(RequestAssignment assignment, RequestAssignmentUpdatePayload payload) {
         UUID handymanId = payload.handymanId();
         Status status = payload.status();

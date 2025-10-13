@@ -83,7 +83,7 @@ class RequestControllerTest {
                 .description(newDescription)
                 .build());
 
-        mvc.perform(put(URI.formatted(id))
+        mvc.perform(patch(URI.formatted(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isOk())
@@ -102,26 +102,12 @@ class RequestControllerTest {
 
         when(service.update(id, payload)).thenThrow(new RequestNotFoundException("test"));
 
-        mvc.perform(put(URI.formatted(id))
+        mvc.perform(patch(URI.formatted(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());
 
         verify(service, times(1)).update(id, payload);
-    }
-
-    @Test
-    void update__InvalidPayload__ReturnsBadRequest() throws Exception {
-        int id = 1;
-
-        RequestUpdatePayload payload = new RequestUpdatePayload(null, null);
-
-        mvc.perform(put(URI.formatted(id))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(service);
     }
 
     @Test

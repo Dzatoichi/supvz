@@ -88,7 +88,7 @@ class RequestAssignmentControllerTest {
                 .status(status)
                 .build());
 
-        mvc.perform(put(URI.formatted(id))
+        mvc.perform(patch(URI.formatted(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isOk())
@@ -108,7 +108,7 @@ class RequestAssignmentControllerTest {
 
         when(service.update(id, payload)).thenThrow(new RequestAssignmentNotFoundException("test"));
 
-        mvc.perform(put(URI.formatted(id))
+        mvc.perform(patch(URI.formatted(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());
@@ -122,7 +122,7 @@ class RequestAssignmentControllerTest {
 
         RequestAssignmentUpdatePayload payload = new RequestAssignmentUpdatePayload(null, null, null);
 
-        mvc.perform(put(URI.formatted(id))
+        mvc.perform(patch(URI.formatted(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());

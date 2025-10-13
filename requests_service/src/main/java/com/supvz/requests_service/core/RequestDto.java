@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Builder
+/*
+ДТО запроса мастеру.
+ */
 public record RequestDto(
         long id,
         int pvzId,

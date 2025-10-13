@@ -2,3 +2,7 @@ spring:
   docker:
     compose:
       enabled: false
+
+
+server:
+  port: 8002

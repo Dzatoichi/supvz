@@ -14,7 +14,14 @@ import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
+/*
+Advice-контроллер для обработки исключений и последующих респонсов.
+ */
 public class ControllerAdvice {
+
+    /*
+    Обработка исключения при невалидации.
+     */
     @ExceptionHandler(BindException.class)
     public ResponseEntity<?> handleBindException(BindException ex) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
@@ -22,6 +29,9 @@ public class ControllerAdvice {
         return ResponseEntity.badRequest().body(body);
     }
 
+    /*
+    Обработка исключения при отсутствии запроса для мастера.
+     */
     @ExceptionHandler
     public ResponseEntity<?> handleRequestNotFoundException(RequestNotFoundException ex) {
         log.info(ex.getMessage());
@@ -32,6 +42,9 @@ public class ControllerAdvice {
         return ResponseEntity.badRequest().body(body);
     }
 
+    /*
+    Обработка исключения при отсутствии ответа мастера на запрос.
+     */
     @ExceptionHandler
     public ResponseEntity<?> handleRequestAssignmentNotFoundException(RequestAssignmentNotFoundException ex) {
         log.info(ex.getMessage());
@@ -42,3 +55,4 @@ public class ControllerAdvice {
         return ResponseEntity.badRequest().body(body);
     }
 }
+

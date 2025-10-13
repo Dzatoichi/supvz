@@ -14,6 +14,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
+/*
+Сущность запроса мастеру.
+ */
 public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
