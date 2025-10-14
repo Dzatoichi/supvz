@@ -25,7 +25,6 @@ class UserRole(str, Enum):
 
     administrator = "administrator"
     owner = "owner"
-    test_owner = "test_owner"
     curator = "curator"
     employee = "employee"
     intern = "intern"
