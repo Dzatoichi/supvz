@@ -31,16 +31,17 @@ async def get_employees(
 
 
 @employees_router.get(
-    "/{employee_id}",
+    "/{user_id}",
     response_model=EmployeeResponseSchema,
 )
-async def get_employee_by_id(
-    employee_id: int,
+async def get_employee_by_user_id(
+    user_id: int,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
     employee = await employee_service.get_employee_by_id(
-        employee_id=employee_id, repo=repo
+        user_id=user_id,
+        repo=repo,
     )
 
     return employee
@@ -88,6 +89,8 @@ async def assign_employee_to_pvz(
     employee_id: int,
     pvz_in: TransferRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
+    employees_repo: EmployeesDAO = Depends(get_employees_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
     return await employee_service.assign_employee_to_other_pvz(
         employee_id=employee_id,
@@ -117,14 +120,14 @@ async def unassign_employee_from_pvz(
 
 
 @employees_router.delete(
-    "/{employee_id}",
+    "/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_employee(
-    employee_id: int,
+    user_id: int,
     repo: EmployeesDAO = Depends(get_employees_repo),
     employee_service: EmployeesService = Depends(get_employees_service),
 ):
-    await employee_service.delete_employee(employee_id=employee_id, repo=repo)
+    await employee_service.delete_employee(user_id=user_id, repo=repo)
 
     return None

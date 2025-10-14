@@ -71,9 +71,7 @@ async def test_register_user_missing_required_field(client):
 
 @pytest.mark.anyio
 async def test_login_invalid_email(client):
-    response = await client.post(
-        "/auth/login", json={"email": "not-an-email", "password": "12345678"}
-    )
+    response = await client.post("/auth/login", json={"email": "not-an-email", "password": "12345678"})
     assert response.status_code == 422
 
 
@@ -85,9 +83,7 @@ async def test_login_missing_password(client):
 
 @pytest.mark.anyio
 async def test_forgot_password_invalid_email(client):
-    response = await client.post(
-        "/auth/forgot_password", json={"email": "not-an-email"}
-    )
+    response = await client.post("/auth/forgot_password", json={"email": "not-an-email"})
     assert response.status_code == 422
 
 

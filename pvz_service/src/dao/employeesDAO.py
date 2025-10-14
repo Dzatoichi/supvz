@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import select
 
 from src.dao.baseDAO import BaseDAO
@@ -13,11 +15,36 @@ class EmployeesDAO(BaseDAO[Employees]):
     def __init__(self):
         super().__init__(model=Employees)
 
-    async def get_employees_by_pvz_id(self, pvz_id: int):
+    @BaseDAO.with_exception
+    async def get_employee(self, *args, **kwargs) -> Optional[Employees]:
+        """
+        Данный метод реализует поиск по любому аттрибуту,
+        который будет указан в качестве аргумента функции.
+        """
         async with self._get_session() as session:
-            result = await session.execute(
-                select(self.model).join(self.model.pvzs).where(PVZs.id == pvz_id)
-            )
+            stmt = select(self.model)
+            if args:
+                stmt = stmt.filter(*args)
+            if kwargs:
+                stmt = stmt.filter_by(**kwargs)
+
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
+
+    @BaseDAO.with_exception
+    async def get_employees(self, *args, **kwargs) -> Optional[list[Employees]]:
+        """
+        Данный метод реализует поиск по любому аттрибуту,
+        который будет указан в качестве аргумента функции.
+        """
+        async with self._get_session() as session:
+            stmt = select(self.model)
+            if args:
+                stmt = stmt.filter(*args)
+            if kwargs:
+                stmt = stmt.filter_by(**kwargs)
+
+            result = await session.execute(stmt)
             return result.scalars().all()
 
     async def assign_to_pvz(self, employee_id: int, pvz_id: int):

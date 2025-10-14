@@ -1,12 +1,9 @@
-from typing import List, TYPE_CHECKING
+from typing import List
 
-from sqlalchemy import Column, ForeignKey, Integer, Table, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-
-# if TYPE_CHECKING:
-#     from src.models.pvzs.PVZs import PVZs
 
 employee_pvz_association = Table(
     "employee_pvz_association",

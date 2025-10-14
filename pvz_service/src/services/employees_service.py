@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from sqlalchemy import or_
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
@@ -24,10 +25,22 @@ class EmployeesService:
         repo: EmployeesDAO,
     ) -> EmployeeResponse:
         """Создаёт нового сотрудника."""
+        condition = or_(
+            self.repo.model.user_id == payload["user_id"],
+            self.repo.model.phone_number == payload.get("phone_number"),
+        )
 
-        employee = await repo.get_by_id(data.user_id)
-        if employee:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Employee already exists")
+        existing = await self.repo.get_employee(condition)
+
+        if existing:
+            if existing.user_id == payload["user_id"]:
+                message = "Employee with this user_id already exists"
+            elif existing.phone_number == payload.get("phone_number"):
+                message = "Employee with this phone number already exists"
+            else:
+                message = "Employee already exists"
+
+            raise HTTPException(status.HTTP_409_CONFLICT, message)
 
         payload = {
             "user_id": data.user_id,
@@ -46,11 +59,11 @@ class EmployeesService:
 
     async def get_employee_by_id(
         self,
-        employee_id: int,
+        user_id: int
         repo: EmployeesDAO,
     ) -> EmployeeResponse:
         """Возвращает сотрудника по ID."""
-        employee = await repo.get_by_id(employee_id)
+        employee = await repo.get_employee(user_id=user_id)
         if not employee:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
@@ -83,28 +96,29 @@ class EmployeesService:
 
     async def delete_employee(
         self,
-        employee_id: int,
+        user_id: int,
         repo: EmployeesDAO,
     ) -> EmployeeResponse:
         """Удаляет сотрудника и возвращает его данные."""
-        employee = await repo.get_by_id(employee_id)
-        if not employee:
+        user = await self.repo.get_employee(user_id=user_id)
+
+        if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        employee_info = EmployeeResponse(
-            id=employee.id,
-            user_id=employee.user_id,
-            owner_id=employee.owner_id,
-            pvzs=employee.pvzs,
+        user_info = EmployeeResponse(
+            id=user.id,
+            user_id=user.user_id,
+            owner_id=user.owner_id,
+            pvzs=user.pvzs,
         )
 
-        success = await repo.delete(employee_id)
+        success = await repo.delete(user_id)
         if not success:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete employee"
             )
 
-        return employee_info
+        return user_info
 
     async def get_employees_by_pvz(
         self,
