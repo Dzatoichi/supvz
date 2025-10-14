@@ -12,12 +12,6 @@ class PVZType(Enum):
     ozon = "ozon"
     yamarket = "yamarket"
 
-class PVZBase(BaseModel):
-    code: str
-    type: PVZType
-    group: str | None = None
-
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 class PVZAdd(BaseModel):
     code: str
@@ -29,6 +23,7 @@ class PVZAdd(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
+
 class PVZUpdate(BaseModel):
     address: str
     owner_id: int
@@ -37,17 +32,7 @@ class PVZUpdate(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
+
 class PVZRead(PVZAdd):
     id: int
     created_at: datetime
-
-
-class PVZGroup(BaseModel):
-    group: str
-
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-class PVZGet(BaseModel):
-    id: int
-
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)

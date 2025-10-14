@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import DateTime, Integer, String, func
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Integer, String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database.base import Base
@@ -10,7 +10,7 @@ from src.schemas.pvz_schemas import PVZType
 
 
 class PVZs(Base):
-    __tablename__ = "pvz"
+    __tablename__ = "pvzs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)

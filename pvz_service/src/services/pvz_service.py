@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from src.dao.pvzsDAO import PVZsDAO
-from src.schemas.pvz_schemas import PVZBase, PVZGroup, PVZRead, PVZAdd, PVZUpdate, PVZGet
+from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 
 
 class PVZService:
@@ -36,10 +36,10 @@ class PVZService:
         )
 
     async def update_pvz_by_id(
-            self,
-            pvz_id: int,
-            data: PVZUpdate,
-            repo: PVZsDAO,
+        self,
+        pvz_id: int,
+        data: PVZUpdate,
+        repo: PVZsDAO,
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
@@ -70,7 +70,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Pvz not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
 
         return PVZRead(
             id=pvz.id,
@@ -85,9 +85,22 @@ class PVZService:
 
     async def get_pvzs(
         self,
+        code: str,
+        type: str,
+        address: str,
+        group: str,
         repo: PVZsDAO,
     ) -> PVZRead:
-        pvzs = await repo.get_all()
+        filters = {}
+        if code is not None:
+            filters["code"] = code
+        if type is not None:
+            filters["type"] = type
+        if address is not None:
+            filters["address"] = address
+        if group is not None:
+            filters["group"] = group
+        pvzs = await repo.get_pvzs(**filters)
 
         return [
             PVZRead(
@@ -104,9 +117,9 @@ class PVZService:
         ]
 
     async def delete_pvz_by_id(
-            self,
-            pvz_id: int,
-            repo: PVZsDAO,
+        self,
+        pvz_id: int,
+        repo: PVZsDAO,
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
@@ -114,7 +127,7 @@ class PVZService:
         pvz_info = {
             "id": pvz.id,
             "code": pvz.code,
-            "type": pvz.type.value if hasattr(pvz.type, 'value') else pvz.type,
+            "type": pvz.type,
             "address": pvz.address,
             "owner_id": pvz.owner_id,
             "group": pvz.group,
