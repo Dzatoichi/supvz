@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from sqlalchemy import or_
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.models.employees.employees import Employees
@@ -16,9 +17,26 @@ class EmployeesService:
     async def create_employee(self, payload: dict) -> EmployeeResponseSchema:
         """Создаёт нового сотрудника."""
 
-        employee = await self.repo.get_by_id(payload["user_id"])
-        if employee:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Employee already exists")
+        # employee = await self.repo.get_employee(user_id=payload["user_id"])
+        # if employee:
+        #     raise HTTPException(status.HTTP_409_CONFLICT, "Employee already exists")
+
+        condition = or_(
+            self.repo.model.user_id == payload["user_id"],
+            self.repo.model.phone_number == payload.get("phone_number"),
+        )
+
+        existing = await self.repo.get_employee(condition)
+
+        if existing:
+            if existing.user_id == payload["user_id"]:
+                message = "Employee with this user_id already exists"
+            elif existing.phone_number == payload.get("phone_number"):
+                message = "Employee with this phone number already exists"
+            else:
+                message = "Employee already exists"
+
+            raise HTTPException(status.HTTP_409_CONFLICT, message)
 
         new_employee = await self.repo.create(payload)
 
@@ -29,17 +47,15 @@ class EmployeesService:
             pvzs=new_employee.pvzs,
         )
 
-    async def get_employee_by_id(self, employee_id: int) -> Employees | None:
-        """Возвращает сотрудника по ID."""
-        employee = await self.repo.get_by_id(employee_id)
+    async def get_employee_by_id(self, user_id: int) -> Employees | None:
+        """Возвращает сотрудника по user_ID."""
+        employee = await self.repo.get_employee(user_id=user_id)
         if not employee:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
         return employee
 
-    async def update_employee(
-        self, employee_id: int, update_data: dict
-    ) -> Employees | None:
+    async def update_employee(self, employee_id: int, update_data: dict) -> Employees | None:
         """Обновляет данные сотрудника."""
         updated_employee = await self.repo.update(employee_id, **update_data)
 
@@ -48,23 +64,21 @@ class EmployeesService:
 
         return updated_employee
 
-    async def delete_employee(self, employee_id: int) -> bool:
+    async def delete_employee(self, user_id: int) -> bool:
         """Удаляет сотрудника."""
-        deleted = await self.repo.delete(employee_id)
+        user = await self.repo.get_employee(user_id=user_id)
 
-        if not deleted:
+        if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        return deleted
+        return await self.repo.delete(user.id)
 
     async def get_employees_by_pvz(self, pvz_id: int) -> list[Employees]:
         """Возвращает список сотрудников, привязанных к заданному ПВЗ."""
 
-        return await self.repo.get_employees_by_pvz_id(pvz_id)
+        return await self.repo.get_employees(pvz_id=pvz_id)
 
-    async def assign_employee_to_other_pvz(
-        self, employee_id: int, new_pvz_id: int
-    ) -> Employees:
+    async def assign_employee_to_other_pvz(self, employee_id: int, new_pvz_id: int) -> Employees:
         """Добавляет сотруднику ещё один ПВЗ."""
 
         employee = await self.repo.get_by_id(employee_id)
@@ -80,9 +94,7 @@ class EmployeesService:
 
         return employee
 
-    async def unassign_employee_to_pvz(
-        self, employee_id: int, pvz_id: int
-    ) -> Employees:
+    async def unassign_employee_to_pvz(self, employee_id: int, pvz_id: int) -> Employees:
         """Удаляет связь между сотрудником и конкретным ПВЗ."""
 
         employee = await self.repo.get_by_id(employee_id)

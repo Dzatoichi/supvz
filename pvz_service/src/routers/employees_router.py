@@ -24,14 +24,14 @@ async def get_employees(
 
 
 @employees_router.get(
-    "/{employee_id}",
+    "/{user_id}",
     response_model=EmployeeResponseSchema,
 )
-async def get_employee_by_id(
-    employee_id: int,
+async def get_employee_by_user_id(
+    user_id: int,
     employee_service: EmployeesService = Depends(get_employees_service),
 ):
-    employee = await employee_service.get_employee_by_id(employee_id)
+    employee = await employee_service.get_employee_by_id(user_id)
 
     return employee
 
@@ -76,9 +76,7 @@ async def assign_employee_to_pvz(
     pvz_in: TransferRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
 ):
-    return await employee_service.assign_employee_to_other_pvz(
-        employee_id, pvz_in.new_pvz_id
-    )
+    return await employee_service.assign_employee_to_other_pvz(employee_id, pvz_in.new_pvz_id)
 
 
 @employees_router.delete(
@@ -94,13 +92,13 @@ async def unassign_employee_from_pvz(
 
 
 @employees_router.delete(
-    "/{employee_id}",
+    "/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_employee(
-    employee_id: int,
+    user_id: int,
     employee_service: EmployeesService = Depends(get_employees_service),
 ):
-    await employee_service.delete_employee(employee_id)
+    await employee_service.delete_employee(user_id)
 
     return None
