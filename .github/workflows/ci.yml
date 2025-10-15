@@ -20,17 +20,11 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.11'
-      - name: Install dependencies
-        working-directory: ${{ env.SERVICE_DIR }}
-        run: |
-          sudo curl -sSL https://install.python-poetry.org | python3 -
-          export PATH="$HOME/.local/bin:$PATH"
-          poetry install --no-root
+      - name: Install pre-commit
+        run: pip install pre-commit
+
       - name: Run pre-commit checks
-        working-directory: ${{ env.SERVICE_DIR }}
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          poetry run pre-commit run --all-files --show-diff-on-failure
+        run: pre-commit run --all-files --show-diff-on-failure
 
   test:
     name: Tests (${{ matrix.service }})
