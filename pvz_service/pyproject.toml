@@ -15,7 +15,8 @@ dependencies = [
     "pydantic (>=2.11.9,<3.0.0)",
     "asyncpg (>=0.30.0,<0.31.0)",
     "uvicorn (>=0.35.0,<0.36.0)",
-    "fastapi (>=0.116.1,<0.117.0)"
+    "fastapi (>=0.116.1,<0.117.0)",
+    "pytest (>=8.4.2,<9.0.0)"
 ]
 
 
@@ -26,6 +27,32 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+exclude = [
+    # Зависимости
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/.venv/**",
+    "**/venv/**",
+    "**/env/**",
+    "**/site-packages/**",
+
+    # Миграции
+    "**/migrations/**",
+    "**/alembic/versions/**",
+    "**/db/migrations/**",
+
+    # Сгенерированные файлы
+    "**/build/**",
+    "**/dist/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/*.pyo",
+
+    # Дополнительные исключения
+    "**/.git/**",
+    "**/.mypy_cache/**",
+    "**/.pytest_cache/**"
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "C4"]
