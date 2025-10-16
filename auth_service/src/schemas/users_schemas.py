@@ -31,6 +31,11 @@ class UserRole(str, Enum):
     handyman = "handyman"
 
 
+class SubEnum(Enum):
+    paid = "paid"
+    test = "test"
+    expired = "expired"
+
 class UserBaseSchema(BaseModel):
     """
     Базовая схема пользователя.

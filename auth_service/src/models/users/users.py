@@ -6,7 +6,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-from src.schemas.users_schemas import UserRole
+from src.schemas.users_schemas import UserRole, SubEnum
 
 if TYPE_CHECKING:
     from src.models.tokens.refresh_tokens import RefreshTokens
@@ -60,6 +60,14 @@ class Users(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin",
+    )
+    subscription: Mapped[SubEnum] = mapped_column(
+        SAEnum(
+            SubEnum,
+            name="user_role",
+            native_enum=False,
+        ),
+        nullable=True,
     )
 
     def __repr__(self) -> str:
