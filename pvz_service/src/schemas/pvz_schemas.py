@@ -7,6 +7,11 @@ from pydantic import (
 )
 
 
+class SubEnum(Enum):
+    paid = "paid"
+    test = "test"
+    expired = "expired"
+
 class PVZType(Enum):
     wb = "wb"
     ozon = "ozon"
@@ -36,3 +41,4 @@ class PVZUpdate(BaseModel):
 class PVZRead(PVZAdd):
     id: int
     created_at: datetime
+
