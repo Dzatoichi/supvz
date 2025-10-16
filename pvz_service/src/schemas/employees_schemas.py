@@ -48,8 +48,17 @@ class EmployeeUpdateRequestSchema(BaseModel):
     name: Optional[str] = None
     phone_number: Optional[str] = None
 
-    user_id: Optional[int] = None
-    owner_id: Optional[int] = None
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, values: str) -> str:
+        """
+        Функция валиадации номера телефона.
+        """
+        if not re.match(r"^\+\d{1,15}$", values):
+            raise ValueError("Invalid phone number")
+        return values
+
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
 
 
 class TransferRequestSchema(BaseModel):

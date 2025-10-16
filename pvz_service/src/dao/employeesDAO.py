@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import select
 
 from src.dao.baseDAO import BaseDAO
-from src.models.employees.employees import Employees
+from src.models.employees.employees import Employees, employee_pvz_association
 from src.models.pvzs.PVZs import PVZs
 
 
@@ -48,13 +48,6 @@ class EmployeesDAO(BaseDAO[Employees]):
             return result.scalars().all()
 
     @BaseDAO.with_exception
-    async def get_pvz_by_id(self, pvz_id: int) -> PVZs | None:
-        """Вспомогательный метод для сервисов, чтобы доставать Pvz."""
-
-        async with self._get_session() as session:
-            return await session.get(PVZs, pvz_id)
-
-    @BaseDAO.with_exception
     async def assign_to_pvz(self, employee_id: int, pvz_id: int):
         async with self._get_session() as session:
             employee = await session.get(Employees, employee_id)
@@ -65,6 +58,7 @@ class EmployeesDAO(BaseDAO[Employees]):
                 await session.refresh(employee)
             return employee
 
+    @BaseDAO.with_exception
     async def unassign_from_pvz(self, employee_id: int, pvz_id: int):
         async with self._get_session() as session:
             employee = await session.get(Employees, employee_id)
@@ -74,3 +68,17 @@ class EmployeesDAO(BaseDAO[Employees]):
                 await session.commit()
                 await session.refresh(employee)
             return employee
+
+    @BaseDAO.with_exception
+    async def get_employees_by_pvz_id(self, pvz_id: int):
+        async with self._get_session() as session:
+            stmt = (
+                select(Employees)
+                .join(
+                    employee_pvz_association,
+                    Employees.id == employee_pvz_association.c.employee_id,
+                )
+                .where(employee_pvz_association.c.pvz_id == pvz_id)
+            )
+            result = await session.scalars(stmt)
+            return result.all()

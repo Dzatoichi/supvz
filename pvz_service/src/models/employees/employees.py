@@ -17,7 +17,7 @@ employee_pvz_association = Table(
     Column(
         "pvz_id",
         Integer,
-        ForeignKey("pvz.id", ondelete="CASCADE"),
+        ForeignKey("pvzs.id", ondelete="CASCADE"),
         primary_key=True,
     ),
 )

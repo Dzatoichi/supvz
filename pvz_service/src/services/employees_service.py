@@ -2,8 +2,12 @@ from fastapi import HTTPException, status
 from sqlalchemy import or_
 
 from src.dao.employeesDAO import EmployeesDAO
-from src.models.employees.employees import Employees
-from src.schemas.employees_schemas import EmployeeResponseSchema
+from src.dao.pvzsDAO import PVZsDAO
+from src.schemas.employees_schemas import (
+    EmployeeCreateRequestSchema,
+    EmployeeResponseSchema,
+    EmployeeUpdateRequestSchema,
+)
 
 
 class EmployeesService:
@@ -11,101 +15,202 @@ class EmployeesService:
     Сервис для работы с сотрудниками и их привязкой к ПВЗ.
     """
 
-    def __init__(self, repo: EmployeesDAO):
-        self.repo = repo
-
-    async def create_employee(self, payload: dict) -> EmployeeResponseSchema:
+    async def create_employee(
+        self,
+        data: EmployeeCreateRequestSchema,
+        repo: EmployeesDAO,
+    ) -> EmployeeResponseSchema:
         """Создаёт нового сотрудника."""
-
-        # employee = await self.repo.get_employee(user_id=payload["user_id"])
-        # if employee:
-        #     raise HTTPException(status.HTTP_409_CONFLICT, "Employee already exists")
-
         condition = or_(
-            self.repo.model.user_id == payload["user_id"],
-            self.repo.model.phone_number == payload.get("phone_number"),
+            repo.model.user_id == data.user_id,
+            repo.model.phone_number == data.phone_number,
         )
 
-        existing = await self.repo.get_employee(condition)
+        existing = await repo.get_employee(condition)
 
         if existing:
-            if existing.user_id == payload["user_id"]:
+            if existing.user_id == data.user_id:
                 message = "Employee with this user_id already exists"
-            elif existing.phone_number == payload.get("phone_number"):
+            elif existing.phone_number == data.phone_number:
                 message = "Employee with this phone number already exists"
             else:
                 message = "Employee already exists"
 
             raise HTTPException(status.HTTP_409_CONFLICT, message)
 
-        new_employee = await self.repo.create(payload)
+        payload = {
+            "user_id": data.user_id,
+            "owner_id": data.owner_id,
+            "phone_number": data.phone_number,
+            "name": data.name,
+            "pvzs": [],
+        }
+
+        new_employee = await repo.create(payload)
 
         return EmployeeResponseSchema(
             id=new_employee.id,
             user_id=new_employee.user_id,
             owner_id=new_employee.owner_id,
+            phone_number=new_employee.phone_number,
+            name=new_employee.name,
             pvzs=new_employee.pvzs,
         )
 
-    async def get_employee_by_id(self, user_id: int) -> Employees | None:
-        """Возвращает сотрудника по user_ID."""
-        employee = await self.repo.get_employee(user_id=user_id)
+    async def get_employee_by_id(
+        self,
+        user_id: int,
+        repo: EmployeesDAO,
+    ) -> EmployeeResponseSchema:
+        """Возвращает сотрудника по ID."""
+        employee = await repo.get_employee(user_id=user_id)
         if not employee:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        return employee
+        return EmployeeResponseSchema(
+            id=employee.id,
+            user_id=employee.user_id,
+            owner_id=employee.owner_id,
+            phone_number=employee.phone_number,
+            name=employee.name,
+            pvzs=employee.pvzs,
+        )
 
-    async def update_employee(self, employee_id: int, update_data: dict) -> Employees | None:
+    async def update_employee(
+        self,
+        employee_id: int,
+        data: EmployeeUpdateRequestSchema,
+        repo: EmployeesDAO,
+    ) -> EmployeeResponseSchema:
         """Обновляет данные сотрудника."""
-        updated_employee = await self.repo.update(employee_id, **update_data)
+        update_data = data.model_dump(exclude_unset=True)
+        updated_employee = await repo.update(employee_id, **update_data)
 
         if not updated_employee:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        return updated_employee
+        return EmployeeResponseSchema(
+            id=updated_employee.id,
+            user_id=updated_employee.user_id,
+            owner_id=updated_employee.owner_id,
+            name=updated_employee.name,
+            phone_number=updated_employee.phone_number,
+            pvzs=updated_employee.pvzs,
+        )
 
-    async def delete_employee(self, user_id: int) -> bool:
-        """Удаляет сотрудника."""
-        user = await self.repo.get_employee(user_id=user_id)
+    async def delete_employee(
+        self,
+        user_id: int,
+        repo: EmployeesDAO,
+    ) -> EmployeeResponseSchema:
+        """Удаляет сотрудника и возвращает его данные."""
+        user = await repo.get_employee(user_id=user_id)
 
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        return await self.repo.delete(user.id)
+        user_info = EmployeeResponseSchema(
+            id=user.id,
+            user_id=user.user_id,
+            owner_id=user.owner_id,
+            name=user.name,
+            phone_number=user.phone_number,
+            pvzs=user.pvzs,
+        )
 
-    async def get_employees_by_pvz(self, pvz_id: int) -> list[Employees]:
+        success = await repo.delete(user_id=user_id)
+        if not success:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete employee")
+
+        return user_info
+
+    async def get_employees_by_pvz(
+        self,
+        pvz_id: int,
+        repo: EmployeesDAO,
+    ) -> list[EmployeeResponseSchema]:
         """Возвращает список сотрудников, привязанных к заданному ПВЗ."""
 
-        return await self.repo.get_employees(pvz_id=pvz_id)
+        employees = await repo.get_employees_by_pvz_id(pvz_id=pvz_id)
 
-    async def assign_employee_to_other_pvz(self, employee_id: int, new_pvz_id: int) -> Employees:
+        return [
+            EmployeeResponseSchema(
+                id=e.id,
+                user_id=e.user_id,
+                owner_id=e.owner_id,
+                name=e.name,
+                phone_number=e.phone_number,
+                pvzs=e.pvzs,
+            )
+            for e in employees
+        ]
+
+    async def assign_employee_to_other_pvz(
+        self,
+        employee_id: int,
+        new_pvz_id: int,
+        employees_repo: EmployeesDAO,
+        pvz_repo: PVZsDAO,
+    ) -> EmployeeResponseSchema:
         """Добавляет сотруднику ещё один ПВЗ."""
-
-        employee = await self.repo.get_by_id(employee_id)
-        if not employee:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Employee not found")
-
-        pvz = await self.repo.get_pvz_by_id(new_pvz_id)
-        if not pvz:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Pvz not found")
-
-        if pvz not in employee.pvzs:
-            return await self.repo.assign_to_pvz(employee_id, pvz.id)
-
-        return employee
-
-    async def unassign_employee_to_pvz(self, employee_id: int, pvz_id: int) -> Employees:
-        """Удаляет связь между сотрудником и конкретным ПВЗ."""
-
-        employee = await self.repo.get_by_id(employee_id)
+        employee = await employees_repo.get_by_id(employee_id)
         if not employee:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Employee not found")
 
-        pvz = await self.repo.get_pvz_by_id(pvz_id)
+        pvz = await pvz_repo.get_pvz(id=new_pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "PVZ not found")
+
+        if pvz not in employee.pvzs:
+            updated = await employees_repo.assign_to_pvz(employee_id, pvz.id)
+            return EmployeeResponseSchema(
+                id=updated.id,
+                user_id=updated.user_id,
+                owner_id=updated.owner_id,
+                name=updated.name,
+                phone_number=updated.phone_number,
+                pvzs=updated.pvzs,
+            )
+
+        return EmployeeResponseSchema(
+            id=employee.id,
+            user_id=employee.user_id,
+            owner_id=employee.owner_id,
+            name=employee.name,
+            phone_number=employee.phone_number,
+            pvzs=employee.pvzs,
+        )
+
+    async def unassign_employee_from_pvz(
+        self,
+        employee_id: int,
+        pvz_id: int,
+        employees_repo: EmployeesDAO,
+        pvz_repo: PVZsDAO,
+    ) -> EmployeeResponseSchema:
+        """Удаляет связь между сотрудником и конкретным ПВЗ."""
+        employee = await employees_repo.get_by_id(employee_id)
+        if not employee:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Employee not found")
+
+        pvz = await pvz_repo.get_pvz(id=pvz_id)
+        if not pvz:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "PVZ not found")
 
         if pvz in employee.pvzs:
-            return await self.repo.unassign_from_pvz(employee_id, pvz.id)
+            updated = await employees_repo.unassign_from_pvz(employee_id, pvz.id)
+            return EmployeeResponseSchema(
+                id=updated.id,
+                user_id=updated.user_id,
+                owner_id=updated.owner_id,
+                pvzs=updated.pvzs,
+            )
 
-        return employee
+        return EmployeeResponseSchema(
+            id=employee.id,
+            user_id=employee.user_id,
+            owner_id=employee.owner_id,
+            name=employee.name,
+            phone_number=employee.phone_number,
+            pvzs=employee.pvzs,
+        )
