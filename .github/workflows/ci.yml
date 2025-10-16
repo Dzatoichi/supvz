@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service]
+        service: [auth_service, pvz_service]
     env:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service]
+        service: [auth_service, pvz_service]
     env:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
