@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
+from src.dao.employeesDAO import EmployeesDAO
+from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import (
     EmployeeCreateRequest,
     EmployeeResponse,
@@ -7,7 +9,11 @@ from src.schemas.employees_schemas import (
     TransferRequest,
 )
 from src.services.employees_service import EmployeesService
-from src.utils.dependencies import get_employees_service
+from src.utils.dependencies import (
+    get_employees_service,
+    get_employees_repo,
+    get_pvz_repo,
+)
 
 employees_router = APIRouter(prefix="/employees", tags=["Employees"])
 
@@ -19,8 +25,9 @@ employees_router = APIRouter(prefix="/employees", tags=["Employees"])
 async def get_employees(
     pvz_id: int,
     employee_service: EmployeesService = Depends(get_employees_service),
+    repo: EmployeesDAO = Depends(get_employees_repo),
 ):
-    return await employee_service.get_employees_by_pvz(pvz_id)
+    return await employee_service.get_employees_by_pvz(pvz_id=pvz_id, repo=repo)
 
 
 @employees_router.get(
@@ -30,8 +37,11 @@ async def get_employees(
 async def get_employee_by_id(
     employee_id: int,
     employee_service: EmployeesService = Depends(get_employees_service),
+    repo: EmployeesDAO = Depends(get_employees_repo),
 ):
-    employee = await employee_service.get_employee_by_id(employee_id)
+    employee = await employee_service.get_employee_by_id(
+        employee_id=employee_id, repo=repo
+    )
 
     return employee
 
@@ -44,9 +54,10 @@ async def get_employee_by_id(
 async def create_employee(
     payload: EmployeeCreateRequest,
     employee_service: EmployeesService = Depends(get_employees_service),
+    repo: EmployeesDAO = Depends(get_employees_repo),
 ):
     """Создаёт нового сотрудника."""
-    employee = await employee_service.create_employee(payload.model_dump())
+    employee = await employee_service.create_employee(data=payload, repo=repo)
     return employee
 
 
@@ -58,10 +69,12 @@ async def update_employee(
     employee_id: int,
     payload: EmployeeUpdateRequest,
     employee_service: EmployeesService = Depends(get_employees_service),
+    repo: EmployeesDAO = Depends(get_employees_repo),
 ):
     updated_employee = await employee_service.update_employee(
-        employee_id,
-        payload.model_dump(exclude_unset=True),
+        employee_id=employee_id,
+        data=payload,
+        repo=repo,
     )
 
     return updated_employee
@@ -75,8 +88,15 @@ async def assign_employee_to_pvz(
     employee_id: int,
     pvz_in: TransferRequest,
     employee_service: EmployeesService = Depends(get_employees_service),
+    employees_repo: EmployeesDAO = Depends(get_employees_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
-    return await employee_service.assign_employee_to_other_pvz(employee_id, pvz_in.new_pvz_id)
+    return await employee_service.assign_employee_to_other_pvz(
+        employee_id=employee_id,
+        new_pvz_id=pvz_in.new_pvz_id,
+        employees_repo=employees_repo,
+        pvz_repo=pvz_repo,
+    )
 
 
 @employees_router.delete(
@@ -87,8 +107,15 @@ async def unassign_employee_from_pvz(
     employee_id: int,
     pvz_id: int,
     employee_service: EmployeesService = Depends(get_employees_service),
+    employees_repo: EmployeesDAO = Depends(get_employees_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
-    return await employee_service.unassign_employee_to_pvz(employee_id, pvz_id)
+    return await employee_service.unassign_employee_from_pvz(
+        employee_id=employee_id,
+        pvz_id=pvz_id,
+        employees_repo=employees_repo,
+        pvz_repo=pvz_repo,
+    )
 
 
 @employees_router.delete(
@@ -97,8 +124,9 @@ async def unassign_employee_from_pvz(
 )
 async def delete_employee(
     employee_id: int,
+    repo: EmployeesDAO = Depends(get_employees_repo),
     employee_service: EmployeesService = Depends(get_employees_service),
 ):
-    await employee_service.delete_employee(employee_id)
+    await employee_service.delete_employee(employee_id=employee_id, repo=repo)
 
     return None

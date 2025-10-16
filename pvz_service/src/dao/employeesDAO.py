@@ -15,14 +15,10 @@ class EmployeesDAO(BaseDAO[Employees]):
 
     async def get_employees_by_pvz_id(self, pvz_id: int):
         async with self._get_session() as session:
-            result = await session.execute(select(self.model).join(self.model.pvzs).where(PVZs.id == pvz_id))
+            result = await session.execute(
+                select(self.model).join(self.model.pvzs).where(PVZs.id == pvz_id)
+            )
             return result.scalars().all()
-
-    async def get_pvz_by_id(self, pvz_id: int) -> PVZs | None:
-        """Вспомогательный метод для сервисов, чтобы доставать Pvz."""
-
-        async with self._get_session() as session:
-            return await session.get(PVZs, pvz_id)
 
     async def assign_to_pvz(self, employee_id: int, pvz_id: int):
         async with self._get_session() as session:
