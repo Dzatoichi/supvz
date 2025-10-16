@@ -5,8 +5,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database.base import Base
 
-from src.schemas.pvz_schemas import SubEnum
-
 
 class PVZs(Base):
     __tablename__ = "pvz"
