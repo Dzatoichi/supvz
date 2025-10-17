@@ -6,7 +6,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-from src.schemas.users_schemas import UserRole, SubEnum
+from src.schemas.users_schemas import SubEnum, UserRole
 
 if TYPE_CHECKING:
     from src.models.tokens.refresh_tokens import RefreshTokens
@@ -68,7 +68,7 @@ class Users(Base):
             native_enum=False,
         ),
         nullable=True,
-        default=SubEnum.test
+        default=SubEnum.test,
     )
 
     def __repr__(self) -> str:

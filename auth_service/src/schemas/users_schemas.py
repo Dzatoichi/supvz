@@ -36,6 +36,7 @@ class SubEnum(Enum):
     test = "test"
     expired = "expired"
 
+
 class UserBaseSchema(BaseModel):
     """
     Базовая схема пользователя.
