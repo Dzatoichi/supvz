@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [ dev ]
+    branches: [dev]
   push:
-    branches: [ dev ]
+    branches: [dev]
 jobs:
   lint:
     name: Lint (${{ matrix.service }})
@@ -20,11 +20,17 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.11'
-      - name: Install pre-commit
-        run: pip install pre-commit
-
-      - name: Run pre-commit checks
-        run: pre-commit run --all-files --show-diff-on-failure
+      - name: Install dependencies
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: |
+          sudo curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+          poetry install --no-root
+      - name: Lint with ruff
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: |
+          poetry run ruff check .
+          poetry run ruff format --check --diff
 
   test:
     name: Tests (${{ matrix.service }})
