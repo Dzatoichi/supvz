@@ -172,7 +172,7 @@ async def refresh_token(
     return {"description": "Refreshed successfully"}
 
 
-@auth_router.post("/authorize", response_model=dict)
+@auth_router.post("/authorize")
 async def authorize_user(
     request: Request,
     permission: str,
@@ -185,7 +185,7 @@ async def authorize_user(
     Авторизация пользователя по access токену.
     """
     token = request.cookies.get("access_token")
-    result = await auth_service.authorize_user(
+    await auth_service.authorize_user(
         token=token,
         token_service=token_service,
         repo=repo,
@@ -193,4 +193,4 @@ async def authorize_user(
         permission=permission,
     )
 
-    return result
+    return

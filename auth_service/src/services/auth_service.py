@@ -143,7 +143,7 @@ class AuthService:
         repo: UsersDAO,
         token_repo: RefreshTokensDAO,
         permission: PermissionEnum,
-    ) -> dict:
+    ) -> None:
         token_payload = await token_service.validate_token(
             token=token,
             token_type=TokenTypesEnum.access,
@@ -161,5 +161,3 @@ class AuthService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Недостаточно прав",
             )
-
-        return {"description": "Успех"}
