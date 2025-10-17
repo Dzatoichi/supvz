@@ -112,6 +112,7 @@ class UserReadSchema(UserBaseSchema):
 
     id: int
     role: UserRole
+    sub: SubEnum
     permissions: list[PermissionEnum] = []
     created_at: datetime
 

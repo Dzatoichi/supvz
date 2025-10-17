@@ -39,6 +39,7 @@ class AuthService:
             email=user.email,
             name=user.name,
             role=user.role,
+            sub=user.subscription,
             created_at=user.created_at,
         )
 

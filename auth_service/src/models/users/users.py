@@ -41,7 +41,7 @@ class Users(Base):
             native_enum=False,
         ),
         nullable=False,
-        default=UserRole.test_owner,
+        default=UserRole.owner,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -64,10 +64,11 @@ class Users(Base):
     subscription: Mapped[SubEnum] = mapped_column(
         SAEnum(
             SubEnum,
-            name="user_role",
+            name="sub",
             native_enum=False,
         ),
         nullable=True,
+        default=SubEnum.test
     )
 
     def __repr__(self) -> str:
