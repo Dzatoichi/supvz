@@ -10,7 +10,7 @@ class UserService:
     Класс сервиса для работы с пользователями.
     """
 
-    async def set_role_owner(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
+    async def set_paid_owner(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
         """
         Метод для обновления подписки с test на paid.
         """
