@@ -25,7 +25,7 @@ public class ControllerAdvice {
     @ExceptionHandler(BindException.class)
     public ResponseEntity<?> handleBindException(BindException ex) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
-        Map<String, Object> body = Map.of("status", status.value(), "message", ex.getBindingResult().getAllErrors().stream().map(ObjectError::getDefaultMessage));
+        Map<String, Object> body = Map.of("status", status.value(), "message", ex.getBindingResult().getAllErrors().stream().map(ObjectError::getDefaultMessage).toList());
         return ResponseEntity.badRequest().body(body);
     }
 
