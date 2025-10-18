@@ -59,13 +59,27 @@ class EmployeesService:
 
     async def get_employee_by_id(
         self,
-        user_id: int,
+        params: dict,
         repo: EmployeesDAO,
     ) -> EmployeeResponseSchema:
         """Возвращает сотрудника по ID."""
-        employee = await repo.get_employee(user_id=user_id)
+
+        actual_params = {k: v for k, v in params.items() if v is not None}
+
+        if len(actual_params) == 0:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="Нужно указать хотя бы один параметр (id, user_id или owner_id)."
+            )
+
+        if len(actual_params) > 1:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Используйте только один параметр для поиска.")
+
+        field_name, field_value = next(iter(actual_params.items()))
+
+        employee = await repo.get_employee(**{field_name: field_value})
+
         if not employee:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Сотрудник не найден")
 
         return EmployeeResponseSchema(
             id=employee.id,

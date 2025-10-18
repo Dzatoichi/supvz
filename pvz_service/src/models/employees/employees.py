@@ -24,6 +24,8 @@ employee_pvz_association = Table(
 
 
 class Employees(Base):
+    """Модель сотрудника."""
+
     __tablename__ = "employees"
 
     id: Mapped[int] = mapped_column(primary_key=True)

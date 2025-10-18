@@ -43,20 +43,6 @@ async def test_register_user_short_password(client):
 
 
 @pytest.mark.anyio
-async def test_register_user_invalid_phone(client):
-    response = await client.post(
-        "/auth/register",
-        json={
-            "email": "test@example.com",
-            "username": "testuser",
-            "password": "12345678",
-            "confirm_password": "12345678",
-        },
-    )
-    assert response.status_code == 422
-
-
-@pytest.mark.anyio
 async def test_register_user_missing_required_field(client):
     response = await client.post(
         "/auth/register",

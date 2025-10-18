@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class PvzInEmployeeResponseSchema(BaseModel):
+    """Схема вложенного объекта ПВЗ, используемая в ответе при возврате данных о сотруднике."""
+
     id: int
     address: Optional[str]
 
@@ -12,6 +14,8 @@ class PvzInEmployeeResponseSchema(BaseModel):
 
 
 class EmployeeCreateRequestSchema(BaseModel):
+    """Схема запроса для создания нового сотрудника."""
+
     user_id: int
     owner_id: int
 
@@ -32,6 +36,8 @@ class EmployeeCreateRequestSchema(BaseModel):
 
 
 class EmployeeResponseSchema(BaseModel):
+    """Схема ответа, описывающая данные сотрудника и связанные ПВЗ."""
+
     id: int
     user_id: int
     owner_id: int
@@ -45,6 +51,8 @@ class EmployeeResponseSchema(BaseModel):
 
 
 class EmployeeUpdateRequestSchema(BaseModel):
+    """Схема запроса для обновления данных сотрудника."""
+
     name: Optional[str] = None
     phone_number: Optional[str] = None
 
@@ -62,4 +70,6 @@ class EmployeeUpdateRequestSchema(BaseModel):
 
 
 class TransferRequestSchema(BaseModel):
+    """Схема запроса для перевода сотрудника в другой ПВЗ."""
+
     new_pvz_id: int

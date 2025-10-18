@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
@@ -27,24 +27,31 @@ async def get_employees(
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
+    """Возвращает список сотрудников, связанных с указанным ПВЗ."""
+
     return await employee_service.get_employees_by_pvz(pvz_id=pvz_id, repo=repo)
 
 
 @employees_router.get(
-    "/{user_id}",
+    "",
     response_model=EmployeeResponseSchema,
 )
-async def get_employee_by_user_id(
-    user_id: int,
+async def get_employee(
+    id: int | None = Query(None),
+    user_id: int | None = Query(None),
+    owner_id: int | None = Query(None),
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
-    employee = await employee_service.get_employee_by_id(
-        user_id=user_id,
-        repo=repo,
-    )
+    """Возвращает одного сотрудника по id, user_id или owner_id, переданному в query параметрах."""
 
-    return employee
+    params_in = {
+        "id": id,
+        "user_id": user_id,
+        "owner_id": owner_id,
+    }
+
+    return await employee_service.get_employee_by_id(params=params_in, repo=repo)
 
 
 @employees_router.post(
@@ -58,7 +65,6 @@ async def create_employee(
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
     """Создаёт нового сотрудника."""
-    # payload = payload.model_dump(exclude_none=True)
 
     employee = await employee_service.create_employee(data=payload, repo=repo)
     return employee
@@ -74,6 +80,8 @@ async def update_employee(
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
+    """Обновляет данные сотрудника по его идентификатору."""
+
     updated_employee = await employee_service.update_employee(
         employee_id=employee_id,
         data=payload,
@@ -94,6 +102,8 @@ async def assign_employee_to_pvz(
     employees_repo: EmployeesDAO = Depends(get_employees_repo),
     pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
+    """Переводит сотрудника в другой ПВЗ."""
+
     return await employee_service.assign_employee_to_other_pvz(
         employee_id=employee_id,
         new_pvz_id=pvz_in.new_pvz_id,
@@ -113,6 +123,8 @@ async def unassign_employee_from_pvz(
     employees_repo: EmployeesDAO = Depends(get_employees_repo),
     pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
+    """Отвязывает сотрудника от ПВЗ, убирая назначение."""
+
     return await employee_service.unassign_employee_from_pvz(
         employee_id=employee_id,
         pvz_id=pvz_id,
@@ -130,6 +142,8 @@ async def delete_employee(
     repo: EmployeesDAO = Depends(get_employees_repo),
     employee_service: EmployeesService = Depends(get_employees_service),
 ):
+    """Удаляет сотрудника по его user_id."""
+
     await employee_service.delete_employee(user_id=user_id, repo=repo)
 
     return None
