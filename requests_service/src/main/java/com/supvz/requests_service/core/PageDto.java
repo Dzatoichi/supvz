@@ -5,6 +5,9 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
+/*
+ДТО страницы
+ */
 public record PageDto<T>(
         List<T> content,
         int page,

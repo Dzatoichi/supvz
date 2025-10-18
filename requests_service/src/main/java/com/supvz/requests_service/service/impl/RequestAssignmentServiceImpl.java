@@ -18,12 +18,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/*
+Реализация сервиса для работы с ответами на запросы.
+ */
 public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     private final RequestAssignmentMapper mapper;
     private final RequestAssignmentRepository repo;
     private final RequestService requestService;
 
     @Override
+    @Transactional
+    /*
+    Метод для создания ответа-сущности по полученной нагрузке.
+     */
     public RequestAssignmentDto create(long requestId, RequestAssignmentPayload payload) {
         log.info("CREATE REQUEST [{}] ASSIGNMENT BY HANDYMAN [{}].", requestId, payload.handymanId());
 
@@ -37,29 +44,35 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     }
 
     @Override
+    /*
+    Метод для чтения страницы ответов на запрос с пагинацией.
+     */
     public PageDto<RequestAssignmentDto> readAll(long requestId, int pageNumber, int size) {
         log.info("READ REQUEST [{}] ASSIGNMENTS PAGE. PAGE [{}], SIZE [{}].", requestId, pageNumber, size);
 
         Pageable pageable = PageRequest.of(pageNumber, size);
-        Page<RequestAssignment> page = repo.findAllByRequestId(requestId, pageable);
+        Page<RequestAssignment> page = repo.findAll(requestId, pageable);
 
         return mapper.readPage(page);
     }
 
     @Override
-    @Transactional
-    public void delete(long id) {
-        log.info("DELETE REQUEST ASSIGNMENT [{}].", id);
+    /*
+    Метод для чтения определенного ответа на запрос по ID.
+     */
+    public RequestAssignmentDto read(long id) {
+        log.info("READ REQUEST ASSIGNMENT [{}].", id);
 
-        RequestAssignment found = repo.findById(id)
+        return repo.findById(id)
+                .map(mapper::read)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
                         ("REQUEST ASSIGNMENT [%s] WAS NOT FOUND.".formatted(id)));
-        repo.delete(found);
-
-        log.info("REQUEST ASSIGNMENT [{}] IS DELETED.", id);
     }
 
     @Override
+    /*
+    Метод для обновления определенного ответа на запрос по ID с полезной нагрузкой.
+     */
     public RequestAssignmentDto update(long id, RequestAssignmentUpdatePayload payload) {
         log.info("UPDATE REQUEST ASSIGNMENT [{}]. Payload [{}].", id, payload);
 
@@ -75,12 +88,18 @@ public class RequestAssignmentServiceImpl implements RequestAssignmentService {
     }
 
     @Override
-    public RequestAssignmentDto read(long id) {
-        log.info("READ REQUEST ASSIGNMENT [{}].", id);
+    @Transactional
+    /*
+    Метод для удаления определенного ответа на запрос по ID.
+     */
+    public void delete(long id) {
+        log.info("DELETE REQUEST ASSIGNMENT [{}].", id);
 
-        return repo.findById(id)
-                .map(mapper::read)
+        RequestAssignment found = repo.findById(id)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
                         ("REQUEST ASSIGNMENT [%s] WAS NOT FOUND.".formatted(id)));
+        repo.delete(found);
+
+        log.info("REQUEST ASSIGNMENT [{}] IS DELETED.", id);
     }
 }

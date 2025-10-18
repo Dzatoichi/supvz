@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
+/*
+ДТО ответа мастера для запроса.
+ */
 public record RequestAssignmentDto(
         long id,
         long requestId,

@@ -9,8 +9,10 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.UUID;
 
+/*
+Репозиторий для работы с запросами.
+ */
 public interface RequestRepository extends CrudRepository<Request, Long> {
-
     @Query(value = """
             FROM Request r WHERE
             (:pvzId IS NULL OR r.pvzId = :pvzId) AND

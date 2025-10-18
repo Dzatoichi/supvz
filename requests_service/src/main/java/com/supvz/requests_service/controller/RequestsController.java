@@ -14,9 +14,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/requests")
 @RequiredArgsConstructor
+/*
+Контроллер для работы с запросами для мастеров.
+ */
 public class RequestsController {
     private final RequestService service;
 
+
+    /*
+    Ручка для создания запроса.
+     */
     @PostMapping
     public ResponseEntity<?> create(
             @RequestBody @Valid RequestPayload payload
@@ -25,6 +32,12 @@ public class RequestsController {
         return ResponseEntity.ok(body);
     }
 
+
+    /*
+    Ручка для получения всех запросов с пагинацией.
+    Параметр page для номера страницы.
+    Параметр size для размера получаемой выборки.
+     */
     @GetMapping
     public ResponseEntity<?> readAll(
             @RequestParam(name = "page", defaultValue = "0") int page,
