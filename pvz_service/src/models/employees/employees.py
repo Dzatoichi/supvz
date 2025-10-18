@@ -38,7 +38,7 @@ class Employees(Base):
         index=True,
     )
 
-    user_id: Mapped[int] = mapped_column(index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(index=True, nullable=False, unique=True)
     owner_id: Mapped[int] = mapped_column(index=True, nullable=False)
 
     pvzs: Mapped[List["PVZs"]] = relationship(
