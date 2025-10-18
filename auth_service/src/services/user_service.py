@@ -30,7 +30,7 @@ class UserService:
                 "User is not owner",
             )
 
-        updated_user = await repo.update(user_id, subscription=SubEnum.paid)
+        updated_user = await repo.update(id=user_id, subscription=SubEnum.paid)
 
         logger.info(
             "Пользователю успешно поменяна подписка!",
