@@ -7,7 +7,7 @@ from .utils.exceptions import setup_exception_handlers
 from .utils.middleware import LoggingMiddleware
 from .utils.rate_limiter import limiter
 
-# xyecoc
+
 app = FastAPI()
 setup_exception_handlers(app)
 app.state.limiter = limiter
