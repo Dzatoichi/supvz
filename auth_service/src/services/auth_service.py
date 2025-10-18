@@ -5,7 +5,11 @@ from fastapi import HTTPException, Response, status
 from src.core.security.hash_helper import hash_helper
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
+from src.schemas.users_schemas import (
+    UserLoginSchema,
+    UserReadSchema,
+    UserRegisterSchema,
+)
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
 
@@ -29,15 +33,12 @@ class AuthService:
         hashed_password = hash_helper.hash(data.password)
         payload = {
             "email": data.email,
-            "phone_number": data.phone_number,
-            "name": data.name,
             "hashed_password": hashed_password,
         }
         user = await repo.create(payload)
         return UserReadSchema(
             id=user.id,
             email=user.email,
-            name=user.name,
             role=user.role,
             created_at=user.created_at,
         )

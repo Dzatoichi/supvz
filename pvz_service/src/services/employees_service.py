@@ -1,11 +1,12 @@
 from fastapi import HTTPException, status
+from sqlalchemy import or_
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import (
-    EmployeeCreateRequest,
-    EmployeeResponse,
-    EmployeeUpdateRequest,
+    EmployeeCreateRequestSchema,
+    EmployeeResponseSchema,
+    EmployeeUpdateRequestSchema,
 )
 
 
@@ -16,53 +17,71 @@ class EmployeesService:
 
     async def create_employee(
         self,
-        data: EmployeeCreateRequest,
+        data: EmployeeCreateRequestSchema,
         repo: EmployeesDAO,
-    ) -> EmployeeResponse:
+    ) -> EmployeeResponseSchema:
         """Создаёт нового сотрудника."""
+        condition = or_(
+            repo.model.user_id == data.user_id,
+            repo.model.phone_number == data.phone_number,
+        )
 
-        employee = await repo.get_by_id(data.user_id)
-        if employee:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Employee already exists")
+        existing = await repo.get_employee(condition)
+
+        if existing:
+            if existing.user_id == data.user_id:
+                message = "Employee with this user_id already exists"
+            elif existing.phone_number == data.phone_number:
+                message = "Employee with this phone number already exists"
+            else:
+                message = "Employee already exists"
+
+            raise HTTPException(status.HTTP_409_CONFLICT, message)
 
         payload = {
             "user_id": data.user_id,
             "owner_id": data.owner_id,
-            "pvzs": data.pvzs,
+            "phone_number": data.phone_number,
+            "name": data.name,
+            "pvzs": [],
         }
 
         new_employee = await repo.create(payload)
 
-        return EmployeeResponse(
+        return EmployeeResponseSchema(
             id=new_employee.id,
             user_id=new_employee.user_id,
             owner_id=new_employee.owner_id,
+            phone_number=new_employee.phone_number,
+            name=new_employee.name,
             pvzs=new_employee.pvzs,
         )
 
     async def get_employee_by_id(
         self,
-        employee_id: int,
+        user_id: int,
         repo: EmployeesDAO,
-    ) -> EmployeeResponse:
+    ) -> EmployeeResponseSchema:
         """Возвращает сотрудника по ID."""
-        employee = await repo.get_by_id(employee_id)
+        employee = await repo.get_employee(user_id=user_id)
         if not employee:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        return EmployeeResponse(
+        return EmployeeResponseSchema(
             id=employee.id,
             user_id=employee.user_id,
             owner_id=employee.owner_id,
+            phone_number=employee.phone_number,
+            name=employee.name,
             pvzs=employee.pvzs,
         )
 
     async def update_employee(
         self,
         employee_id: int,
-        data: EmployeeUpdateRequest,
+        data: EmployeeUpdateRequestSchema,
         repo: EmployeesDAO,
-    ) -> EmployeeResponse:
+    ) -> EmployeeResponseSchema:
         """Обновляет данные сотрудника."""
         update_data = data.model_dump(exclude_unset=True)
         updated_employee = await repo.update(employee_id, **update_data)
@@ -70,51 +89,57 @@ class EmployeesService:
         if not updated_employee:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        return EmployeeResponse(
+        return EmployeeResponseSchema(
             id=updated_employee.id,
             user_id=updated_employee.user_id,
             owner_id=updated_employee.owner_id,
+            name=updated_employee.name,
+            phone_number=updated_employee.phone_number,
             pvzs=updated_employee.pvzs,
         )
 
     async def delete_employee(
         self,
-        employee_id: int,
+        user_id: int,
         repo: EmployeesDAO,
-    ) -> EmployeeResponse:
+    ) -> EmployeeResponseSchema:
         """Удаляет сотрудника и возвращает его данные."""
-        employee = await repo.get_by_id(employee_id)
-        if not employee:
+        user = await repo.get_employee(user_id=user_id)
+
+        if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
 
-        employee_info = EmployeeResponse(
-            id=employee.id,
-            user_id=employee.user_id,
-            owner_id=employee.owner_id,
-            pvzs=employee.pvzs,
+        user_info = EmployeeResponseSchema(
+            id=user.id,
+            user_id=user.user_id,
+            owner_id=user.owner_id,
+            name=user.name,
+            phone_number=user.phone_number,
+            pvzs=user.pvzs,
         )
 
-        success = await repo.delete(employee_id)
+        success = await repo.delete(user_id=user_id)
         if not success:
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete employee"
-            )
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete employee")
 
-        return employee_info
+        return user_info
 
     async def get_employees_by_pvz(
         self,
         pvz_id: int,
         repo: EmployeesDAO,
-    ) -> list[EmployeeResponse]:
+    ) -> list[EmployeeResponseSchema]:
         """Возвращает список сотрудников, привязанных к заданному ПВЗ."""
-        employees = await repo.get_employees_by_pvz_id(pvz_id)
+
+        employees = await repo.get_employees_by_pvz_id(pvz_id=pvz_id)
 
         return [
-            EmployeeResponse(
+            EmployeeResponseSchema(
                 id=e.id,
                 user_id=e.user_id,
                 owner_id=e.owner_id,
+                name=e.name,
+                phone_number=e.phone_number,
                 pvzs=e.pvzs,
             )
             for e in employees
@@ -126,7 +151,7 @@ class EmployeesService:
         new_pvz_id: int,
         employees_repo: EmployeesDAO,
         pvz_repo: PVZsDAO,
-    ) -> EmployeeResponse:
+    ) -> EmployeeResponseSchema:
         """Добавляет сотруднику ещё один ПВЗ."""
         employee = await employees_repo.get_by_id(employee_id)
         if not employee:
@@ -138,17 +163,21 @@ class EmployeesService:
 
         if pvz not in employee.pvzs:
             updated = await employees_repo.assign_to_pvz(employee_id, pvz.id)
-            return EmployeeResponse(
+            return EmployeeResponseSchema(
                 id=updated.id,
                 user_id=updated.user_id,
                 owner_id=updated.owner_id,
+                name=updated.name,
+                phone_number=updated.phone_number,
                 pvzs=updated.pvzs,
             )
 
-        return EmployeeResponse(
+        return EmployeeResponseSchema(
             id=employee.id,
             user_id=employee.user_id,
             owner_id=employee.owner_id,
+            name=employee.name,
+            phone_number=employee.phone_number,
             pvzs=employee.pvzs,
         )
 
@@ -158,7 +187,7 @@ class EmployeesService:
         pvz_id: int,
         employees_repo: EmployeesDAO,
         pvz_repo: PVZsDAO,
-    ) -> EmployeeResponse:
+    ) -> EmployeeResponseSchema:
         """Удаляет связь между сотрудником и конкретным ПВЗ."""
         employee = await employees_repo.get_by_id(employee_id)
         if not employee:
@@ -170,16 +199,18 @@ class EmployeesService:
 
         if pvz in employee.pvzs:
             updated = await employees_repo.unassign_from_pvz(employee_id, pvz.id)
-            return EmployeeResponse(
+            return EmployeeResponseSchema(
                 id=updated.id,
                 user_id=updated.user_id,
                 owner_id=updated.owner_id,
                 pvzs=updated.pvzs,
             )
 
-        return EmployeeResponse(
+        return EmployeeResponseSchema(
             id=employee.id,
             user_id=employee.user_id,
             owner_id=employee.owner_id,
+            name=employee.name,
+            phone_number=employee.phone_number,
             pvzs=employee.pvzs,
         )

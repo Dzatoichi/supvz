@@ -6,8 +6,8 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-from src.schemas.pvz_schemas import PVZType
 from src.models.employees.employees import Employees, employee_pvz_association
+from src.schemas.pvz_schemas import PVZType
 
 
 class PVZs(Base):

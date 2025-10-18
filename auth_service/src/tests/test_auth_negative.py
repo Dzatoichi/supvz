@@ -9,8 +9,6 @@ async def test_register_user_passwords_do_not_match(client):
             "email": "test@example.com",
             "password": "12345678",
             "confirm_password": "87654321",
-            "name": "Test User",
-            "phone_number": "+1234567890",
         },
     )
     assert response.status_code == 422
@@ -25,8 +23,6 @@ async def test_register_user_invalid_email(client):
             "username": "testuser",
             "password": "12345678",
             "confirm_password": "12345678",
-            "name": "Test",
-            "phone_number": "+1234567890",
         },
     )
     assert response.status_code == 422
@@ -41,8 +37,6 @@ async def test_register_user_short_password(client):
             "username": "testuser",
             "password": "123",
             "confirm_password": "123",
-            "name": "Test",
-            "phone_number": "+1234567890",
         },
     )
     assert response.status_code == 422
@@ -57,8 +51,6 @@ async def test_register_user_invalid_phone(client):
             "username": "testuser",
             "password": "12345678",
             "confirm_password": "12345678",
-            "name": "Test",
-            "phone_number": "1234567890",
         },
     )
     assert response.status_code == 422
@@ -72,8 +64,6 @@ async def test_register_user_missing_required_field(client):
             "email": "test@example.com",
             "username": "testuser",
             "password": "12345678",
-            "name": "Test",
-            "phone_number": "+1234567890",
         },
     )
     assert response.status_code == 422
@@ -101,7 +91,11 @@ async def test_forgot_password_invalid_email(client):
 async def test_reset_password_passwords_do_not_match(client):
     response = await client.post(
         "/auth/reset_password",
-        json={"token": "sometoken", "new_password": "newpassword123", "confirm_new_password": "otherpassword"},
+        json={
+            "token": "sometoken",
+            "new_password": "newpassword123",
+            "confirm_new_password": "otherpassword",
+        },
     )
     assert response.status_code == 422
     assert "Passwords do not match" in response.text
@@ -110,6 +104,10 @@ async def test_reset_password_passwords_do_not_match(client):
 @pytest.mark.anyio
 async def test_reset_password_missing_token(client):
     response = await client.post(
-        "/auth/reset_password", json={"new_password": "newpassword123", "confirm_new_password": "newpassword123"}
+        "/auth/reset_password",
+        json={
+            "new_password": "newpassword123",
+            "confirm_new_password": "newpassword123",
+        },
     )
     assert response.status_code == 422

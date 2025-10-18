@@ -1,10 +1,9 @@
 from typing import List
 
-from sqlalchemy import Column, ForeignKey, Integer, Table
+from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-from src.models.pvzs.PVZs import PVZs
 
 employee_pvz_association = Table(
     "employee_pvz_association",
@@ -18,7 +17,7 @@ employee_pvz_association = Table(
     Column(
         "pvz_id",
         Integer,
-        ForeignKey("pvz.id", ondelete="CASCADE"),
+        ForeignKey("pvzs.id", ondelete="CASCADE"),
         primary_key=True,
     ),
 )
@@ -30,6 +29,12 @@ class Employees(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     name: Mapped[str] = mapped_column(nullable=False)
+    phone_number: Mapped[str] = mapped_column(
+        String(32),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
 
     user_id: Mapped[int] = mapped_column(index=True, nullable=False)
     owner_id: Mapped[int] = mapped_column(index=True, nullable=False)

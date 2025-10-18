@@ -7,8 +7,6 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from src.database.base import Base
-from src.models.employees.employees import Employees  # noqa: F401
-from src.models.pvzs.PVZs import PVZs  # noqa: F401
 from src.settings.config import settings
 
 # this is the Alembic Config object, which provides
