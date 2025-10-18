@@ -13,10 +13,16 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+/*
+Реализация маппера для запросов.
+ */
 public class RequestMapperImpl implements RequestMapper {
     private final RequestAssignmentMapper assignmentMapper;
 
     @Override
+    /*
+    Метод для преобразования полезной нагрузки в сущность.
+     */
     public Request create(RequestPayload payload) {
         return Request.builder()
                 .pvzId(payload.pvzId())
@@ -26,6 +32,9 @@ public class RequestMapperImpl implements RequestMapper {
     }
 
     @Override
+    /*
+    Метод для преобразования сущности в ДТО.
+     */
     public RequestDto read(Request request) {
         List<RequestAssignment> assignments = request.getAssignments();
 
@@ -39,6 +48,9 @@ public class RequestMapperImpl implements RequestMapper {
     }
 
     @Override
+    /*
+    Метод для преобразования Page из springframework.data.Page в ДТО
+     */
     public PageDto<RequestDto> readPage(Page<Request> page) {
         return PageDto.<RequestDto>builder()
                 .content(page.getContent().stream().map(this::read).toList())
@@ -51,6 +63,9 @@ public class RequestMapperImpl implements RequestMapper {
     }
 
     @Override
+    /*
+    Метод для преобразования сущности и полезной нагрузки для обновления в сущность.
+     */
     public Request update(Request request, RequestUpdatePayload payload) {
         String description = payload.description();
         Integer pvzId = payload.pvzId();

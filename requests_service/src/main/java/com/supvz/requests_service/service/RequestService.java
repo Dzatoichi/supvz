@@ -2,8 +2,10 @@ package com.supvz.requests_service.service;
 
 import com.supvz.requests_service.core.*;
 import com.supvz.requests_service.entity.Request;
-import jakarta.validation.Valid;
 
+/*
+Интерфейс сервиса для работы с запросами.
+ */
 public interface RequestService {
     RequestDto create(RequestPayload payload);
 
@@ -11,9 +13,9 @@ public interface RequestService {
 
     RequestDto read(long id);
 
+    RequestDto update(long id, RequestUpdatePayload payload);
+
     void delete(long id);
 
     Request get(long id);
-
-    RequestDto update(long id, RequestUpdatePayload payload);
 }

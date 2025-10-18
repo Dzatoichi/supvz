@@ -12,9 +12,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/requests/{id}/assignments")
 @RequiredArgsConstructor
+/*
+Контроллер для работы с ответами мастеров на запросы.
+ */
 public class RequestAssignmentsController {
     private final RequestAssignmentService service;
 
+    /*
+    Ручка создания ответа мастера на запрос.
+     */
     @PostMapping
     public ResponseEntity<?> create(
             @PathVariable(name = "id") long requestId,
@@ -24,6 +30,9 @@ public class RequestAssignmentsController {
         return ResponseEntity.ok(body);
     }
 
+    /*
+    Ручка получения ответов мастеров по запросу.
+     */
     @GetMapping
     public ResponseEntity<?> readAll (
             @RequestParam(name = "page", defaultValue = "0") int page,
