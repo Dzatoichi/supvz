@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
 from src.schemas.pvz_schemas import PVZType
@@ -23,14 +23,26 @@ class PVZs(Base):
         nullable=False,
     )
     address: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    group: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    group_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("pvz_groups.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, index=True)
-    curator_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    curator_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
+
+    group: Mapped[Optional["PVZGroup"]] = relationship("PVZGroup", back_populates="pvzs")
 
     def __repr__(self) -> str:
         return f"<PVZs(id={self.id}, code={self.code})>"
