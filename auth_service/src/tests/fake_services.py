@@ -23,7 +23,7 @@ class FakeAuthService:
             "email": data.email,
             "name": data.name,
             "role": "owner",
-            "sub": "test",
+            "subscription": "test",
             "created_at": "2024-01-01T00:00:00",
         }
 
