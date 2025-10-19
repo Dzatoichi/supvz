@@ -16,19 +16,19 @@ users_router = APIRouter(prefix="/users", tags=["users"])
 
 
 @limiter.limit("5/minute")
-@users_router.post("/{user_id}/set-role-owner", response_model=UserReadSchema)
-async def set_role_owner(
+@users_router.post("/{user_id}/set-paid-sub", response_model=UserReadSchema)
+async def set_paid_sub(
     request: Request,
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
 ):
     """
-    Ручка обновления роли юзера с test_owner → owner.
+    Ручка обновления подписки владельца с test → paid.
     Обычно вызывается после успешной оплаты (например из webhook платёжки).
     """
 
-    result = await user_service.set_role_owner(user_id=user_id, repo=repo)
+    result = await user_service.set_paid_owner(user_id=user_id, repo=repo)
     return result
 
 
