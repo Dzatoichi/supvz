@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
+from src.core.security.permissions import PermissionEnum, has_permission
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
@@ -133,3 +135,29 @@ class AuthService:
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         return True
+
+    async def authorize_user(
+        self,
+        token: str,
+        token_service: JWTTokensService,
+        repo: UsersDAO,
+        token_repo: RefreshTokensDAO,
+        permission: PermissionEnum,
+    ) -> None:
+        token_payload = await token_service.validate_token(
+            token=token,
+            token_type=TokenTypesEnum.access,
+            repo=token_repo,
+        )
+        user_id = token_payload.get("user_id")
+        user = await repo.get_by_id(user_id)
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Пользователь не найден или неактивен",
+            )
+        if not has_permission(role=user.role, permission=permission):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Недостаточно прав",
+            )
