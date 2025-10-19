@@ -31,7 +31,7 @@ class UserRole(str, Enum):
     handyman = "handyman"
 
 
-class SubEnum(Enum):
+class SubscriptionEnum(Enum):
     paid = "paid"
     test = "test"
     expired = "expired"
@@ -113,7 +113,7 @@ class UserReadSchema(UserBaseSchema):
 
     id: int
     role: UserRole
-    sub: SubEnum
+    subscription: SubscriptionEnum
     permissions: list[PermissionEnum] = []
     created_at: datetime
 

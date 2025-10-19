@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import SubEnum, UserReadSchema, UserRole
+from src.schemas.users_schemas import SubscriptionEnum, UserReadSchema, UserRole
 from src.utils.logger_settings import logger
 
 
@@ -30,7 +30,7 @@ class UserService:
                 "User is not owner",
             )
 
-        updated_user = await repo.update(id=user_id, subscription=SubEnum.paid)
+        updated_user = await repo.update(id=user_id, subscription=SubscriptionEnum.paid)
 
         logger.info(
             "Пользователю успешно поменяна подписка!",
@@ -42,6 +42,6 @@ class UserService:
             email=updated_user.email,
             name=updated_user.name,
             role=updated_user.role,
-            sub=updated_user.subscription,
+            subscription=updated_user.subscription,
             created_at=updated_user.created_at,
         )

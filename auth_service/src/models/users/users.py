@@ -64,7 +64,7 @@ class Users(Base):
     subscription: Mapped[SubEnum] = mapped_column(
         SAEnum(
             SubEnum,
-            name="sub",
+            name="subscription",
             native_enum=False,
         ),
         nullable=True,
