@@ -1,4 +1,4 @@
-package com.supvz.requests_service;
+package com.supvz.notifications_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /*
 Класс запуска приложения.
  */
-public class RequestsServiceApplication {
+public class NotificationsServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RequestsServiceApplication.class, args);
+		SpringApplication.run(NotificationsServiceApplication.class, args);
 	}
 
 }
