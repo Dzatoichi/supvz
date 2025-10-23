@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from src.dao.baseDAO import BaseDAO
 from src.models.pvzs.PVZs import PVZs
@@ -41,3 +41,13 @@ class PVZsDAO(BaseDAO[PVZs]):
 
             result = await session.execute(stmt)
             return result.scalars().all()
+
+    @BaseDAO.with_exception
+    async def unassign_pvzs_from_group(self, group_id: int):
+        """
+        Отвязывает все ПВЗ от указанной группы, устанавливая group_id в None.
+        """
+        async with self._get_session() as session:
+            stmt = update(self.model).where(self.model.group_id == group_id).values(group_id=None)
+            await session.execute(stmt)
+            await session.commit()

@@ -6,6 +6,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
+from src.models.pvzs.PVZGroups import PVZGroups
 from src.schemas.pvz_schemas import PVZType
 
 
@@ -42,7 +43,7 @@ class PVZs(Base):
         nullable=False,
     )
 
-    group: Mapped[Optional["PVZGroup"]] = relationship("PVZGroup", back_populates="pvzs")
+    group: Mapped[Optional["PVZGroups"]] = relationship("PVZGroups", back_populates="pvzs")
 
     def __repr__(self) -> str:
         return f"<PVZs(id={self.id}, code={self.code})>"
