@@ -18,40 +18,21 @@ from src.utils.dependencies import (
 employees_router = APIRouter(prefix="/employees", tags=["Employees"])
 
 
-@employees_router.get(
-    "/pvz/{pvz_id}",
-    response_model=list[EmployeeResponseSchema],
-)
+@employees_router.get("")
 async def get_employees(
-    pvz_id: int,
+    user_id: int | None = Query(default=None, description="ID пользователя"),
+    owner_id: int | None = Query(default=None, description="ID владельца"),
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
-    """Возвращает список сотрудников, связанных с указанным ПВЗ."""
+    """
+    Возвращает одного сотрудника по user_id, а также всех по owner_id.
+    Можно передать только один параметр — либо user_id, либо owner_id.
+    """
 
-    return await employee_service.get_employees_by_pvz(pvz_id=pvz_id, repo=repo)
+    params_in = {"user_id": user_id, "owner_id": owner_id}
 
-
-@employees_router.get(
-    "",
-    response_model=EmployeeResponseSchema,
-)
-async def get_employee(
-    id: int | None = Query(None),
-    user_id: int | None = Query(None),
-    owner_id: int | None = Query(None),
-    employee_service: EmployeesService = Depends(get_employees_service),
-    repo: EmployeesDAO = Depends(get_employees_repo),
-):
-    """Возвращает одного сотрудника по id, user_id или owner_id, переданному в query параметрах."""
-
-    params_in = {
-        "id": id,
-        "user_id": user_id,
-        "owner_id": owner_id,
-    }
-
-    return await employee_service.get_employee_by_id(params=params_in, repo=repo)
+    return await employee_service.get_employees_by_id(params=params_in, repo=repo)
 
 
 @employees_router.post(
@@ -71,11 +52,11 @@ async def create_employee(
 
 
 @employees_router.patch(
-    "/{employee_id}",
+    "/{user_id}",
     response_model=EmployeeResponseSchema,
 )
 async def update_employee(
-    employee_id: int,
+    user_id: int,
     payload: EmployeeUpdateRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
@@ -83,7 +64,7 @@ async def update_employee(
     """Обновляет данные сотрудника по его идентификатору."""
 
     updated_employee = await employee_service.update_employee(
-        employee_id=employee_id,
+        user_id=user_id,
         data=payload,
         repo=repo,
     )
@@ -92,11 +73,11 @@ async def update_employee(
 
 
 @employees_router.post(
-    "/{employee_id}/assign",
+    "/{user_id}/assign",
     response_model=EmployeeResponseSchema,
 )
 async def assign_employee_to_pvz(
-    employee_id: int,
+    user_id: int,
     pvz_in: TransferRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
     employees_repo: EmployeesDAO = Depends(get_employees_repo),
@@ -105,7 +86,7 @@ async def assign_employee_to_pvz(
     """Переводит сотрудника в другой ПВЗ."""
 
     return await employee_service.assign_employee_to_other_pvz(
-        employee_id=employee_id,
+        user_id=user_id,
         new_pvz_id=pvz_in.new_pvz_id,
         employees_repo=employees_repo,
         pvz_repo=pvz_repo,
@@ -113,11 +94,11 @@ async def assign_employee_to_pvz(
 
 
 @employees_router.delete(
-    "/{employee_id}/unassign/{pvz_id}",
+    "/{user_id}/unassign/{pvz_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def unassign_employee_from_pvz(
-    employee_id: int,
+    user_id: int,
     pvz_id: int,
     employee_service: EmployeesService = Depends(get_employees_service),
     employees_repo: EmployeesDAO = Depends(get_employees_repo),
@@ -126,7 +107,7 @@ async def unassign_employee_from_pvz(
     """Отвязывает сотрудника от ПВЗ, убирая назначение."""
 
     return await employee_service.unassign_employee_from_pvz(
-        employee_id=employee_id,
+        user_id=user_id,
         pvz_id=pvz_id,
         employees_repo=employees_repo,
         pvz_repo=pvz_repo,
@@ -145,5 +126,3 @@ async def delete_employee(
     """Удаляет сотрудника по его user_id."""
 
     await employee_service.delete_employee(user_id=user_id, repo=repo)
-
-    return None

@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 
 from src.dao.pvzsDAO import PVZsDAO
+from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
 from src.utils.dependencies import get_pvz_repo, get_pvz_service
@@ -67,6 +68,20 @@ async def get_pvzs(
         repo=repo,
     )
     return pvzs
+
+
+@pvz_router.get(
+    "/{pvz_id}/employees",
+    response_model=list[EmployeeResponseSchema],
+)
+async def get_employees(
+    pvz_id: int,
+    pvz_service: PVZService = Depends(get_pvz_service),
+    repo: PVZsDAO = Depends(get_pvz_repo),
+):
+    """Возвращает список сотрудников, связанных с указанным ПВЗ."""
+
+    return await pvz_service.get_employees_by_pvz(pvz_id=pvz_id, repo=repo)
 
 
 @pvz_router.delete("/{pvz_id}", response_model=PVZRead)

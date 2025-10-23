@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 
 from src.dao.pvzsDAO import PVZsDAO
+from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 
 
@@ -90,7 +91,7 @@ class PVZService:
         address: str,
         group: str,
         repo: PVZsDAO,
-    ) -> PVZRead:
+    ) -> list[PVZRead]:
         filters = {}
         if code is not None:
             filters["code"] = code
@@ -115,6 +116,17 @@ class PVZService:
             )
             for pvz in pvzs
         ]
+
+    async def get_employees_by_pvz(
+        self,
+        pvz_id: int,
+        repo: PVZsDAO,
+    ) -> list[EmployeeResponseSchema]:
+        """Возвращает список сотрудников, привязанных к заданному ПВЗ."""
+
+        employees = await repo.get_employees_by_pvz_id(pvz_id=pvz_id)
+
+        return [EmployeeResponseSchema.model_validate(e) for e in employees]
 
     async def delete_pvz_by_id(
         self,

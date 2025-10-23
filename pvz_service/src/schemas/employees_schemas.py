@@ -38,7 +38,6 @@ class EmployeeCreateRequestSchema(BaseModel):
 class EmployeeResponseSchema(BaseModel):
     """Схема ответа, описывающая данные сотрудника и связанные ПВЗ."""
 
-    id: int
     user_id: int
     owner_id: int
 

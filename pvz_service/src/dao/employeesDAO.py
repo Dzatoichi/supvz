@@ -1,9 +1,9 @@
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from src.dao.baseDAO import BaseDAO
-from src.models.employees.employees import Employees, employee_pvz_association
+from src.models.employees.employees import Employees
 from src.models.pvzs.PVZs import PVZs
 
 
@@ -49,6 +49,7 @@ class EmployeesDAO(BaseDAO[Employees]):
 
     @BaseDAO.with_exception
     async def assign_to_pvz(self, employee_id: int, pvz_id: int):
+        """Привязывает сотрудника к пункту выдачи заказов (ПВЗ)."""
         async with self._get_session() as session:
             employee = await session.get(Employees, employee_id)
             pvz = await session.get(PVZs, pvz_id)
@@ -60,6 +61,7 @@ class EmployeesDAO(BaseDAO[Employees]):
 
     @BaseDAO.with_exception
     async def unassign_from_pvz(self, employee_id: int, pvz_id: int):
+        """Отвязывает сотрудника от пункта выдачи заказов (ПВЗ)."""
         async with self._get_session() as session:
             employee = await session.get(Employees, employee_id)
             pvz = await session.get(PVZs, pvz_id)
@@ -70,15 +72,13 @@ class EmployeesDAO(BaseDAO[Employees]):
             return employee
 
     @BaseDAO.with_exception
-    async def get_employees_by_pvz_id(self, pvz_id: int):
+    async def update(self, user_id: int, **kwargs):
+        """Обновляет данные сотрудника по его user_id."""
         async with self._get_session() as session:
-            stmt = (
-                select(Employees)
-                .join(
-                    employee_pvz_association,
-                    Employees.id == employee_pvz_association.c.employee_id,
-                )
-                .where(employee_pvz_association.c.pvz_id == pvz_id)
-            )
-            result = await session.scalars(stmt)
-            return result.all()
+            stmt = update(self.model).where(self.model.user_id == user_id).values(**kwargs).returning(self.model)
+            result = await session.execute(stmt)
+            await session.commit()
+            updated = result.scalar_one_or_none()
+            if updated:
+                await session.refresh(updated)
+            return updated

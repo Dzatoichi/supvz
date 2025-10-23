@@ -11,7 +11,7 @@ employee_pvz_association = Table(
     Column(
         "employee_id",
         Integer,
-        ForeignKey("employees.id", ondelete="CASCADE"),
+        ForeignKey("employees.user_id", ondelete="CASCADE"),
         primary_key=True,
     ),
     Column(
@@ -28,7 +28,7 @@ class Employees(Base):
 
     __tablename__ = "employees"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(index=True, nullable=False, primary_key=True)
 
     name: Mapped[str] = mapped_column(nullable=False)
     phone_number: Mapped[str] = mapped_column(
@@ -38,7 +38,6 @@ class Employees(Base):
         index=True,
     )
 
-    user_id: Mapped[int] = mapped_column(index=True, nullable=False, unique=True)
     owner_id: Mapped[int] = mapped_column(index=True, nullable=False)
 
     pvzs: Mapped[List["PVZs"]] = relationship(
@@ -50,4 +49,4 @@ class Employees(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Employee(id={self.id}, user_id={self.user_id}), owner_id={self.owner_id}>"
+        return f"<Employee(user={self.user_id}, owner_id={self.owner_id}>"
