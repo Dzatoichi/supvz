@@ -25,6 +25,8 @@ public class InboxEvent {
 
     private String payload;
 
+    private LocalDateTime reservedTo;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime receivedAt;

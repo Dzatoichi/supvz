@@ -1,8 +1,11 @@
 package com.supvz.notifications_service.service;
 
 import com.supvz.notifications_service.entity.InboxEvent;
-import com.supvz.notifications_service.entity.Notification;
+
+import java.util.UUID;
 
 public interface NotificationService {
-    Notification create(InboxEvent event);
+    void create(InboxEvent event);
+
+    void process(UUID eventId);
 }

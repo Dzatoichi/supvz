@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.core;
+package com.supvz.notifications_service.core.dto;
 
 
 import com.supvz.notifications_service.entity.NotificationType;

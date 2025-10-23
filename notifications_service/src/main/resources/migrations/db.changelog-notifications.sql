@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS inbox_events
 (
 	event_id UUID PRIMARY KEY,
 	event_type notification_type NOT NULL,
+	reserved_to TIMESTAMP,
 	payload TEXT NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	received_at TIMESTAMP NOT NULL DEFAULT now(),
@@ -36,5 +37,5 @@ CREATE TABLE IF NOT EXISTS notifications
 );
 
 --changeset re1kur:4
-CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox_events (received_at) WHERE processed = FALSE;
+CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox_events (received_at) WHERE processed = FALSE AND reserved_to < now();
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications (recipient_id);
