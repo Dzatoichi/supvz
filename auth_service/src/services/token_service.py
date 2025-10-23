@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Any
+from typing import Any, Optional
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
@@ -33,10 +33,7 @@ class JWTTokensService:
         """
         token_handler = TokenHandler(token_type=token_type)
         if token_type == TokenTypesEnum.register:
-            token, expires_at = token_handler.sign_jwt(
-                user_id=user_id,
-                **additional_payload
-            )
+            token, expires_at = token_handler.sign_jwt(user_id=user_id, **additional_payload)
         else:
             token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
@@ -53,11 +50,11 @@ class JWTTokensService:
         return token
 
     async def create_registration_token(
-            self,
-            pvz_id: int,
-            owner_id: int,
-            role: str,
-            email: Optional[str] = None,
+        self,
+        pvz_id: int,
+        owner_id: int,
+        role: str,
+        email: Optional[str] = None,
     ) -> str:
         """
         Создание JWT токена для регистрации сотрудника.
@@ -69,7 +66,7 @@ class JWTTokensService:
             pvz_id=pvz_id,
             owner_id=owner_id,
             role=role,  # роль сотрудника
-            email=email
+            email=email,
         )
 
     async def revoke_token(
@@ -134,16 +131,6 @@ class JWTTokensService:
         if token_type == TokenTypesEnum.access:
             return token_payload
 
-        if token_type == TokenTypesEnum.register:
-            required_fields = ["pvz_id", "owner_id", "target_role"]
-            for field in required_fields:
-                if field not in token_payload:
-                    raise InvalidTokenException(f"Missing required field: {field}")
-            return token_payload
-
-        if repo is None:
-            raise InvalidTokenException("Repository required for refresh token validation")
-
         token_hash = hash_helper.hash_token(token=token)
         token_info = await self.repo.get_token_by_token_hash(token_hash=token_hash)
 
@@ -158,7 +145,7 @@ class StatefulTokenService:
     Класс сервиса обработки stateful токенов.
     """
 
-    def __init__(self, dao: StatefulTokenDAO | None = None):
+    def __init__(self, dao: Optional[StatefulTokenDAO] = None):
         self.dao = dao
 
     async def create_stateful_token(

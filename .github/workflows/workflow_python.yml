@@ -1,4 +1,4 @@
-name: CI
+name: CI_PYTHON
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service]
+        service: [auth_service, pvz_service]
     env:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
@@ -31,7 +31,6 @@ jobs:
         run: |
           poetry run ruff check .
           poetry run ruff format --check --diff
-          poetry run ruff format
 
   test:
     name: Tests (${{ matrix.service }})
@@ -40,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service]
+        service: [auth_service, pvz_service]
     env:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
