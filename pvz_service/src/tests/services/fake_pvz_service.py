@@ -10,15 +10,41 @@ class FakePVZService:
     Это фейковый сервис, который имитирует поведение настоящего PVZService
     для использования в API-тестах. Он не ходит в базу данных.
     """
-    
+
     _fake_db = [
-        PVZRead(id=1, code="PVZ-MSK-01", type="ozon", address="Москва", owner_id=10, group="A", curator_id=1, created_at=datetime.utcnow()),
-        PVZRead(id=2, code="PVZ-SPB-01", type="wb", address="Санкт-Петербург", owner_id=11, group="A", curator_id=2, created_at=datetime.utcnow()),
-        PVZRead(id=3, code="PVZ-MSK-02", type="ozon", address="Москва, ул. Тверская", owner_id=12, group="B", curator_id=3, created_at=datetime.utcnow()),
+        PVZRead(
+            id=1,
+            code="PVZ-MSK-01",
+            type="ozon",
+            address="Москва",
+            owner_id=10,
+            group="A",
+            curator_id=1,
+            created_at=datetime.utcnow(),
+        ),
+        PVZRead(
+            id=2,
+            code="PVZ-SPB-01",
+            type="wb",
+            address="Санкт-Петербург",
+            owner_id=11,
+            group="A",
+            curator_id=2,
+            created_at=datetime.utcnow(),
+        ),
+        PVZRead(
+            id=3,
+            code="PVZ-MSK-02",
+            type="ozon",
+            address="Москва, ул. Тверская",
+            owner_id=12,
+            group="B",
+            curator_id=3,
+            created_at=datetime.utcnow(),
+        ),
     ]
 
     async def add_pvz(self, data, repo):
-        
         if data.code == "EXISTING-CODE":
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -32,7 +58,7 @@ class FakePVZService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Pvz not found",
             )
-            
+
         return PVZRead(
             id=pvz_id,
             code="FETCHED-PVZ",
@@ -41,7 +67,7 @@ class FakePVZService:
             owner_id=1,
             group="A",
             curator_id=1,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
     async def update_pvz_by_id(self, pvz_id, data, repo):
@@ -58,7 +84,7 @@ class FakePVZService:
             owner_id=data.owner_id,
             group=data.group,
             curator_id=data.curator_id,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
     async def get_pvzs(self, code, type, address, group, repo):
@@ -66,10 +92,10 @@ class FakePVZService:
 
         if code is not None:
             results = [pvz for pvz in results if pvz.code == code]
-        
+
         if type is not None:
             results = [pvz for pvz in results if pvz.type == type]
-            
+
         if address is not None:
             results = [pvz for pvz in results if address in pvz.address]
 

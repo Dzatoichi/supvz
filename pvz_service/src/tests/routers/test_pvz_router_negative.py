@@ -2,6 +2,7 @@ import pytest
 
 pytestmark = pytest.mark.anyio
 
+
 async def test_get_non_existent_pvz_by_id(client):
     """
     Тест: GET /pvzs/{pvz_id} должен вернуть 404, если ПВЗ не найден.
