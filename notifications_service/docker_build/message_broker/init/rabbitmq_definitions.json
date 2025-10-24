@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "name": "rabbitmq",
+      "password": "rabbitmq",
+      "tags": ["administrator"]
+    }
+  ],
+  "permissions":[
+    {
+      "user":"rabbitmq",
+      "vhost":"/",
+      "configure":".*",
+      "read":".*",
+      "write":".*"}
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "notifications_service",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true
+    }
+  ],
+  "queues": [
+    {
+      "name": "notifications_queue",
+      "vhost": "/",
+      "durable": true
+    }
+  ],
+  "bindings": [
+    {
+      "source": "notifications_service",
+      "vhost": "/",
+      "destination": "notifications_queue",
+      "routing_key": "new_notification",
+      "destination_type": "queue"
+    }
+  ]
+}

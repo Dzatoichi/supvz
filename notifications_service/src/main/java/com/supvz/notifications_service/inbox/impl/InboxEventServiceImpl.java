@@ -34,6 +34,7 @@ public class InboxEventServiceImpl implements InboxEventService {
         try {
             InboxEvent mapped = mapper.create(messageDto);
             InboxEvent saved = repo.save(mapped);
+            // todo вылетает не эта ошибка если уже существует
             log.info("Inbox event [{}] is created.", saved.getEventId());
             return saved;
         } catch (DataIntegrityViolationException e) {

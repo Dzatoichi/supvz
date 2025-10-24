@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;
 import com.supvz.notifications_service.core.exception.InvalidMessagePatternException;
 import com.supvz.notifications_service.core.dto.MessageDto;
-import com.supvz.notifications_service.service.NotificationProcessingService;
+import com.supvz.notifications_service.service.MessageProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -17,7 +17,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class NotificationRabbitListener implements MessageListener {
     private final ObjectMapper objectMapper;
-    private final NotificationProcessingService processingService;
+    private final MessageProcessingService processingService;
 
     @Override
     @RabbitListener(queues = {"${messaging.notifications_queue}"})
@@ -25,7 +25,7 @@ public class NotificationRabbitListener implements MessageListener {
         log.info("Listened raw message: [{}]", message);
         try {
             MessageDto messageDto = objectMapper.readValue(message, MessageDto.class);
-            processingService.init(messageDto);
+            processingService.initNotification(messageDto);
             log.info("Message [{}] is successfully processed.", messageDto.eventId());
         } catch (IOException e) {
             log.error("Failed to deserialize message [{}]: {}", message, e.getMessage());

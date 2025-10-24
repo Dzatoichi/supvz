@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface NotificationRepository extends CrudRepository<Notification, Long> {
     @Query(value = """
             FROM Notification n
-            WHERE n.event.eventId :id
+            WHERE n.event.eventId = :id
             """)
     Optional<Notification> findByEventId(
             @Param("id") UUID id);

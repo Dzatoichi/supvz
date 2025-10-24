@@ -1,9 +1,8 @@
 package com.supvz.notifications_service.inbox.impl;
 
-import com.supvz.notifications_service.core.dto.InboxEventDto;
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.inbox.InboxPoller;
-import com.supvz.notifications_service.service.NotificationService;
+import com.supvz.notifications_service.service.MessageProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class InboxPollerImpl implements InboxPoller {
     private final InboxEventService inboxEventService;
-    private final NotificationService notificationService;
+    private final MessageProcessingService processingService;
 
     @Value("${inbox.polling.to_process_by_time.number}")
     private int firstNumber;
@@ -30,7 +29,7 @@ public class InboxPollerImpl implements InboxPoller {
         List<UUID> eventIds = inboxEventService.readFirstUnprocessed(firstNumber);
 
         for (UUID eventId : eventIds) {
-            notificationService.process(eventId);
+            processingService.processNotification(eventId);
         }
     }
 }

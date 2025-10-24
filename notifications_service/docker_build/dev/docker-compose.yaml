@@ -8,3 +8,16 @@ services:
       POSTGRES_DB: notifications_db
     ports:
       - "5432:5432"
+  rabbitmq:
+    container_name: message_broker
+    image: rabbitmq:4-management-alpine
+    volumes:
+      - ../message_broker/init/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbitmq_management load_definitions '/etc/rabbitmq/definitions.json'"
+    ports:
+      - "5672:5672"
+      - "15672:15672"

@@ -4,7 +4,7 @@ import com.supvz.notifications_service.entity.InboxEvent;
 import com.supvz.notifications_service.entity.Notification;
 import com.supvz.notifications_service.mapper.NotificationMapper;
 import com.supvz.notifications_service.repo.NotificationRepository;
-import com.supvz.notifications_service.service.NotificationProcessingService;
+import com.supvz.notifications_service.service.MessageProcessingService;
 import com.supvz.notifications_service.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,6 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationMapper mapper;
     private final NotificationRepository repo;
-    private final NotificationProcessingService processingService;
 
     @Override
     @Transactional
@@ -34,14 +33,11 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void process(UUID eventId) {
-        log.info("Process notification by event [{}].", eventId);
+    public Notification findByEventId(UUID eventId) {
+        log.info("Get notification by event [{}].", eventId);
+        //todo exception
 
-        Notification notification = repo.findByEventId(eventId)
-                .orElseThrow(); //todo exception
-
-        processingService.process(notification);
-
-        log.info("Notification [{}] is processed.", notification.getId());
+        return repo.findByEventId(eventId)
+                .orElseThrow();
     }
 }

@@ -21,7 +21,7 @@ public class Notification {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(table = "inbox_events", name = "event_id", referencedColumnName = "event_id")
+    @JoinColumn(name = "event_id")
     private InboxEvent event;
 
     @JdbcType(PostgreSQLEnumJdbcType.class)
@@ -38,4 +38,21 @@ public class Notification {
     private LocalDateTime createdAt;
 
     private LocalDateTime sentAt;
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+
+        if (!(o instanceof Notification notification)) return false;
+
+        if (id == null || notification.id == null) return false;
+
+        return id.equals(notification.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id == null ? System.identityHashCode(this) : id.hashCode();
+    }
 }

@@ -37,5 +37,5 @@ CREATE TABLE IF NOT EXISTS notifications
 );
 
 --changeset re1kur:4
-CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox_events (received_at) WHERE processed = FALSE AND reserved_to < now();
+CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox_events (received_at) WHERE processed = FALSE;
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications (recipient_id);
