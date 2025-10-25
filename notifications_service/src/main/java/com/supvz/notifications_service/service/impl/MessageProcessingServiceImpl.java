@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -23,7 +24,7 @@ public class MessageProcessingServiceImpl implements MessageProcessingService {
     @Override
     @Transactional
     public void initNotification(MessageDto messageDto) {
-        log.info("Initialize notification message: [{}].", messageDto.eventId());
+        log.debug("Initialize notification message: [{}].", messageDto.eventId());
 
         InboxEvent inboxEvent = inboxEventService.create(messageDto);
         notificationService.create(inboxEvent);
@@ -32,10 +33,17 @@ public class MessageProcessingServiceImpl implements MessageProcessingService {
     }
 
     @Override
+    @Transactional
     public void processNotification(UUID eventId) {
-        log.info("Process notification by event [{}].", eventId);
+        log.debug("Process notification by event [{}].", eventId);
 
         Notification notification = notificationService.findByEventId(eventId);
+
+        notification.setSentAt(LocalDateTime.now());
+        InboxEvent event = notification.getEvent();
+        event.setProcessed(true);
+        event.setProcessedAt(LocalDateTime.now());
+        notification.setEvent(event);
 
         log.info("Notification [{}] is processed.", notification.getId());
     }

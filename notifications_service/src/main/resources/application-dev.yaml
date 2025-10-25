@@ -4,9 +4,15 @@ spring:
       enabled: true
       file:
         - docker_build/dev/docker-compose.yaml
+  jpa:
+    show-sql: true
 
 server:
   port: 8003
+
+logging:
+  level:
+    com.supvz.notifications_service: trace
 
 messaging:
   notifications_queue: notifications_queue

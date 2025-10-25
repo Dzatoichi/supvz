@@ -22,11 +22,11 @@ public class NotificationRabbitListener implements MessageListener {
     @Override
     @RabbitListener(queues = {"${messaging.notifications_queue}"})
     public void listen(String message) {
-        log.info("Listened raw message: [{}]", message);
+        log.debug("Listened raw message: [{}]", message);
         try {
             MessageDto messageDto = objectMapper.readValue(message, MessageDto.class);
             processingService.initNotification(messageDto);
-            log.info("Message [{}] is successfully processed.", messageDto.eventId());
+            log.info("Message [{}] is successfully listened.", messageDto.eventId());
         } catch (IOException e) {
             log.error("Failed to deserialize message [{}]: {}", message, e.getMessage());
             throw new InvalidMessagePatternException(e.getMessage());

@@ -1,5 +1,7 @@
 package com.supvz.notifications_service.inbox.impl;
 
+import com.supvz.notifications_service.core.exception.InboxEventConflictException;
+import com.supvz.notifications_service.entity.InboxEvent;
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.inbox.InboxPoller;
 import com.supvz.notifications_service.service.MessageProcessingService;
@@ -25,11 +27,21 @@ public class InboxPollerImpl implements InboxPoller {
     @Override
     @Scheduled(fixedDelay = 10000)
     public void poll() {
-        log.info("Polling inbox events.");
-        List<UUID> eventIds = inboxEventService.readFirstUnprocessed(firstNumber);
-
-        for (UUID eventId : eventIds) {
+        log.debug("Polling inbox events.");
+        List<InboxEvent> events = inboxEventService.readFirstUnprocessed(firstNumber);
+        List<UUID> eventsIds = reserveEvents(events);
+        for (UUID eventId : eventsIds) {
             processingService.processNotification(eventId);
         }
+    }
+
+    private List<UUID> reserveEvents(List<InboxEvent> events) {
+        List<UUID> eventsIds = events.stream().map(InboxEvent::getEventId).toList();
+        log.debug("Reserve events {}.", eventsIds.isEmpty() ? "[EMPTY LIST]" : eventsIds);
+
+        for (InboxEvent event : events) {
+            inboxEventService.reserveEvent(event);
+        }
+        return eventsIds;
     }
 }

@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface InboxEventService {
     InboxEvent create(MessageDto messageDto);
 
-    List<UUID> readFirstUnprocessed(int firstNumber);
+    List<InboxEvent> readFirstUnprocessed(int firstNumber);
 
-    List<UUID> reserveList(List<InboxEvent> events);
+    void reserveEvent(InboxEvent event);
 }

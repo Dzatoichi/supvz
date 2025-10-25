@@ -16,7 +16,7 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     @Query(value = """
             FROM InboxEvent i WHERE
             i.processed IS FALSE
-            AND i.reservedTo < CURRENT_TIMESTAMP
+            AND (i.reservedTo IS NULL OR i.reservedTo < CURRENT_TIMESTAMP)
             ORDER BY receivedAt
             LIMIT :number
             """)
@@ -27,10 +27,23 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     @Query(value = """
             UPDATE InboxEvent i
             SET i.reservedTo = :reservationTime
-            WHERE i.eventId = :id AND
+            WHERE i = :event AND
             (i.reservedTo IS NULL OR i.reservedTo < CURRENT_TIMESTAMP)
             """)
     int reserve(
-            @Param("id") UUID eventId,
+            @Param("event") InboxEvent event,
             @Param("reservationTime") LocalDateTime reservationMinutes);
+
+    @Modifying
+    @Query(value = """
+            INSERT INTO inbox_events (event_id, event_type, payload, created_at, received_at, processed)
+                VALUES (:eventId, (:eventType)::notification_type, :payload, :createdAt, NOW(), FALSE)
+                ON CONFLICT (event_id) DO NOTHING
+                RETURNING event_id
+            """, nativeQuery = true)
+    List<UUID> saveIfNotExists(
+            @Param("eventId") UUID eventId,
+            @Param("eventType") String eventType,
+            @Param("payload") String payload,
+            @Param("createdAt") LocalDateTime createdAt);
 }

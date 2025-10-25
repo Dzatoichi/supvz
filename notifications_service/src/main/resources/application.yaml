@@ -1,5 +1,7 @@
 spring:
   application:
     name: notifications_service
+  jpa:
+    open-in-view: false
   liquibase:
     change-log: migrations/db.changelog-master.yaml
