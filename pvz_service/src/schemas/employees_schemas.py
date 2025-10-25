@@ -1,16 +1,9 @@
 import re
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-
-class PvzInEmployeeResponseSchema(BaseModel):
-    """Схема вложенного объекта ПВЗ, используемая в ответе при возврате данных о сотруднике."""
-
-    id: int
-    address: Optional[str]
-
-    model_config = ConfigDict(from_attributes=True)
+from src.schemas.pvz_schemas import PVZRead
 
 
 class EmployeeCreateRequestSchema(BaseModel):
@@ -19,14 +12,14 @@ class EmployeeCreateRequestSchema(BaseModel):
     user_id: int
     owner_id: int
 
-    name: str | None = None
-    phone_number: str | None = None
+    name: str
+    phone_number: str
 
     @field_validator("phone_number")
     @classmethod
     def validate_phone_number(cls, values: str) -> str:
         """
-        Функция валиадации номера телефона.
+        Функция валидации номера телефона.
         """
         if not re.match(r"^\+\d{1,15}$", values):
             raise ValueError("Invalid phone number")
@@ -44,7 +37,7 @@ class EmployeeResponseSchema(BaseModel):
     name: str | None = None
     phone_number: str | None = None
 
-    pvzs: List[PvzInEmployeeResponseSchema]
+    pvzs: List[PVZRead]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -52,14 +45,14 @@ class EmployeeResponseSchema(BaseModel):
 class EmployeeUpdateRequestSchema(BaseModel):
     """Схема запроса для обновления данных сотрудника."""
 
-    name: Optional[str] = None
-    phone_number: Optional[str] = None
+    name: str | None = None
+    phone_number: str | None = None
 
     @field_validator("phone_number")
     @classmethod
     def validate_phone_number(cls, values: str) -> str:
         """
-        Функция валиадации номера телефона.
+        Функция валидации номера телефона.
         """
         if not re.match(r"^\+\d{1,15}$", values):
             raise ValueError("Invalid phone number")

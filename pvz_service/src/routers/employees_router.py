@@ -18,21 +18,32 @@ from src.utils.dependencies import (
 employees_router = APIRouter(prefix="/employees", tags=["Employees"])
 
 
-@employees_router.get("")
+@employees_router.get("/{user_id}", response_model=EmployeeResponseSchema)
+async def get_employee(
+    user_id: int,
+    employee_service: EmployeesService = Depends(get_employees_service),
+    repo: EmployeesDAO = Depends(get_employees_repo),
+):
+    """Возвращает одного сотрудника по его user_id."""
+    return await employee_service.get_employee_by_user_id(user_id=user_id, repo=repo)
+
+
+@employees_router.get("", response_model=list[EmployeeResponseSchema])
 async def get_employees(
-    user_id: int | None = Query(default=None, description="ID пользователя"),
-    owner_id: int | None = Query(default=None, description="ID владельца"),
+    user_id: int = Query(..., description="ID владельца"),
+    pvz_id: int | None = Query(default=None, description="ID ПВЗ для фильтрации сотрудников"),
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
     """
-    Возвращает одного сотрудника по user_id, а также всех по owner_id.
-    Можно передать только один параметр — либо user_id, либо owner_id.
+    Возвращает всех сотрудников указанного владельца.
+    Можно также указать ID ПВЗ для фильтрации сотрудников конкретного ПВЗ.
     """
-
-    params_in = {"user_id": user_id, "owner_id": owner_id}
-
-    return await employee_service.get_employees_by_id(params=params_in, repo=repo)
+    return await employee_service.get_employees_filtered(
+        owner_id=user_id,
+        pvz_id=pvz_id,
+        repo=repo,
+    )
 
 
 @employees_router.post(

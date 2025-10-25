@@ -2,11 +2,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
+from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
-from src.utils.dependencies import get_pvz_repo, get_pvz_service
+from src.utils.dependencies import get_employees_repo, get_pvz_repo, get_pvz_service
 
 pvz_router = APIRouter(prefix="/pvzs", tags=["pvzs"])
 
@@ -74,14 +75,25 @@ async def get_pvzs(
     "/{pvz_id}/employees",
     response_model=list[EmployeeResponseSchema],
 )
-async def get_employees(
+async def get_employees_by_pvz(
     pvz_id: int,
+    user_id: int = Query(..., description="ID сотрудника, запрашивающего список коллег"),
     pvz_service: PVZService = Depends(get_pvz_service),
-    repo: PVZsDAO = Depends(get_pvz_repo),
+    repo: EmployeesDAO = Depends(get_employees_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
-    """Возвращает список сотрудников, связанных с указанным ПВЗ."""
+    """
+    Возвращает список сотрудников, работающих в указанном ПВЗ.
 
-    return await pvz_service.get_employees_by_pvz(pvz_id=pvz_id, repo=repo)
+    Доступ разрешен только сотрудникам, которые сами привязаны к этому ПВЗ.
+    Проверяется, что pvz_id содержится в списке ПВЗ пользователя.
+    """
+    return await pvz_service.get_employees_by_pvz_checked(
+        user_id=user_id,
+        pvz_id=pvz_id,
+        repo=repo,
+        pvz_repo=pvz_repo,
+    )
 
 
 @pvz_router.delete("/{pvz_id}", response_model=PVZRead)

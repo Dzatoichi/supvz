@@ -50,39 +50,30 @@ class EmployeesService:
 
         return EmployeeResponseSchema.model_validate(new_employee)
 
-    async def get_employees_by_id(
+    async def get_employee_by_user_id(
         self,
-        params: dict,
+        user_id: int,
         repo: EmployeesDAO,
-    ) -> list[EmployeeResponseSchema] | EmployeeResponseSchema:
-        """Возвращает сотрудника(ов) по ID."""
+    ) -> EmployeeResponseSchema:
+        """Возвращает одного сотрудника по user_id."""
+        employee = await repo.get_employee(user_id=user_id)
 
-        actual_params = {k: v for k, v in params.items() if v is not None}
+        if not employee:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Сотрудник не найден")
 
-        if len(actual_params) == 0:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                detail="Нужно указать хотя бы один параметр (user_id или owner_id).",
-            )
+        return EmployeeResponseSchema.model_validate(employee)
 
-        if len(actual_params) > 1:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                detail="Используйте только один параметр для поиска.",
-            )
-
-        field_name, field_value = next(iter(actual_params.items()))
-
-        employees = await repo.get_employees(**{field_name: field_value})
+    async def get_employees_filtered(
+        self,
+        owner_id: int,
+        pvz_id: int | None,
+        repo: EmployeesDAO,
+    ) -> list[EmployeeResponseSchema]:
+        """Возвращает список сотрудников владельца, при необходимости фильтрует по ПВЗ."""
+        employees = await repo.get_employees_filtered(user_id=owner_id, pvz_id=pvz_id)
 
         if not employees:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND,
-                detail="Сотрудники не найдены",
-            )
-
-        if field_name == "user_id":
-            return EmployeeResponseSchema.model_validate(employees[0])
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Сотрудники не найдены")
 
         return [EmployeeResponseSchema.model_validate(emp) for emp in employees]
 
