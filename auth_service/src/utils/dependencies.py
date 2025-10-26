@@ -59,4 +59,3 @@ def get_access_token_from_cookie(request: Request) -> str:
     if not access_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token not found in cookies")
     return access_token
-

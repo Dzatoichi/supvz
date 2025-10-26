@@ -1,8 +1,16 @@
 from fastapi import HTTPException, status
+from fastapi_pagination import Page, Params, paginate
 
-from src.core.security.permissions import get_permissions_for_role
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserReadSchema, UserRole
+from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import (
+    UserAuthRequestSchema,
+    UserReadSchema,
+    UserRole,
+    UserUpdateSchema,
+)
+from src.services.token_service import JWTTokensService
 from src.utils.logger_settings import logger
 
 
@@ -38,60 +46,42 @@ class UserService:
             user_id=user.id,
         )
 
-        return UserReadSchema(
-            id=updated_user.id,
-            email=updated_user.email,
-            name=updated_user.name,
-            role=updated_user.role,
-            permissions=get_permissions_for_role(updated_user.role),
-            created_at=updated_user.created_at,
-        )
+        return UserReadSchema.model_validate(updated_user)
 
-    async def get_user_by_id(self, user_id: int, repo: UsersDAO) -> UserRead:
+    async def get_user_by_id(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
         """Получает юзера по id"""
 
         user = await repo.get_by_id(user_id)
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        return UserRead(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            role=user.role,
-            permissions=get_permissions_for_role(user.role),
-            created_at=user.created_at,
-        )
+        return UserReadSchema.model_validate(user)
 
-    async def get_users(self, repo: UsersDAO) -> list[UserRead]:
+    async def get_users(self, repo: UsersDAO, params: Params) -> Page[UserReadSchema]:
         """Получает всех юзеров"""
 
         users = await repo.get_all()
 
-        return [
-            UserRead(
-                id=user.id,
-                email=user.email,
-                name=user.name,
-                role=user.role,
-                permissions=get_permissions_for_role(user.role),
-                created_at=user.created_at,
-            )
-            for user in users
-        ]
+        users_page = paginate(users, params)
+
+        users_page.items = [UserReadSchema.model_validate(user) for user in users_page.items]
+
+        return users_page
 
     async def update_user(
         self,
-        token: UserAuthRequest,
+        token: UserAuthRequestSchema,
         token_service: JWTTokensService,
-        user: UserUpdate,
+        user: UserUpdateSchema,
         repo: UsersDAO,
-    ) -> UserUpdate:
+        refresh_repo: RefreshTokensDAO,
+    ) -> UserUpdateSchema:
         """Обновляет данные пользователя"""
 
         token_payload = await token_service.validate_token(
             token.access_token,
             TokenTypesEnum.access,
+            repo=refresh_repo,
         )
 
         # Проверяем существование пользователя
@@ -102,30 +92,33 @@ class UserService:
         # Проверяем, что пользователь обновляет свои данные
         current_user_id = token_payload.get("user_id")
         if current_user_id != user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Можно обновлять только свои данные")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Можно обновлять только свои данные",
+            )
 
         # Обновляем данные
-        updated_user = await repo.update(prev_user.id, name=user.name, phone_number=user.phone_number, email=user.email)
-        return UserUpdate(
-            id=updated_user.id,
-            name=updated_user.name,
-            phone_number=updated_user.phone_number,
-            email=updated_user.email,
+        updated_user = await repo.update(
+            prev_user.id,
+            email=user.email,
         )
 
-    async def delete_user(self, user_id: int, repo: UsersDAO) -> UserRead:
+        logger.info(
+            "Информация о пользователе id={user_id} успешно обновлена!",
+            user_id=user.id,
+        )
+        return UserUpdateSchema.model_validate(updated_user)
+
+    async def delete_user(self, user_id: int, repo: UsersDAO):
         """Удаляет пользователя по id"""
 
         user = await repo.get_by_id(user_id)
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        await repo.delete(user.id)
-        return UserRead(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            role=user.role,
-            permissions=get_permissions_for_role(user.role),
-            created_at=user.created_at,
+        logger.info(
+            "Пользователь id={user_id} успешно удален!",
+            user_id=user.id,
         )
+
+        await repo.delete(user.id)

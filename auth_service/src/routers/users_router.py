@@ -1,8 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi_pagination import Page, Params
 
 from src.core.security.permissions import PermissionEnum
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserAuthRequestSchema, UserReadSchema, UserUpdateSchema
+from src.schemas.users_schemas import (
+    UserAuthRequestSchema,
+    UserReadSchema,
+    UserUpdateSchema,
+)
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService
 from src.services.user_service import UserService
@@ -10,6 +16,7 @@ from src.utils.dependencies import (
     get_access_token_from_cookie,
     get_auth_service,
     get_jwt_tokens_service,
+    get_refresh_token_dao,
     get_user_service,
     get_users_dao,
 )
@@ -49,45 +56,53 @@ async def get_user(
     return result
 
 
-@users_router.get("", response_model=list[UserReadSchema])
+@users_router.get("", response_model=Page[UserReadSchema])
 async def get_users(
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
+    params: Params = Depends(),
 ):
     """Получает список данных о каждом юзере"""
 
-    result = await user_service.get_users(repo=repo)
+    result = await user_service.get_users(repo=repo, params=params)
     return result
 
 
 @users_router.patch("", response_model=UserUpdateSchema)
 async def update_user(
-    user: UserUpdate,
-    access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
-    user_service: UserService = Depends(get_user_service),  # noqa: B008
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
-    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
+    user: UserUpdateSchema,
+    access_token: str = Depends(get_access_token_from_cookie),
+    user_service: UserService = Depends(get_user_service),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    repo: UsersDAO = Depends(get_users_dao),
+    refresh_repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
 ):
     """Заменяет имя и номер телефона существующего пользователя"""
 
-    token = UserAuthRequest(access_token=access_token)
-    result = await user_service.update_user(token=token, token_service=token_service, user=user, repo=repo)
+    token = UserAuthRequestSchema(access_token=access_token)
+    result = await user_service.update_user(
+        token=token,
+        token_service=token_service,
+        user=user,
+        repo=repo,
+        refresh_repo=refresh_repo,
+    )
     return result
 
 
 @users_router.delete("/{user_id}", response_model=UserReadSchema)
 async def delete_user(
     user_id: int,
-    access_token: str = Depends(get_access_token_from_cookie),  # noqa: B008
-    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
-    user_service: UserService = Depends(get_user_service),  # noqa: B008
-    repo: UsersDAO = Depends(get_users_dao),  # noqa: B008
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),  # noqa: B008
+    access_token: str = Depends(get_access_token_from_cookie),
+    auth_service: AuthService = Depends(get_auth_service),
+    user_service: UserService = Depends(get_user_service),
+    repo: UsersDAO = Depends(get_users_dao),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ):
     """Удаление пользователя по id (только с правом DELETE_EMPLOYEES)"""
 
     # Используем зависимость get_access_token_from_cookie
-    auth_request = UserAuthRequest(access_token=access_token)
+    auth_request = UserAuthRequestSchema(access_token=access_token)
 
     # Используем авторизацию
     role, permissions = await auth_service.authorize_user(auth_request, token_service, repo)
@@ -95,8 +110,8 @@ async def delete_user(
     # Проверяем наличие права на удаление сотрудников
     if PermissionEnum.DELETE_EMPLOYEES not in permissions:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав для удаления пользователей"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав для удаления пользователей",
         )
 
-    result = await user_service.delete_user(user_id=user_id, repo=repo)
-    return result
+    await user_service.delete_user(user_id=user_id, repo=repo)
