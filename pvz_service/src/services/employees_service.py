@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from fastapi_pagination import Params
 from sqlalchemy import or_
 
 from src.dao.employeesDAO import EmployeesDAO
@@ -68,14 +69,21 @@ class EmployeesService:
         owner_id: int,
         pvz_id: int | None,
         repo: EmployeesDAO,
+        params: Params,
     ) -> list[EmployeeResponseSchema]:
         """Возвращает список сотрудников владельца, при необходимости фильтрует по ПВЗ."""
-        employees = await repo.get_employees_filtered(user_id=owner_id, pvz_id=pvz_id)
+        employees = await repo.get_employees_filtered(
+            user_id=owner_id,
+            pvz_id=pvz_id,
+            params=params,
+        )
 
         if not employees:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Сотрудники не найдены")
 
-        return [EmployeeResponseSchema.model_validate(emp) for emp in employees]
+        employees.items = [EmployeeResponseSchema.model_validate(emp) for emp in employees.items]
+
+        return employees
 
     async def update_employee(
         self,

@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from fastapi_pagination import Page, Params, paginate
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
@@ -92,7 +93,8 @@ class PVZService:
         address: str,
         group: str,
         repo: PVZsDAO,
-    ) -> list[PVZRead]:
+        params: Params,
+    ) -> Page[PVZRead]:
         filters = {}
         if code is not None:
             filters["code"] = code
@@ -102,21 +104,15 @@ class PVZService:
             filters["address"] = address
         if group is not None:
             filters["group"] = group
+
         pvzs = await repo.get_pvzs(**filters)
 
-        return [
-            PVZRead(
-                id=pvz.id,
-                code=pvz.code,
-                type=pvz.type,
-                address=pvz.address,
-                owner_id=pvz.owner_id,
-                group=pvz.group,
-                curator_id=pvz.curator_id,
-                created_at=pvz.created_at,
-            )
-            for pvz in pvzs
-        ]
+        pvzs_page = paginate(pvzs, params=params)
+
+        # конвертация ORM -> Pydantic
+        pvzs_page.items = [PVZRead.model_validate(pvz) for pvz in pvzs_page.items]
+
+        return pvzs_page
 
     async def delete_pvz_by_id(
         self,
@@ -148,7 +144,8 @@ class PVZService:
         pvz_id: int,
         repo: EmployeesDAO,
         pvz_repo: PVZsDAO,
-    ) -> list[EmployeeResponseSchema]:
+        params: Params,
+    ) -> Page[EmployeeResponseSchema]:
         """
         Возвращает список сотрудников указанного ПВЗ, если запрашивающий сотрудник
         действительно привязан к этому ПВЗ.
@@ -168,11 +165,14 @@ class PVZService:
             )
 
         # Получаем всех сотрудников данного ПВЗ
-        employees = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id)
-        if not employees:
+        employees_page = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id, params=params)
+        if not employees_page.items:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"В ПВЗ с id={pvz_id} не найдено сотрудников.",
             )
 
-        return [EmployeeResponseSchema.model_validate(e) for e in employees]
+        # конвертируем ORM -> Pydantic
+        employees_page.items = [EmployeeResponseSchema.model_validate(e) for e in employees_page.items]
+
+        return employees_page

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query, status
+from fastapi_pagination import Page, Params
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
@@ -28,12 +29,13 @@ async def get_employee(
     return await employee_service.get_employee_by_user_id(user_id=user_id, repo=repo)
 
 
-@employees_router.get("", response_model=list[EmployeeResponseSchema])
+@employees_router.get("", response_model=Page[EmployeeResponseSchema])
 async def get_employees(
     user_id: int = Query(..., description="ID владельца"),
     pvz_id: int | None = Query(default=None, description="ID ПВЗ для фильтрации сотрудников"),
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
+    params: Params = Depends(),
 ):
     """
     Возвращает всех сотрудников указанного владельца.
@@ -43,6 +45,7 @@ async def get_employees(
         owner_id=user_id,
         pvz_id=pvz_id,
         repo=repo,
+        params=params,
     )
 
 

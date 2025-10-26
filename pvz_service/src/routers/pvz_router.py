@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from fastapi_pagination import Page, Params
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
@@ -50,7 +51,7 @@ async def get_pvz_by_id(
     return pvz
 
 
-@pvz_router.get("/", response_model=list[PVZRead])
+@pvz_router.get("/", response_model=Page[PVZRead])
 async def get_pvzs(
     code: Optional[str] = Query(None),
     type: Optional[str] = Query(None),
@@ -58,6 +59,7 @@ async def get_pvzs(
     group: Optional[str] = Query(None),
     repo: PVZsDAO = Depends(get_pvz_repo),
     pvz_service: PVZService = Depends(get_pvz_service),
+    params: Params = Depends(),
 ):
     """Возвращает список всех ПВЗ с возможностью фильтрации по коду, типу, адресу или группе."""
 
@@ -67,13 +69,14 @@ async def get_pvzs(
         address=address,
         group=group,
         repo=repo,
+        params=params,
     )
     return pvzs
 
 
 @pvz_router.get(
     "/{pvz_id}/employees",
-    response_model=list[EmployeeResponseSchema],
+    response_model=Page[EmployeeResponseSchema],
 )
 async def get_employees_by_pvz(
     pvz_id: int,
@@ -81,6 +84,7 @@ async def get_employees_by_pvz(
     pvz_service: PVZService = Depends(get_pvz_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
     pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+    params: Params = Depends(),
 ):
     """
     Возвращает список сотрудников, работающих в указанном ПВЗ.
@@ -93,6 +97,7 @@ async def get_employees_by_pvz(
         pvz_id=pvz_id,
         repo=repo,
         pvz_repo=pvz_repo,
+        params=params,
     )
 
 
