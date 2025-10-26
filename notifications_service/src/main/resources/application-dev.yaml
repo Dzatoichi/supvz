@@ -6,6 +6,20 @@ spring:
         - docker_build/dev/docker-compose.yaml
   jpa:
     show-sql: true
+  mail:
+    host: smtp.gmail.com
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 10000
+          writetimeout: 10000
 
 server:
   port: 8003

@@ -4,8 +4,7 @@ import com.supvz.notifications_service.core.dto.MessageDto;
 import com.supvz.notifications_service.entity.InboxEvent;
 import com.supvz.notifications_service.entity.Notification;
 import com.supvz.notifications_service.inbox.InboxEventService;
-import com.supvz.notifications_service.service.MessageProcessingService;
-import com.supvz.notifications_service.service.NotificationService;
+import com.supvz.notifications_service.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +19,9 @@ import java.util.UUID;
 public class MessageProcessingServiceImpl implements MessageProcessingService {
     private final InboxEventService inboxEventService;
     private final NotificationService notificationService;
+    private final EmailNotificationProcessingService emailNotificationService;
+    private final WebNotificationProcessingService webNotificationService;
+    private final PushNotificationProcessingService pushNotificationService;
 
     @Override
     @Transactional
@@ -38,12 +40,14 @@ public class MessageProcessingServiceImpl implements MessageProcessingService {
         log.debug("Process notification by event [{}].", eventId);
 
         Notification notification = notificationService.findByEventId(eventId);
-
-        notification.setSentAt(LocalDateTime.now());
-        InboxEvent event = notification.getEvent();
-        event.setProcessed(true);
-        event.setProcessedAt(LocalDateTime.now());
-        notification.setEvent(event);
+        switch (notification.getNotificationType()) {
+            case email -> emailNotificationService.send(notification);
+            case web -> webNotificationService.send(notification);
+            case push -> pushNotificationService.send(notification);
+        }
+        LocalDateTime sentAndProcessedAt = LocalDateTime.now();
+        notificationService.markSent(notification, sentAndProcessedAt);
+        inboxEventService.markProcessed(notification.getEvent(), sentAndProcessedAt);
 
         log.info("Notification [{}] is processed.", notification.getId());
     }

@@ -4,13 +4,13 @@ import com.supvz.notifications_service.entity.InboxEvent;
 import com.supvz.notifications_service.entity.Notification;
 import com.supvz.notifications_service.mapper.NotificationMapper;
 import com.supvz.notifications_service.repo.NotificationRepository;
-import com.supvz.notifications_service.service.MessageProcessingService;
 import com.supvz.notifications_service.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -39,5 +39,16 @@ public class NotificationServiceImpl implements NotificationService {
 
         return repo.findByEventId(eventId)
                 .orElseThrow();
+    }
+
+    @Override
+    @Transactional
+    public void markSent(Notification notification, LocalDateTime sentAndProcessedAt) {
+        log.debug("Marking notification [{}] as sent.", notification.getId());
+
+        notification.setSentAt(sentAndProcessedAt);
+        repo.save(notification);
+
+        log.debug("Notification [{}] is marked as sent.", notification.getId());
     }
 }

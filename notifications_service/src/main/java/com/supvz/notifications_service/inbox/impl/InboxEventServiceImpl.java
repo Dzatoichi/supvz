@@ -61,4 +61,17 @@ public class InboxEventServiceImpl implements InboxEventService {
         }
         log.info("Inbox event [{}] reserved to {}.", event.getEventId(), reservedTo);
     }
+
+    @Override
+    @Transactional
+    public void markProcessed(InboxEvent event, LocalDateTime processedAt) {
+        log.debug("Marking event [{}] as processed.", event.getEventId());
+
+        event.setProcessedAt(processedAt);
+        event.setProcessed(true);
+
+        repo.save(event);
+
+        log.debug("Event [{}] is marked as processed.", event.getEventId());
+    }
 }

@@ -5,7 +5,7 @@
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM pg_type WHERE typname = 'notification_type';
 CREATE TYPE notification_type AS ENUM (
     'email',
-    'sms',
+    'web',
     'push'
 );
 
