@@ -26,13 +26,7 @@ class Users(Base):
         nullable=False,
         index=True,
     )
-    phone_number: Mapped[str] = mapped_column(
-        String(32),
-        unique=True,
-        nullable=False,
-        index=True,
-    )
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         SAEnum(

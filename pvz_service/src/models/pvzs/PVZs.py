@@ -1,11 +1,12 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import DateTime, Integer, String, func
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
+from src.models.employees.employees import Employees, employee_pvz_association
 from src.schemas.pvz_schemas import PVZType
 
 
@@ -30,6 +31,13 @@ class PVZs(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+
+    employees: Mapped[List["Employees"]] = relationship(
+        "Employees",
+        secondary=employee_pvz_association,
+        back_populates="pvzs",
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
