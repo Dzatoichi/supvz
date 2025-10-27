@@ -8,8 +8,8 @@ spring:
     show-sql: true
   mail:
     host: smtp.gmail.com
-    username: ${SMTP_USERNAME}
-    password: ${SMTP_PASSWORD}
+    username: ${SMTP_USER}
+    password: ${SMTP_PASS}
     port: 587
     properties:
       mail:
@@ -20,9 +20,6 @@ spring:
           connectiontimeout: 5000
           timeout: 10000
           writetimeout: 10000
-
-server:
-  port: 8003
 
 logging:
   level:

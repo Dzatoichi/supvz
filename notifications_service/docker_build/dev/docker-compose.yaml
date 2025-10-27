@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
   rabbitmq:
-    container_name: message_broker
+    container_name: dev_mb
     image: rabbitmq:4-management-alpine
     volumes:
       - ../message_broker/init/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
@@ -21,3 +21,12 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+  prometheus:
+    container_name: dev_prom
+    image: prom/prometheus:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

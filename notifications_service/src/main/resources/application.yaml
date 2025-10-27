@@ -1,7 +1,19 @@
 spring:
   application:
-    name: notifications_service
+    name: notifications-service
   jpa:
     open-in-view: false
   liquibase:
     change-log: migrations/db.changelog-master.yaml
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+        - health
+        - info
+        - prometheus
+
+server:
+  port: 8003

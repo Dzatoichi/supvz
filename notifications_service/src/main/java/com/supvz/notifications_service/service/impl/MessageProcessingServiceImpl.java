@@ -49,6 +49,6 @@ public class MessageProcessingServiceImpl implements MessageProcessingService {
         notificationService.markSent(notification, sentAndProcessedAt);
         inboxEventService.markProcessed(notification.getEvent(), sentAndProcessedAt);
 
-        log.info("Notification [{}] is processed.", notification.getId());
+        log.info("Notification [{}] by event [{}] is processed.", notification.getId(), eventId);
     }
 }

@@ -6,7 +6,32 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
     url: ${DB_URL}
-#    RABBIT
+  rabbitmq:
+    username: ${MB_USER}
+    password: ${MB_PASS}
+    virtual-host: ${MB_VHOST}
+    host: ${MB_HOST}
+    port: ${MB_PORT}
+  mail:
+    host: ${SMTP_HOST}
+    username: ${SMTP_USER}
+    password: ${SMTP_PASS}
+    port: ${SMTP_PORT}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: ${SMTP_CON_TIMEOUT}
+          timeout: ${SMTP_TIMEOUT}
+          writetimeout: ${SMTP_WRITE_TIMEOUT}
 
-server:
-  port: 8003
+messaging:
+  notifications_queue: ${MESSAGING_INBOX_QUEUE}
+
+inbox:
+  reservation_in_minutes: ${INBOX_RESERVATION_IN_MINUTES}
+  polling:
+    to_process_by_time:
+      number: ${SCHEDULING_POLLING_COUNT_BY_TIME}
