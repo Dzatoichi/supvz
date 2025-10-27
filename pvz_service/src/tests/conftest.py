@@ -11,12 +11,12 @@ else:
 
 from src.main import app
 from src.tests.services.fake_pvz_service import FakePVZService
-from src.utils.dependencies import get_pvzs_service
+from src.utils.dependencies import get_pvz_service
 
 
 @pytest.fixture(autouse=True)
 def override_dependencies():
-    app.dependency_overrides[get_pvzs_service] = lambda: FakePVZService()
+    app.dependency_overrides[get_pvz_service] = lambda: FakePVZService()
     yield
     app.dependency_overrides = {}
 

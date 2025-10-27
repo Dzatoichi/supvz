@@ -20,7 +20,7 @@ class FakePVZService:
             owner_id=10,
             group="A",
             curator_id=1,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(),
         ),
         PVZRead(
             id=2,
@@ -30,7 +30,7 @@ class FakePVZService:
             owner_id=11,
             group="A",
             curator_id=2,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(),
         ),
         PVZRead(
             id=3,
@@ -40,7 +40,7 @@ class FakePVZService:
             owner_id=12,
             group="B",
             curator_id=3,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(),
         ),
     ]
 
