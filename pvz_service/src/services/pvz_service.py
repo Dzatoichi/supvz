@@ -1,7 +1,9 @@
 from fastapi import HTTPException, status
 
+from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
+from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 
 
@@ -20,7 +22,9 @@ class PVZService:
             )
 
         # Если указан group_id, проверяем владельца
-        if data.group_id:
+        if data.group_id == 0:
+            data.group_id = None
+        elif data.group_id:
             group = await group_repo.get_group(id=data.group_id)
             if not group:
                 raise HTTPException(
@@ -50,13 +54,8 @@ class PVZService:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
-        payload = {
-            "address": data.address,
-            "owner_id": data.owner_id,
-            "curator_id": data.curator_id,
-            "group": data.group,
-        }
-        pvz_update = await repo.update(id=pvz_id, **payload)
+
+        pvz_update = await repo.update(id=pvz_id, **data.model_dump(exclude_unset=True))
 
         return PVZRead.model_validate(pvz_update)
 
@@ -115,3 +114,38 @@ class PVZService:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete PVZ")
 
         return pvz_info
+
+    async def get_employees_by_pvz_checked(
+        self,
+        user_id: int,
+        pvz_id: int,
+        repo: EmployeesDAO,
+        pvz_repo: PVZsDAO,
+    ) -> list[EmployeeResponseSchema]:
+        """
+        Возвращает список сотрудников указанного ПВЗ, если запрашивающий сотрудник
+        действительно привязан к этому ПВЗ.
+        """
+        employee = await repo.get_employee(user_id=user_id)
+        if not employee:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Сотрудник с user_id={user_id} не найден.",
+            )
+
+        # Проверка, что сотрудник действительно привязан к указанному ПВЗ
+        if not any(pvz.id == pvz_id for pvz in employee.pvzs):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Вы не можете просматривать сотрудников этого ПВЗ.",
+            )
+
+        # Получаем всех сотрудников данного ПВЗ
+        employees = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id)
+        if not employees:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"В ПВЗ с id={pvz_id} не найдено сотрудников.",
+            )
+
+        return [EmployeeResponseSchema.model_validate(e) for e in employees]

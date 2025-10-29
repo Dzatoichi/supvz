@@ -12,7 +12,7 @@ from src.services.pvz_groups_service import PVZGroupsService
 from src.utils.dependencies import (
     get_pvz_groups_repo,
     get_pvz_groups_service,
-    get_pvzs_dao,
+    get_pvz_repo,
 )
 
 pvz_groups_router = APIRouter(prefix="/pvz_groups", tags=["PVZ_Groups"])
@@ -51,7 +51,7 @@ async def assign_pvz_to_group(
     data: AssignPVZToGroupSchema,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
     repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
-    pvz_repo: PVZsDAO = Depends(get_pvzs_dao),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
     """Привязка одного или нескольких ПВЗ к указанной группе."""
 
@@ -108,7 +108,7 @@ async def delete_group(
     group_id: int,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
     repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
-    pvz_repo: PVZsDAO = Depends(get_pvzs_dao),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
     """Удаляет группу ПВЗ и отвязывает все её ПВЗ."""
 

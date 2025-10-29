@@ -1,4 +1,3 @@
-import re
 from datetime import datetime
 from enum import Enum
 from typing import Annotated
@@ -25,11 +24,16 @@ class UserRole(str, Enum):
 
     administrator = "administrator"
     owner = "owner"
-    test_owner = "test_owner"
     curator = "curator"
     employee = "employee"
     intern = "intern"
     handyman = "handyman"
+
+
+class SubscriptionEnum(Enum):
+    paid = "paid"
+    test = "test"
+    expired = "expired"
 
 
 class UserBaseSchema(BaseModel):
@@ -38,7 +42,6 @@ class UserBaseSchema(BaseModel):
     """
 
     email: EmailStr
-    name: str | None = None
 
     @field_validator("email")
     @classmethod
@@ -65,18 +68,6 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
-    name: str
-    phone_number: str
-
-    @field_validator("phone_number")
-    @classmethod
-    def validate_phone_number(cls, values: str) -> str:
-        """
-        Функция валиадации номера телефона.
-        """
-        if not re.match(r"^\+\d{1,15}$", values):
-            raise ValueError("Invalid phone number")
-        return values
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -94,8 +85,6 @@ class UserUpdateSchema(BaseModel):
     """
 
     id: int
-    name: str | None = None
-    phone_number: str | None = None
     email: EmailStr | None = None
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
@@ -108,6 +97,7 @@ class UserReadSchema(UserBaseSchema):
 
     id: int
     role: UserRole
+    subscription: SubscriptionEnum
     permissions: list[PermissionEnum] = []
     created_at: datetime
 

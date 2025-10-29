@@ -28,7 +28,7 @@ class PVZUpdate(BaseModel):
     address: str
     owner_id: int
     curator_id: int | None = None
-    group: str | None = None
+    group_id: int | None = None
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
