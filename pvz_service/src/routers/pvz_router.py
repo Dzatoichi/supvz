@@ -2,10 +2,11 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
+from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
-from src.utils.dependencies import get_pvzs_dao, get_pvzs_service
+from src.utils.dependencies import get_pvz_groups_repo, get_pvzs_dao, get_pvzs_service
 
 pvz_router = APIRouter(prefix="/pvzs", tags=["pvzs"])
 
@@ -15,8 +16,9 @@ async def add_pvz(
     pvz_in: PVZAdd,
     repo: PVZsDAO = Depends(get_pvzs_dao),
     pvz_service: PVZService = Depends(get_pvzs_service),
+    group_repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
 ):
-    pvz = await pvz_service.add_pvz(data=pvz_in, repo=repo)
+    pvz = await pvz_service.add_pvz(data=pvz_in, repo=repo, group_repo=group_repo)
 
     return pvz
 
@@ -47,7 +49,7 @@ async def get_pvzs(
     code: Optional[str] = Query(None),
     type: Optional[str] = Query(None),
     address: Optional[str] = Query(None),
-    group: Optional[str] = Query(None),
+    group_id: Optional[int] = Query(None),
     repo: PVZsDAO = Depends(get_pvzs_dao),
     pvz_service: PVZService = Depends(get_pvzs_service),
 ):
@@ -55,7 +57,7 @@ async def get_pvzs(
         code=code,
         type=type,
         address=address,
-        group=group,
+        group_id=group_id,
         repo=repo,
     )
     return pvzs

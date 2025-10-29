@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 
+from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 
@@ -9,31 +10,36 @@ class PVZService:
         self,
         data: PVZAdd,
         repo: PVZsDAO,
+        group_repo: PVZGroupsDAO,
     ) -> PVZRead:
         pvz = await repo.get_pvz(code=data.code)
         if pvz:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Pvz already exists")
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail=f"PVZ с кодом {data.code} уже существует",
+            )
 
-        payload = {
-            "code": data.code,
-            "type": data.type,
-            "address": data.address,
-            "group": data.group,
-            "owner_id": data.owner_id,
-            "curator_id": data.curator_id,
-        }
+        # Если указан group_id, проверяем владельца
+        if data.group_id:
+            group = await group_repo.get_group(id=data.group_id)
+            if not group:
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND,
+                    detail=f"Группа {data.group_id} не найдена",
+                )
 
-        pvz_add = await repo.create(payload)
-        return PVZRead(
-            id=pvz_add.id,
-            code=pvz_add.code,
-            type=pvz_add.type,
-            address=pvz_add.address,
-            owner_id=pvz_add.owner_id,
-            group=pvz_add.group,
-            curator_id=pvz_add.curator_id,
-            created_at=pvz_add.created_at,
-        )
+            # Проверяем, что owner_id ПВЗ совпадает с owner_id группы
+            if data.owner_id != group.owner_id:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    detail=(
+                        f"Невозможно добавить ПВЗ: owner_id={data.owner_id} "
+                        f"не совпадает с owner_id группы={group.owner_id}"
+                    ),
+                )
+
+        pvz_add = await repo.create(data.model_dump())
+        return PVZRead.model_validate(pvz_add, from_attributes=True)
 
     async def update_pvz_by_id(
         self,
@@ -52,16 +58,7 @@ class PVZService:
         }
         pvz_update = await repo.update(id=pvz_id, **payload)
 
-        return PVZRead(
-            id=pvz_update.id,
-            code=pvz_update.code,
-            type=pvz_update.type,
-            address=pvz_update.address,
-            owner_id=pvz_update.owner_id,
-            group=pvz_update.group,
-            curator_id=pvz_update.curator_id,
-            created_at=pvz_update.created_at,
-        )
+        return PVZRead.model_validate(pvz_update)
 
     async def get_pvz_by_id(
         self,
@@ -72,25 +69,16 @@ class PVZService:
         if not pvz:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
 
-        return PVZRead(
-            id=pvz.id,
-            code=pvz.code,
-            type=pvz.type,
-            address=pvz.address,
-            owner_id=pvz.owner_id,
-            group=pvz.group,
-            curator_id=pvz.curator_id,
-            created_at=pvz.created_at,
-        )
+        return PVZRead.model_validate(pvz)
 
     async def get_pvzs(
         self,
         code: str,
         type: str,
         address: str,
-        group: str,
+        group_id: int,
         repo: PVZsDAO,
-    ) -> PVZRead:
+    ) -> list[PVZRead]:
         filters = {}
         if code is not None:
             filters["code"] = code
@@ -98,23 +86,11 @@ class PVZService:
             filters["type"] = type
         if address is not None:
             filters["address"] = address
-        if group is not None:
-            filters["group"] = group
+        if group_id is not None:
+            filters["group_id"] = group_id
         pvzs = await repo.get_pvzs(**filters)
 
-        return [
-            PVZRead(
-                id=pvz.id,
-                code=pvz.code,
-                type=pvz.type,
-                address=pvz.address,
-                owner_id=pvz.owner_id,
-                group=pvz.group,
-                curator_id=pvz.curator_id,
-                created_at=pvz.created_at,
-            )
-            for pvz in pvzs
-        ]
+        return [PVZRead.model_validate(pvz) for pvz in pvzs]
 
     async def delete_pvz_by_id(
         self,

@@ -10,22 +10,34 @@ class PVZGroupBase(BaseModel):
     curator_id: Optional[int] = None
 
 
-class PVZGroupCreate(PVZGroupBase):
+class PVZGroupCreateSchema(PVZGroupBase):
     """Схема для создания группы ПВЗ. Содержит обязательный owner_id."""
 
     owner_id: int
 
 
-class PVZGroupUpdate(PVZGroupBase):
+class PVZGroupUpdateSchema(PVZGroupBase):
     """Схема для обновления группы ПВЗ. Все поля опциональны."""
 
     pass
 
 
-class PVZGroupResponse(PVZGroupBase):
+class PVZGroupResponseSchema(PVZGroupBase):
     """Схема ответа для группы ПВЗ с ID и owner_id."""
 
     id: int
     owner_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AssignPVZToGroupSchema(BaseModel):
+    """Схема для привязки ПВЗ к группе."""
+
+    pvz_ids: list[int]
+
+
+class DetailResponseSchema(BaseModel):
+    """Схема для стандартного ответа с сообщением о результате операции."""
+
+    detail: str

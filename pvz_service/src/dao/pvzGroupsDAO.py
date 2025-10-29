@@ -52,3 +52,25 @@ class PVZGroupsDAO(BaseDAO[PVZGroups]):
 
             result = await session.execute(stmt)
             return result.scalars().all()
+
+    @BaseDAO.with_exception
+    async def assign_pvz_to_group(self, group_id: int, pvz_ids: list[int]):
+        """Привязывает пвз к указанной группе по ее ID"""
+
+        async with self._get_session() as session:
+            stmt = update(PVZs).where(PVZs.id.in_(pvz_ids)).values(group_id=group_id)
+            await session.execute(stmt)
+            await session.commit()
+
+    @BaseDAO.with_exception
+    async def set_curator_for_group(self, group_id: int, curator_id: int):
+        async with self._get_session() as session:
+            # обновляем куратора у самой группы
+            stmt_group = update(self.model).where(self.model.id == group_id).values(curator_id=curator_id)
+            await session.execute(stmt_group)
+
+            # обновляем куратора у всех ПВЗ внутри группы
+            stmt_pvz = update(PVZs).where(PVZs.group_id == group_id).values(curator_id=curator_id)
+            await session.execute(stmt_pvz)
+
+            await session.commit()

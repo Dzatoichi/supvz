@@ -18,7 +18,7 @@ class PVZAdd(BaseModel):
     type: PVZType
     address: str
     owner_id: int
-    group: str | None = None
+    group_id: int | None = None
     curator_id: int | None = None
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
