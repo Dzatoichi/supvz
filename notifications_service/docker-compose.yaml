@@ -126,6 +126,19 @@ services:
       prometheus:
         condition: service_healthy
 
+# ____________UTIL____________
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker_build/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      notifications-service:
+        condition: service_healthy
+
 volumes:
   loki_chunks:
   loki_index:
