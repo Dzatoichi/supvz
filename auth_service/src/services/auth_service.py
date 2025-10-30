@@ -7,8 +7,16 @@ from src.core.security.permissions import PermissionEnum, has_permission
 from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema, UserReadEmployeeSchema
+from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema,UserRegisterEmployeeSchema
+from src.schemas.users_schemas import (
+    UserLoginSchema,
+    UserReadSchema,
+    UserRegisterSchema,
+    UserReadEmployeeSchema,
+)
 from src.services.token_service import JWTTokensService, StatefulTokenService
+
+from auth_service.src.schemas.users_schemas import UserReadEmployeeSchema
 
 
 class AuthService:
@@ -43,8 +51,8 @@ class AuthService:
             return UserReadSchema(
                 id=user.id,
                 email=user.email,
-                name=user.name,
                 role=user.role,
+                sub=user.subscription,
                 created_at=user.created_at,
             )
         else:
@@ -60,6 +68,8 @@ class AuthService:
                 role=user.role,
                 created_at=user.created_at,
             )
+
+
 
     async def login_user(
         self,
@@ -152,6 +162,19 @@ class AuthService:
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         return True
+
+    async def generate_register_token(
+        self,
+        employee_data: UserRegisterEmployeeSchema,
+        token_service: JWTTokensService,
+    ) -> dict:
+        register_token = await token_service.create_token(
+            token_type=TokenTypesEnum.register,
+            user_id=employee_data.owner_id,
+            owner_id=employee_data.owner_id,
+            pvz_id=employee_data.pvz_id,
+        )
+        return { "register_token": register_token }
 
     async def authorize_user(
         self,
