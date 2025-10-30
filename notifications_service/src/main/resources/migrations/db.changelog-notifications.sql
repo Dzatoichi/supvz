@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS notifications
 	subject VARCHAR(256),
 	created_at TIMESTAMP NOT NULL DEFAULT now(),
 	sent_at TIMESTAMP,
+	sent BOOLEAN NOT NULL DEFAULT FALSE,
+	viewed BOOLEAN,
 	FOREIGN KEY(event_id) REFERENCES inbox_events(event_id) ON DELETE CASCADE
 );
 

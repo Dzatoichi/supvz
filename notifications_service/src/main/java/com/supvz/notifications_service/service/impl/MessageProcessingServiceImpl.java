@@ -39,14 +39,14 @@ public class MessageProcessingServiceImpl implements MessageProcessingService {
     public void processNotification(UUID eventId) {
         log.debug("Process notification by event [{}].", eventId);
 
-        Notification notification = notificationService.findByEventId(eventId);
+        Notification notification = notificationService.getByEventId(eventId);
         switch (notification.getNotificationType()) {
             case email -> emailNotificationService.send(notification);
             case web -> webNotificationService.send(notification);
             case push -> pushNotificationService.send(notification);
         }
         LocalDateTime sentAndProcessedAt = LocalDateTime.now();
-        notificationService.markSent(notification, sentAndProcessedAt);
+        notificationService.markAsSent(notification, sentAndProcessedAt);
         inboxEventService.markProcessed(notification.getEvent(), sentAndProcessedAt);
 
         log.info("Notification [{}] by event [{}] is processed.", notification.getId(), eventId);

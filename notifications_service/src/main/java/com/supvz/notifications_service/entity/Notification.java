@@ -34,11 +34,13 @@ public class Notification {
 
     private String subject;
 
-    @CreationTimestamp
     private LocalDateTime createdAt;
 
     private LocalDateTime sentAt;
 
+    private Boolean sent;
+
+    private Boolean viewed;
 
     @Override
     public boolean equals(Object o) {
@@ -54,5 +56,11 @@ public class Notification {
     @Override
     public int hashCode() {
         return id == null ? System.identityHashCode(this) : id.hashCode();
+    }
+
+    @PrePersist
+    private void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (sent == null) sent = false;
     }
 }
