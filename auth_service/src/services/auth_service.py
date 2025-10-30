@@ -7,16 +7,14 @@ from src.core.security.permissions import PermissionEnum, has_permission
 from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema,UserRegisterEmployeeSchema
 from src.schemas.users_schemas import (
     UserLoginSchema,
-    UserReadSchema,
-    UserRegisterSchema,
     UserReadEmployeeSchema,
+    UserReadSchema,
+    UserRegisterEmployeeSchema,
+    UserRegisterSchema,
 )
 from src.services.token_service import JWTTokensService, StatefulTokenService
-
-from auth_service.src.schemas.users_schemas import UserReadEmployeeSchema
 
 
 class AuthService:
@@ -68,8 +66,6 @@ class AuthService:
                 role=user.role,
                 created_at=user.created_at,
             )
-
-
 
     async def login_user(
         self,
@@ -174,7 +170,7 @@ class AuthService:
             owner_id=employee_data.owner_id,
             pvz_id=employee_data.pvz_id,
         )
-        return { "register_token": register_token }
+        return {"register_token": register_token}
 
     async def authorize_user(
         self,

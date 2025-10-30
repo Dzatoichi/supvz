@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Any
+from typing import Any, Optional
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
@@ -33,10 +33,7 @@ class JWTTokensService:
         """
         token_handler = TokenHandler(token_type=token_type)
         if token_type == TokenTypesEnum.register:
-            token, expires_at = token_handler.sign_jwt(
-                user_id=user_id,
-                **additional_payload
-            )
+            token, expires_at = token_handler.sign_jwt(user_id=user_id, **additional_payload)
         else:
             token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
@@ -53,11 +50,11 @@ class JWTTokensService:
         return token
 
     async def create_registration_token(
-            self,
-            pvz_id: int,
-            owner_id: int,
-            role: str,
-            email: Optional[str] = None,
+        self,
+        pvz_id: int,
+        owner_id: int,
+        role: str,
+        email: Optional[str] = None,
     ) -> str:
         """
         Создание JWT токена для регистрации сотрудника.
@@ -69,7 +66,7 @@ class JWTTokensService:
             pvz_id=pvz_id,
             owner_id=owner_id,
             role=role,
-            email=email
+            email=email,
         )
 
     async def revoke_token(

@@ -108,6 +108,7 @@ class UserReadSchema(UserBaseSchema):
         self.permissions = get_permissions_for_role(self.role)
         return self
 
+
 class UserReadEmployeeSchema(UserReadSchema):
     pvz_id: int
     owner_id: int
