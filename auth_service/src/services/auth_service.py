@@ -3,15 +3,18 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
-
+from src.core.security.permissions import PermissionEnum, has_permission
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
-
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema,UserRegisterEmployeeSchema
-
+from src.schemas.users_schemas import (
+    UserLoginSchema,
+    UserReadSchema,
+    UserRegisterSchema,
+    UserReadEmployeeSchema,
+)
 from src.services.token_service import JWTTokensService, StatefulTokenService
-
-from auth_service.src.schemas.users_schemas import UserReadEmployeeSchema
 
 
 class AuthService:
@@ -33,11 +36,8 @@ class AuthService:
             raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
 
         hashed_password = hash_helper.hash(data.password)
-
         payload = {
             "email": data.email,
-            "phone_number": data.phone_number,
-            "name": data.name,
             "hashed_password": hashed_password,
         }
         # Обычная регистрация если нет register_token
@@ -46,8 +46,8 @@ class AuthService:
             return UserReadSchema(
                 id=user.id,
                 email=user.email,
-                name=user.name,
                 role=user.role,
+                sub=user.subscription,
                 created_at=user.created_at,
             )
         else:
@@ -59,12 +59,9 @@ class AuthService:
                 owner_id=user.owner_id,
                 id=user.id,
                 email=user.email,
-                name=user.name,
                 role=user.role,
                 created_at=user.created_at,
             )
-
-
 
     async def login_user(
         self,
@@ -170,3 +167,29 @@ class AuthService:
             pvz_id=employee_data.pvz_id,
         )
         return { "register_token": register_token }
+
+    async def authorize_user(
+        self,
+        token: str,
+        token_service: JWTTokensService,
+        repo: UsersDAO,
+        token_repo: RefreshTokensDAO,
+        permission: PermissionEnum,
+    ) -> None:
+        token_payload = await token_service.validate_token(
+            token=token,
+            token_type=TokenTypesEnum.access,
+            repo=token_repo,
+        )
+        user_id = token_payload.get("user_id")
+        user = await repo.get_by_id(user_id)
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Пользователь не найден или неактивен",
+            )
+        if not has_permission(role=user.role, permission=permission):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Недостаточно прав",
+            )

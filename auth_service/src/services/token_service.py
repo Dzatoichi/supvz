@@ -68,7 +68,7 @@ class JWTTokensService:
             user_id=owner_id,
             pvz_id=pvz_id,
             owner_id=owner_id,
-            role=role,  # роль сотрудника
+            role=role,
             email=email
         )
 
@@ -158,7 +158,7 @@ class StatefulTokenService:
     Класс сервиса обработки stateful токенов.
     """
 
-    def __init__(self, dao: StatefulTokenDAO | None = None):
+    def __init__(self, dao: Optional[StatefulTokenDAO] = None):
         self.dao = dao
 
     async def create_stateful_token(

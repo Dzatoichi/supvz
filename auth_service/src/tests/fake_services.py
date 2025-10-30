@@ -21,8 +21,8 @@ class FakeAuthService:
         return {
             "id": 1,
             "email": data.email,
-            "name": data.name,
             "role": "owner",
+            "subscription": "test",
             "created_at": "2024-01-01T00:00:00",
         }
 
