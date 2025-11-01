@@ -28,6 +28,10 @@ logging:
 messaging:
   notifications_queue: notifications_queue
 
+websocket:
+  baseTopic: topic
+  allowed_origins: "*"
+
 inbox:
   reservation_in_minutes: 5
   polling:

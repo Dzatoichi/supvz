@@ -1,8 +1,8 @@
 package com.supvz.notifications_service.service.impl;
 
-import com.supvz.notifications_service.core.dto.MessageDto;
-import com.supvz.notifications_service.entity.InboxEvent;
-import com.supvz.notifications_service.entity.Notification;
+import com.supvz.notifications_service.model.dto.MessageDto;
+import com.supvz.notifications_service.model.entity.InboxEvent;
+import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.service.*;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MessageProcessingServiceImpl implements MessageProcessingService {
+public class EventProcessingServiceImpl implements EventProcessingService {
     private final InboxEventService inboxEventService;
     private final NotificationService notificationService;
     private final EmailNotificationProcessingService emailNotificationService;
@@ -45,6 +45,9 @@ public class MessageProcessingServiceImpl implements MessageProcessingService {
             case web -> webNotificationService.send(notification);
             case push -> pushNotificationService.send(notification);
         }
+
+//        todo: рассмотреть сценарий, если уведомление не обработалось. придумать компенсирующие события. обработчики ошибок
+
         LocalDateTime sentAndProcessedAt = LocalDateTime.now();
         notificationService.markAsSent(notification, sentAndProcessedAt);
         inboxEventService.markProcessed(notification.getEvent(), sentAndProcessedAt);

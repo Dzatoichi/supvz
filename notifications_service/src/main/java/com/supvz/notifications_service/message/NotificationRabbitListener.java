@@ -3,8 +3,8 @@ package com.supvz.notifications_service.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;
 import com.supvz.notifications_service.core.exception.InvalidMessagePatternException;
-import com.supvz.notifications_service.core.dto.MessageDto;
-import com.supvz.notifications_service.service.MessageProcessingService;
+import com.supvz.notifications_service.model.dto.MessageDto;
+import com.supvz.notifications_service.service.EventProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -17,7 +17,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class NotificationRabbitListener implements MessageListener {
     private final ObjectMapper objectMapper;
-    private final MessageProcessingService processingService;
+    private final EventProcessingService processingService;
 
     @Override
     @RabbitListener(queues = {"${messaging.notifications_queue}"})

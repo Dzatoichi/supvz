@@ -1,6 +1,6 @@
-package com.supvz.notifications_service.core.dto;
+package com.supvz.notifications_service.model.dto;
 
-import com.supvz.notifications_service.entity.NotificationType;
+import com.supvz.notifications_service.model.entity.NotificationType;
 import lombok.Builder;
 
 import java.util.UUID;

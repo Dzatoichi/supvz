@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.core.dto;
+package com.supvz.notifications_service.model.dto;
 
 import lombok.Builder;
 

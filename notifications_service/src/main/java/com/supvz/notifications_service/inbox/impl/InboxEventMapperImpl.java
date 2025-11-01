@@ -1,8 +1,8 @@
 package com.supvz.notifications_service.inbox.impl;
 
-import com.supvz.notifications_service.core.dto.InboxEventDto;
-import com.supvz.notifications_service.core.dto.MessageDto;
-import com.supvz.notifications_service.entity.InboxEvent;
+import com.supvz.notifications_service.model.dto.InboxEventDto;
+import com.supvz.notifications_service.model.dto.MessageDto;
+import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.inbox.InboxEventMapper;
 import org.springframework.stereotype.Component;
 

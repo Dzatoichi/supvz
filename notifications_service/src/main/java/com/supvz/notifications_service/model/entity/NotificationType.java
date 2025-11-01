@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.entity;
+package com.supvz.notifications_service.model.entity;
 
 public enum NotificationType {
     email,

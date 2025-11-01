@@ -1,13 +1,13 @@
 package com.supvz.notifications_service.service.impl;
 
-import com.supvz.notifications_service.core.dto.NotificationDto;
-import com.supvz.notifications_service.core.dto.PageDto;
+import com.supvz.notifications_service.model.dto.NotificationDto;
+import com.supvz.notifications_service.model.dto.PageDto;
 import com.supvz.notifications_service.core.exception.InboxEventNotFoundException;
 import com.supvz.notifications_service.core.filter.DateNotificationFilter;
 import com.supvz.notifications_service.core.filter.NotificationFilter;
-import com.supvz.notifications_service.entity.InboxEvent;
-import com.supvz.notifications_service.entity.Notification;
-import com.supvz.notifications_service.entity.NotificationType;
+import com.supvz.notifications_service.model.entity.InboxEvent;
+import com.supvz.notifications_service.model.entity.Notification;
+import com.supvz.notifications_service.model.entity.NotificationType;
 import com.supvz.notifications_service.mapper.NotificationMapper;
 import com.supvz.notifications_service.repo.NotificationRepository;
 import com.supvz.notifications_service.service.NotificationService;
@@ -61,7 +61,6 @@ public class NotificationServiceImpl implements NotificationService {
         Pageable pageable = PageRequest.of(page, size);
         String recipientId = filter.recipientId();
         UUID eventId = filter.eventId();
-        LocalDateTime sentAt = filter.sentAt();
         NotificationType type = filter.type();
         Boolean viewed = filter.viewed();
         DateNotificationFilter dateFilter = filter.dateFilter();
@@ -72,7 +71,7 @@ public class NotificationServiceImpl implements NotificationService {
             notificationPage = repo.findAllWithDateFilter(pageable, recipientId,
                     eventId, type, viewed, dateFilter.startDate(), dateFilter.endDate());
         } else {
-            notificationPage = repo.findAll(pageable, recipientId, eventId, type, viewed, sentAt);
+            notificationPage = repo.findAll(pageable, recipientId, eventId, type, viewed);
         }
         return mapper.readPage(notificationPage);
     }

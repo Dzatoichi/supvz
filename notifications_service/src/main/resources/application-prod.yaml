@@ -30,6 +30,10 @@ spring:
 messaging:
   notifications_queue: ${MESSAGING_INBOX_QUEUE}
 
+websocket:
+  baseTopic: topic
+  allowed_origins: "*"
+
 inbox:
   reservation_in_minutes: ${INBOX_RESERVATION_IN_MINUTES}
   polling:

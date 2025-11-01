@@ -1,13 +1,13 @@
 package com.supvz.notifications_service.mapper.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.supvz.notifications_service.core.dto.NotificationDto;
-import com.supvz.notifications_service.core.dto.PageDto;
+import com.supvz.notifications_service.model.dto.NotificationDto;
+import com.supvz.notifications_service.model.dto.PageDto;
 import com.supvz.notifications_service.core.exception.InvalidMessagePatternException;
-import com.supvz.notifications_service.core.dto.MessagePayloadDto;
-import com.supvz.notifications_service.entity.InboxEvent;
-import com.supvz.notifications_service.entity.Notification;
-import com.supvz.notifications_service.entity.NotificationType;
+import com.supvz.notifications_service.model.dto.MessagePayloadDto;
+import com.supvz.notifications_service.model.entity.InboxEvent;
+import com.supvz.notifications_service.model.entity.Notification;
+import com.supvz.notifications_service.model.entity.NotificationType;
 import com.supvz.notifications_service.mapper.NotificationMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

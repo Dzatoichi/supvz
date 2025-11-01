@@ -1,10 +1,9 @@
 package com.supvz.notifications_service.inbox.impl;
 
-import com.supvz.notifications_service.core.exception.InboxEventConflictException;
-import com.supvz.notifications_service.entity.InboxEvent;
+import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.inbox.InboxPoller;
-import com.supvz.notifications_service.service.MessageProcessingService;
+import com.supvz.notifications_service.service.EventProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class InboxPollerImpl implements InboxPoller {
     private final InboxEventService inboxEventService;
-    private final MessageProcessingService processingService;
+    private final EventProcessingService processingService;
 
     @Value("${inbox.polling.to_process_by_time.number}")
     private int firstNumber;

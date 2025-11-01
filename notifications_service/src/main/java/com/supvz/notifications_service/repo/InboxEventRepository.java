@@ -1,6 +1,6 @@
 package com.supvz.notifications_service.repo;
 
-import com.supvz.notifications_service.entity.InboxEvent;
+import com.supvz.notifications_service.model.entity.InboxEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

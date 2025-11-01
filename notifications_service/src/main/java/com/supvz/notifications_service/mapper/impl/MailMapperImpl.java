@@ -1,6 +1,6 @@
 package com.supvz.notifications_service.mapper.impl;
 
-import com.supvz.notifications_service.entity.Notification;
+import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.mapper.MailMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;

@@ -1,10 +1,10 @@
 package com.supvz.notifications_service.service;
 
-import com.supvz.notifications_service.core.dto.NotificationDto;
-import com.supvz.notifications_service.core.dto.PageDto;
+import com.supvz.notifications_service.model.dto.NotificationDto;
+import com.supvz.notifications_service.model.dto.PageDto;
 import com.supvz.notifications_service.core.filter.NotificationFilter;
-import com.supvz.notifications_service.entity.InboxEvent;
-import com.supvz.notifications_service.entity.Notification;
+import com.supvz.notifications_service.model.entity.InboxEvent;
+import com.supvz.notifications_service.model.entity.Notification;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
