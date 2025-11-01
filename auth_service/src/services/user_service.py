@@ -19,30 +19,30 @@ class UserService:
     Класс сервиса для работы с пользователями.
     """
 
-    async def set_role_owner(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
+    async def set_paid_owner(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
         """
-        Метод обновления роли пользователя с test_owner → owner.
+        Метод для обновления подписки с test на paid.
         """
 
         user = await repo.get_by_id(user_id)
         if not user:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
-        if user.role != UserRole.test_owner:
+        if user.role != UserRole.owner:
             logger.error(
-                "Пользователю не удалось выдать роль владельца, так как у него не была роль test_owner!",
+                "Пользователю не удалось поменять подписку, т.к у него нет роли owner!",
                 user_id=user.id,
             )
 
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                "User is not test_owner",
+                "User is not owner",
             )
 
-        updated_user = await repo.update(user_id, role=UserRole.owner)
+        updated_user = await repo.update(id=user_id, subscription=SubscriptionEnum.paid)
 
         logger.info(
-            "Пользователю успешно выдана роль владельца!",
+            "Пользователю успешно поменяна подписка!",
             user_id=user.id,
         )
 

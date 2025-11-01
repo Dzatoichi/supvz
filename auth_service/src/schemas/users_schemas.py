@@ -24,11 +24,16 @@ class UserRole(str, Enum):
 
     administrator = "administrator"
     owner = "owner"
-    test_owner = "test_owner"
     curator = "curator"
     employee = "employee"
     intern = "intern"
     handyman = "handyman"
+
+
+class SubscriptionEnum(Enum):
+    paid = "paid"
+    test = "test"
+    expired = "expired"
 
 
 class UserBaseSchema(BaseModel):
@@ -92,6 +97,7 @@ class UserReadSchema(UserBaseSchema):
 
     id: int
     role: UserRole
+    subscription: SubscriptionEnum
     permissions: list[PermissionEnum] = []
     created_at: datetime
 

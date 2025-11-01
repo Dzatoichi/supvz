@@ -1,4 +1,4 @@
-name: CI
+name: CI_PYTHON
 
 on:
   pull_request:

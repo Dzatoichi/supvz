@@ -34,8 +34,8 @@ class EmployeeResponseSchema(BaseModel):
     user_id: int
     owner_id: int
 
-    name: str | None = None
-    phone_number: str | None = None
+    name: str
+    phone_number: str
 
     pvzs: List[PVZRead]
 

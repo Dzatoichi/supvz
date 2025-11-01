@@ -107,9 +107,6 @@ class JWTTokensService:
         if token_type == TokenTypesEnum.access:
             return token_payload
 
-        if repo is None:
-            raise InvalidTokenException("Repository required for refresh token validation")
-
         token_hash = hash_helper.hash_token(token=token)
         token_info = await self.repo.get_token_by_token_hash(token_hash=token_hash)
 
@@ -124,7 +121,7 @@ class StatefulTokenService:
     Класс сервиса обработки stateful токенов.
     """
 
-    def __init__(self, dao: StatefulTokenDAO | None = None):
+    def __init__(self, dao: Optional[StatefulTokenDAO] = None):
         self.dao = dao
 
     async def create_stateful_token(
