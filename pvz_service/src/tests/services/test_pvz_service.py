@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import HTTPException
+from fastapi_pagination import Params
 
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
@@ -56,7 +57,14 @@ class TestPVZService:
         mock_repo = AsyncMock()
         mock_repo.get_pvz.return_value = MagicMock()
 
-        input_data = PVZAdd(code="PVZ-123", type="ozon", address="addr", owner_id=1, group="A", curator_id=1)
+        input_data = PVZAdd(
+            code="PVZ-123",
+            type="ozon",
+            address="addr",
+            owner_id=1,
+            group="A",
+            curator_id=1,
+        )
 
         service = PVZService()
         with pytest.raises(HTTPException) as excinfo:
@@ -79,7 +87,13 @@ class TestPVZService:
             id=1,
             code="OLD-CODE",
             created_at=datetime.now(),
-            **{"address": "Новый адрес", "owner_id": 11, "curator_id": 22, "group": "B", "type": "wb"},
+            **{
+                "address": "Новый адрес",
+                "owner_id": 11,
+                "curator_id": 22,
+                "group": "B",
+                "type": "wb",
+            },
         )
         mock_repo.update.return_value = updated_pvz_from_repo
 
@@ -152,8 +166,17 @@ class TestPVZService:
         mock_repo = AsyncMock()
         mock_repo.get_pvzs.return_value = []
 
+        params = Params(page=1, size=50)
+
         service = PVZService()
-        await service.get_pvzs(code="PVZ-007", type=None, address="г. Москва", group=None, repo=mock_repo)
+        await service.get_pvzs(
+            code="PVZ-007",
+            type=None,
+            address="г. Москва",
+            group=None,
+            repo=mock_repo,
+            params=params,
+        )
 
         expected_filters = {"code": "PVZ-007", "address": "г. Москва"}
         mock_repo.get_pvzs.assert_awaited_once_with(**expected_filters)

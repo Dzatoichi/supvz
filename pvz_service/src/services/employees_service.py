@@ -153,8 +153,5 @@ class EmployeesService:
         if not pvz:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "PVZ not found")
 
-        if pvz in employee.pvzs:
-            updated = await employees_repo.unassign_from_pvz(user_id, pvz.id)
-            return EmployeeResponseSchema.model_validate(updated)
-
-        return EmployeeResponseSchema.model_validate(employee)
+        updated = await employees_repo.unassign_from_pvz(user_id, pvz.id)
+        return EmployeeResponseSchema.model_validate(updated)

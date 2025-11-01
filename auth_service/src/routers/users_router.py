@@ -24,7 +24,7 @@ users_router = APIRouter(prefix="/users", tags=["users"])
 
 
 @limiter.limit("5/minute")
-@users_router.post("/{user_id}/set-paid-sub", response_model=UserReadSchema)
+@users_router.post("/{user_id}/set_paid_sub", response_model=UserReadSchema)
 async def set_paid_sub(
     request: Request,
     user_id: int,
@@ -95,18 +95,4 @@ async def delete_user(
     repo: UsersDAO = Depends(get_users_dao),
 ):
     """Удаление пользователя по id (только с правом DELETE_EMPLOYEES)"""
-
-    # Используем зависимость get_access_token_from_cookie
-    auth_request = UserAuthRequestSchema(access_token=access_token)
-
-    # Используем авторизацию
-    role, permissions = await auth_service.authorize_user(auth_request, token_service, repo)
-
-    # Проверяем наличие права на удаление сотрудников
-    if PermissionEnum.DELETE_EMPLOYEES not in permissions:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав для удаления пользователей",
-        )
-
     await user_service.delete_user(user_id=user_id, repo=repo)

@@ -45,14 +45,23 @@ async def test_get_pvzs_with_query_params(client):
     response = await client.get("/pvzs/", params={"code": "SOME-CODE", "group": "C"})
 
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    body = response.json()
+
+    # формат Page
+    assert "items" in body
+    assert isinstance(body["items"], list)
 
 
 async def test_update_pvz(client):
     """
     Тестируем эндпоинт PATCH /pvzs/{id} для обновления данных
     """
-    update_data = {"address": "Новый обновленный адрес", "owner_id": 99, "curator_id": 88, "group": "Z"}
+    update_data = {
+        "address": "Новый обновленный адрес",
+        "owner_id": 99,
+        "curator_id": 88,
+        "group": "Z",
+    }
 
     response = await client.patch("/pvzs/123", json=update_data)
 

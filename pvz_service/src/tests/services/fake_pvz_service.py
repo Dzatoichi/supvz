@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import HTTPException, status
+from fastapi_pagination import paginate
 
 from src.schemas.pvz_schemas import PVZRead
 
@@ -87,7 +88,7 @@ class FakePVZService:
             created_at=datetime.now(),
         )
 
-    async def get_pvzs(self, code, type, address, group, repo):
+    async def get_pvzs(self, code, type, address, group, repo, params):
         results = self._fake_db
 
         if code is not None:
@@ -102,7 +103,7 @@ class FakePVZService:
         if group is not None:
             results = [pvz for pvz in results if pvz.group == group]
 
-        return results
+        return paginate(results, params)
 
     async def delete_pvz_by_id(
         self,
