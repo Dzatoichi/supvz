@@ -76,8 +76,8 @@ class PVZService:
         code: str,
         type: str,
         address: str,
-        group_id: int,
         repo: PVZsDAO,
+        group_id: int | None = None,
     ) -> list[PVZRead]:
         filters = {}
         if code is not None:

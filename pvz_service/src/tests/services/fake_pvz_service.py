@@ -18,7 +18,7 @@ class FakePVZService:
             type="ozon",
             address="Москва",
             owner_id=10,
-            group="A",
+            group_id=0,
             curator_id=1,
             created_at=datetime.now(),
         ),
@@ -28,7 +28,7 @@ class FakePVZService:
             type="wb",
             address="Санкт-Петербург",
             owner_id=11,
-            group="A",
+            group_id=0,
             curator_id=2,
             created_at=datetime.now(),
         ),
@@ -38,13 +38,13 @@ class FakePVZService:
             type="ozon",
             address="Москва, ул. Тверская",
             owner_id=12,
-            group="B",
+            group_id=1,
             curator_id=3,
             created_at=datetime.now(),
         ),
     ]
 
-    async def add_pvz(self, data, repo):
+    async def add_pvz(self, data, repo, group_repo):
         if data.code == "EXISTING-CODE":
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -65,7 +65,7 @@ class FakePVZService:
             type="ozon",
             address="Fetched Address",
             owner_id=1,
-            group="A",
+            group_id=0,
             curator_id=1,
             created_at=datetime.now(),
         )
@@ -82,12 +82,12 @@ class FakePVZService:
             type="ozon",
             address="Fetched Address_1",
             owner_id=data.owner_id,
-            group=data.group,
+            group_id=data.group_id,
             curator_id=data.curator_id,
             created_at=datetime.now(),
         )
 
-    async def get_pvzs(self, code, type, address, group, repo):
+    async def get_pvzs(self, code, type, address, group_id, repo):
         results = self._fake_db
 
         if code is not None:
@@ -99,8 +99,8 @@ class FakePVZService:
         if address is not None:
             results = [pvz for pvz in results if address in pvz.address]
 
-        if group is not None:
-            results = [pvz for pvz in results if pvz.group == group]
+        if group_id is not None:
+            results = [pvz for pvz in results if pvz.group_id == group_id]
 
         return results
 
@@ -120,7 +120,7 @@ class FakePVZService:
             type="ozon",
             address="Fetched Address_1",
             owner_id=10,
-            group="A",
+            group_id=0,
             curator_id=1,
             created_at=datetime.now(),
         )

@@ -22,7 +22,7 @@ async def test_add_pvz_with_conflicting_code(client):
         "code": "EXISTING-CODE",
         "type": "ozon",
         "address": "Some Address",
-        "group": "A",
+        "group_id": 0,
         "owner_id": 1,
         "curator_id": 1,
     }
@@ -38,7 +38,12 @@ async def test_update_non_existent_pvz(client):
     """
     Тест: PATCH /pvzs/{pvz_id} должен вернуть 404, если ПВЗ не найден.
     """
-    update_data = {"address": "some new address", "owner_id": 1, "curator_id": 1, "group": "A"}
+    update_data = {
+        "address": "some new address",
+        "owner_id": 1,
+        "curator_id": 1,
+        "group": "A",
+    }
 
     response = await client.patch("/pvzs/999", json=update_data)
 
