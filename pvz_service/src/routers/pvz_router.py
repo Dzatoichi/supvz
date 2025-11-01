@@ -1,11 +1,12 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import EmployeeResponseSchema
+from src.schemas.pvz_group_schemas import AssignPVZToGroupSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
 from src.utils.dependencies import (
@@ -111,3 +112,24 @@ async def delete_pvz_by_id(
 
     result = await pvz_service.delete_pvz_by_id(pvz_id=pvz_id, repo=repo)
     return result
+
+
+@pvz_router.patch(
+    "/{group_id}/pvzs",
+    status_code=status.HTTP_200_OK,
+)
+async def assign_pvz_to_group(
+    group_id: int,
+    data: AssignPVZToGroupSchema,
+    service: PVZService = Depends(get_pvz_service),
+    repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+):
+    """Привязка одного или нескольких ПВЗ к указанной группе."""
+
+    return await service.assign_pvz_to_group(
+        group_id=group_id,
+        pvz_ids=data.pvz_ids,
+        repo=repo,
+        pvz_repo=pvz_repo,
+    )

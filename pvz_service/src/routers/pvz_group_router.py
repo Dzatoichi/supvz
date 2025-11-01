@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, Query, status
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.pvz_group_schemas import (
-    AssignPVZToGroupSchema,
     PVZGroupCreateSchema,
     PVZGroupResponseSchema,
     PVZGroupUpdateSchema,
@@ -42,29 +41,8 @@ async def create_group(
     return await service.create_group(data, repo)
 
 
-@pvz_groups_router.post(
-    "/{group_id}/assign-pvz",
-    status_code=status.HTTP_200_OK,
-)
-async def assign_pvz_to_group(
-    group_id: int,
-    data: AssignPVZToGroupSchema,
-    service: PVZGroupsService = Depends(get_pvz_groups_service),
-    repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
-    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
-):
-    """Привязка одного или нескольких ПВЗ к указанной группе."""
-
-    return await service.assign_pvz_to_group(
-        group_id=group_id,
-        pvz_ids=data.pvz_ids,
-        repo=repo,
-        pvz_repo=pvz_repo,
-    )
-
-
-@pvz_groups_router.post(
-    "/{group_id}/assign-curator/{curator_id}",
+@pvz_groups_router.patch(
+    "/{group_id}/curator",
     status_code=status.HTTP_200_OK,
 )
 async def assign_curator_to_group(
@@ -72,10 +50,11 @@ async def assign_curator_to_group(
     curator_id: int,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
     repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
     """Назначение куратора для группы и всех ПВЗ в этой группе."""
 
-    return await service.assign_curator(group_id, curator_id, repo)
+    return await service.assign_curator(group_id=group_id, curator_id=curator_id, pvz_repo=pvz_repo, repo=repo)
 
 
 @pvz_groups_router.patch("/{group_id}", response_model=PVZGroupResponseSchema)
@@ -83,7 +62,7 @@ async def update_group(
     group_id: int,
     data: PVZGroupUpdateSchema,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
-    repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
+    repo: PVZsDAO = Depends(get_pvz_repo),
 ):
     """Обновляет существующую группу ПВЗ."""
 
@@ -112,4 +91,5 @@ async def delete_group(
 ):
     """Удаляет группу ПВЗ и отвязывает все её ПВЗ."""
 
-    await service.delete_group(group_id=group_id, repo=repo, pvz_repo=pvz_repo)
+    await service.unassign_all_pvz_from_group(group_id=group_id, pvz_repo=pvz_repo)
+    await service.delete_group(group_id=group_id, repo=repo)

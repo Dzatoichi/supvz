@@ -1,6 +1,7 @@
 from typing import Optional
 
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO
 from src.models.employees.employees import Employees, employee_pvz_association
@@ -66,3 +67,31 @@ class PVZsDAO(BaseDAO[PVZs]):
             )
             result = await session.scalars(stmt)
             return result.all()
+
+    @BaseDAO.with_exception
+    async def update_pvzs_curator_by_group(self, group_id: int, curator_id: int):
+        """
+        Обновляет поле curator_id у всех ПВЗ, принадлежащих указанной группе.
+        """
+        async with self._get_session() as session:
+            stmt = update(self.model).where(self.model.group_id == group_id).values(curator_id=curator_id)
+            await session.execute(stmt)
+            await session.commit()
+
+    @BaseDAO.with_exception
+    async def assign_pvz_to_group(self, group_id: int, pvz_ids: list[int]):
+        """Привязывает пвз к указанной группе по ее ID"""
+
+        async with self._get_session() as session:
+            stmt = update(self.model).where(self.model.id.in_(pvz_ids)).values(group_id=group_id)
+            await session.execute(stmt)
+            await session.commit()
+
+    async def set_curator_for_group(
+        self,
+        group_id: int,
+        curator_id: int,
+        session: AsyncSession,
+    ):
+        stmt = update(self.model).where(self.model.group_id == group_id).values(curator_id=curator_id)
+        await session.execute(stmt)

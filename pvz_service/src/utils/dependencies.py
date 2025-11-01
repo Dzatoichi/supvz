@@ -1,6 +1,7 @@
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
+from src.database.base import db_helper
 from src.services.employees_service import EmployeesService
 from src.services.pvz_groups_service import PVZGroupsService
 from src.services.pvz_service import PVZService
@@ -35,4 +36,4 @@ def get_pvz_service() -> "PVZService":
 
 def get_pvz_groups_service() -> PVZGroupsService:
     """Создает сервис для работы с группами"""
-    return PVZGroupsService()
+    return PVZGroupsService(db_helper=db_helper)

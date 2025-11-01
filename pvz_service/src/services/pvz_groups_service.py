@@ -2,16 +2,17 @@ from fastapi import HTTPException, status
 
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
-from src.models.pvzs.PVZs import PVZs
 from src.schemas.pvz_group_schemas import (
     PVZGroupCreateSchema,
     PVZGroupResponseSchema,
     PVZGroupUpdateSchema,
 )
-from src.schemas.pvz_schemas import PVZRead
 
 
 class PVZGroupsService:
+    def __init__(self, db_helper):
+        self.db_helper = db_helper
+
     async def create_group(
         self,
         data: PVZGroupCreateSchema,
@@ -27,7 +28,7 @@ class PVZGroupsService:
         self,
         group_id: int,
         data: PVZGroupUpdateSchema,
-        repo: PVZGroupsDAO,
+        repo: PVZsDAO,
     ):
         """Обновляет данные группы ПВЗ и кураторство для ПВЗ при необходимости."""
 
@@ -37,30 +38,6 @@ class PVZGroupsService:
             await repo.update_pvzs_curator_by_group(group_id, data.curator_id)
 
         return PVZGroupResponseSchema.model_validate(group)
-
-    async def get_pvzs_by_group(
-        self,
-        group_id: int | None,
-        group_name: str | None,
-        pvz_repo: PVZsDAO,
-        group_repo: PVZGroupsDAO,
-    ):
-        """Возвращает список ПВЗ по ID или имени группы."""
-
-        if (group_id is None and group_name is None) or (group_id is not None and group_name is not None):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Нужно передать ровно один параметр — group_id или group_name",
-            )
-
-        if group_name:
-            group = await group_repo.get_group(name=group_name)
-            if not group:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Группа не найдена")
-            group_id = group.id
-
-        pvzs = await pvz_repo.get_pvzs(group_id=group_id)
-        return [PVZRead.model_validate(p) for p in pvzs]
 
     async def get_groups(
         self,
@@ -108,49 +85,30 @@ class PVZGroupsService:
 
         return PVZGroupResponseSchema.model_validate(group)
 
+    async def unassign_all_pvz_from_group(
+        self,
+        group_id,
+        pvz_repo: PVZsDAO,
+    ):
+        """Отвязывает все ПВЗ от группы."""
+
+        await pvz_repo.unassign_pvzs_from_group(group_id)
+
     async def delete_group(
         self,
         group_id,
         repo: PVZGroupsDAO,
-        pvz_repo: PVZsDAO,
     ):
-        """Удаляет группу ПВЗ и отвязывает все её ПВЗ."""
-
-        await pvz_repo.unassign_pvzs_from_group(group_id)
+        """Удаляет группу ПВЗ."""
 
         await repo.delete(id=group_id)
 
-    async def assign_pvz_to_group(
-        self,
-        group_id: int,
-        pvz_ids: list[int],
-        repo: PVZGroupsDAO,
-        pvz_repo: PVZsDAO,
-    ):
-        group = await repo.get_group(id=group_id)
-        if not group:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Группа не найдена")
-
-        # Получаем все ПВЗ, которые хотим привязать
-        pvzs = await pvz_repo.get_pvzs(PVZs.id.in_(pvz_ids))
-
-        if len(pvzs) != len(pvz_ids):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Некоторые ПВЗ не существуют")
-
-        # Проверяем, что у всех ПВЗ owner_id совпадает с owner_id группы
-        for pvz in pvzs:
-            if pvz.owner_id != group.owner_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"ПВЗ {pvz.id} принадлежит другому владельцу",
-                )
-
-        await repo.assign_pvz_to_group(group_id=group_id, pvz_ids=pvz_ids)
-
-        return {"detail": "ПВЗ успешно привязаны к группе"}
-
-    async def assign_curator(self, group_id: int, curator_id: int, repo: PVZGroupsDAO):
+    async def assign_curator(self, group_id: int, curator_id: int, repo: PVZGroupsDAO, pvz_repo: PVZsDAO):
         """Привязывает куратора к группе, а также ко всем пвз состоящим в этой группе"""
 
-        await repo.set_curator_for_group(group_id, curator_id)
+        async with self.db_helper.async_session_maker() as session:
+            async with session.begin():  # ← одна транзакция
+                await repo.set_curator(group_id, curator_id, session)
+                await pvz_repo.set_curator_for_group(group_id, curator_id, session)
+
         return {"detail": "Куратор успешно назначен и применён ко всем ПВЗ группы"}

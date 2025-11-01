@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
+from src.models.pvzs.PVZs import PVZs
 from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 
@@ -149,3 +150,32 @@ class PVZService:
             )
 
         return [EmployeeResponseSchema.model_validate(e) for e in employees]
+
+    async def assign_pvz_to_group(
+        self,
+        group_id: int,
+        pvz_ids: list[int],
+        repo: PVZGroupsDAO,
+        pvz_repo: PVZsDAO,
+    ):
+        group = await repo.get_group(id=group_id)
+        if not group:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Группа не найдена")
+
+        # Получаем все ПВЗ, которые хотим привязать
+        pvzs = await pvz_repo.get_pvzs(PVZs.id.in_(pvz_ids))
+
+        if len(pvzs) != len(pvz_ids):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Некоторые ПВЗ не существуют")
+
+        # Проверяем, что у всех ПВЗ owner_id совпадает с owner_id группы
+        for pvz in pvzs:
+            if pvz.owner_id != group.owner_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"ПВЗ {pvz.id} принадлежит другому владельцу",
+                )
+
+        await pvz_repo.assign_pvz_to_group(group_id=group_id, pvz_ids=pvz_ids)
+
+        return {"detail": "ПВЗ успешно привязаны к группе"}

@@ -3,26 +3,26 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 
-class PVZGroupBase(BaseModel):
+class PVZGroupBaseSchema(BaseModel):
     """Базовая схема группы ПВЗ с общими полями."""
 
     name: str
     curator_id: Optional[int] = None
 
 
-class PVZGroupCreateSchema(PVZGroupBase):
+class PVZGroupCreateSchema(PVZGroupBaseSchema):
     """Схема для создания группы ПВЗ. Содержит обязательный owner_id."""
 
     owner_id: int
 
 
-class PVZGroupUpdateSchema(PVZGroupBase):
+class PVZGroupUpdateSchema(PVZGroupBaseSchema):
     """Схема для обновления группы ПВЗ. Все поля опциональны."""
 
     pass
 
 
-class PVZGroupResponseSchema(PVZGroupBase):
+class PVZGroupResponseSchema(PVZGroupBaseSchema):
     """Схема ответа для группы ПВЗ с ID и owner_id."""
 
     id: int
