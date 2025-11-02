@@ -199,7 +199,6 @@ async def authorize_user(
 
 @auth_router.post("/generate_register_token", response_model=dict)
 async def generate_register_token(
-    request: Request,
     employee_data: UserRegisterEmployeeSchema,
     auth_service: AuthService = Depends(get_auth_service),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
