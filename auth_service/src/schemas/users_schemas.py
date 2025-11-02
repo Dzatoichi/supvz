@@ -109,11 +109,6 @@ class UserReadSchema(UserBaseSchema):
         return self
 
 
-class UserReadEmployeeSchema(UserReadSchema):
-    pvz_id: int
-    owner_id: int
-
-
 class UserAuthRequestSchema(BaseModel):
     """Pydantic model for user authorization request."""
 
