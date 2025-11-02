@@ -82,3 +82,15 @@ async def delete_user(
 
     result = await user_service.delete_user(user_id=user_id, repo=repo)
     return result
+
+@users_router.get("/me", response_model=UserReadSchema)
+async def get_сurrent_user(
+    access_token: str = Depends(get_access_token_from_cookie),
+    user_service: UserService = Depends(get_user_service),
+    repo: UsersDAO = Depends(get_users_dao),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+):
+    """Получение профиля пользователя"""
+
+    result = await user_service.get_current_user(access_token=access_token, token_service=token_service, repo=repo)
+    return result

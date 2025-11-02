@@ -4,6 +4,9 @@ from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import SubscriptionEnum, UserReadSchema, UserRole
 from src.utils.logger_settings import logger
 
+from auth_service.src.schemas.tokens_schemas import TokenTypesEnum
+from auth_service.src.services.token_service import JWTTokensService
+
 
 class UserService:
     """
@@ -45,3 +48,16 @@ class UserService:
             subscription=updated_user.subscription,
             created_at=updated_user.created_at,
         )
+
+    async def get_current_user(
+        self,
+        access_token: str,
+        repo: UsersDAO,
+        token_service: JWTTokensService,
+    ) -> UserReadSchema:
+        payload = token_service.validate_token(
+            token=access_token,
+            token_type=TokenTypesEnum.access)
+        user = repo.get_by_id(payload["id"])
+
+
