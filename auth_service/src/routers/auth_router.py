@@ -6,13 +6,11 @@ from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
-    UserAuthRequestSchema,
-    UserAuthResponseSchema,
     UserForgotPasswordSchema,
     UserLoginSchema,
     UserReadSchema,
-    UserRegisterSchema,
     UserRegisterEmployeeSchema,
+    UserRegisterSchema,
 )
 from src.services.auth_service import AuthService
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -198,12 +196,12 @@ async def authorize_user(
 
     return
 
+
 @auth_router.post("/generate_register_token", response_model=dict)
 async def generate_register_token(
-        request: Request,
-        employee_data: UserRegisterEmployeeSchema,
-        auth_service: AuthService = Depends(get_auth_service),
-        token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    employee_data: UserRegisterEmployeeSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ):
     """
     Создание токена регистрации сотрудника

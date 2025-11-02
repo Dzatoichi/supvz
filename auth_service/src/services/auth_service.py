@@ -7,12 +7,11 @@ from src.core.security.permissions import PermissionEnum, has_permission
 from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema,UserRegisterEmployeeSchema
 from src.schemas.users_schemas import (
     UserLoginSchema,
     UserReadSchema,
+    UserRegisterEmployeeSchema,
     UserRegisterSchema,
-    UserReadEmployeeSchema,
 )
 from src.services.token_service import JWTTokensService, StatefulTokenService
 
@@ -26,7 +25,6 @@ class AuthService:
         self,
         data: UserRegisterSchema,
         repo: UsersDAO,
-        token_service: JWTTokensService,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.
@@ -40,28 +38,14 @@ class AuthService:
             "email": data.email,
             "hashed_password": hashed_password,
         }
-        # Обычная регистрация если нет register_token
-        if data.register_token is None:
-            user = await repo.create(payload)
-            return UserReadSchema(
-                id=user.id,
-                email=user.email,
-                role=user.role,
-                sub=user.subscription,
-                created_at=user.created_at,
-            )
-        else:
-            register_token_payload = token_service.validate_token(data.register_token, TokenTypesEnum.register)
-            payload.update(register_token_payload)
-            user = await repo.create(payload)
-            return UserReadEmployeeSchema(  # новая схема наследуемая от UserReadSchema, с обязательными полями pvz_id,owner_id
-                pvz_id=user.pvz_id,
-                owner_id=user.owner_id,
-                id=user.id,
-                email=user.email,
-                role=user.role,
-                created_at=user.created_at,
-            )
+        user = await repo.create(payload)
+        return UserReadSchema(
+            id=user.id,
+            email=user.email,
+            role=user.role,
+            sub=user.subscription,
+            created_at=user.created_at,
+        )
 
     async def login_user(
         self,
@@ -166,7 +150,7 @@ class AuthService:
             owner_id=employee_data.owner_id,
             pvz_id=employee_data.pvz_id,
         )
-        return { "register_token": register_token }
+        return {"register_token": register_token}
 
     async def authorize_user(
         self,

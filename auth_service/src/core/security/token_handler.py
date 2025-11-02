@@ -38,8 +38,9 @@ class TokenHandler:
         )
         return token, payload.get("exp")
 
-    def sign_registration_jwt(self, user_id: int, pvz_id: int, target_role: str, email: str = None) -> tuple[
-        Any, datetime | int | None]:
+    def sign_registration_jwt(
+        self, user_id: int, pvz_id: int, target_role: str, email: str = None
+    ) -> tuple[Any, datetime | int | None]:
         """
         Метод шифрования registration jwt токена с дополнительными данными.
         """
