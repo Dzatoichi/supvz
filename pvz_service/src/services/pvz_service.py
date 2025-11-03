@@ -179,3 +179,12 @@ class PVZService:
         await pvz_repo.assign_pvz_to_group(group_id=group_id, pvz_ids=pvz_ids)
 
         return {"detail": "ПВЗ успешно привязаны к группе"}
+
+    async def unassign_all_pvz_from_group(
+        self,
+        group_id,
+        pvz_repo: PVZsDAO,
+    ):
+        """Отвязывает все ПВЗ от группы."""
+
+        await pvz_repo.unassign_pvzs_from_group(group_id)

@@ -115,7 +115,7 @@ async def delete_pvz_by_id(
 
 
 @pvz_router.patch(
-    "/{group_id}/pvzs",
+    "/group_assignment",
     status_code=status.HTTP_200_OK,
 )
 async def assign_pvz_to_group(

@@ -8,10 +8,12 @@ from src.schemas.pvz_group_schemas import (
     PVZGroupUpdateSchema,
 )
 from src.services.pvz_groups_service import PVZGroupsService
+from src.services.pvz_service import PVZService
 from src.utils.dependencies import (
     get_pvz_groups_repo,
     get_pvz_groups_service,
     get_pvz_repo,
+    get_pvz_service,
 )
 
 pvz_groups_router = APIRouter(prefix="/pvz_groups", tags=["PVZ_Groups"])
@@ -85,11 +87,12 @@ async def get_group(
 @pvz_groups_router.delete("/{group_id}", status_code=204)
 async def delete_group(
     group_id: int,
-    service: PVZGroupsService = Depends(get_pvz_groups_service),
+    group_service: PVZGroupsService = Depends(get_pvz_groups_service),
+    pvz_service: PVZService = Depends(get_pvz_service),
     repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
     pvz_repo: PVZsDAO = Depends(get_pvz_repo),
 ):
     """Удаляет группу ПВЗ и отвязывает все её ПВЗ."""
 
-    await service.unassign_all_pvz_from_group(group_id=group_id, pvz_repo=pvz_repo)
-    await service.delete_group(group_id=group_id, repo=repo)
+    await pvz_service.unassign_all_pvz_from_group(group_id=group_id, pvz_repo=pvz_repo)
+    await group_service.delete_group(group_id=group_id, repo=repo)

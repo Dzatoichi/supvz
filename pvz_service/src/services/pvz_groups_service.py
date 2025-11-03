@@ -85,15 +85,6 @@ class PVZGroupsService:
 
         return PVZGroupResponseSchema.model_validate(group)
 
-    async def unassign_all_pvz_from_group(
-        self,
-        group_id,
-        pvz_repo: PVZsDAO,
-    ):
-        """Отвязывает все ПВЗ от группы."""
-
-        await pvz_repo.unassign_pvzs_from_group(group_id)
-
     async def delete_group(
         self,
         group_id,
