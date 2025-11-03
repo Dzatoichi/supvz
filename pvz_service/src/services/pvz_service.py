@@ -1,9 +1,15 @@
-from fastapi import HTTPException, status
-
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
+from src.utils.exceptions import (
+    EmployeeNotAllowedException,
+    EmployeeNotFoundException,
+    NoEmployeesInPVZException,
+    PVZAlreadyExistsException,
+    PVZDeleteFailedException,
+    PVZNotFoundException,
+)
 
 
 class PVZService:
@@ -14,7 +20,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(code=data.code)
         if pvz:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Pvz already exists")
+            raise PVZAlreadyExistsException("ПВЗ с таким кодом уже существует")
 
         payload = {
             "code": data.code,
@@ -45,7 +51,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
+            raise PVZNotFoundException("ПВЗ с таким id не найдено")
         payload = {
             "address": data.address,
             "owner_id": data.owner_id,
@@ -72,7 +78,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
+            raise PVZNotFoundException("ПВЗ с таким id не найдено")
 
         return PVZRead(
             id=pvz.id,
@@ -125,7 +131,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
+            raise PVZNotFoundException("ПВЗ с таким id не найдено")
         pvz_info = {
             "id": pvz.id,
             "code": pvz.code,
@@ -138,7 +144,7 @@ class PVZService:
         }
         success = await repo.delete(id=pvz_id)
         if not success:
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete PVZ")
+            raise PVZDeleteFailedException("Ошибка при удалении ПВЗ")
 
         return pvz_info
 
@@ -155,24 +161,15 @@ class PVZService:
         """
         employee = await repo.get_employee(user_id=user_id)
         if not employee:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Сотрудник с user_id={user_id} не найден.",
-            )
+            raise EmployeeNotFoundException("Сотрудник не найден")
 
         # Проверка, что сотрудник действительно привязан к указанному ПВЗ
         if not any(pvz.id == pvz_id for pvz in employee.pvzs):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Вы не можете просматривать сотрудников этого ПВЗ.",
-            )
+            raise EmployeeNotAllowedException("Нет доступа к этому ПВЗ")
 
         # Получаем всех сотрудников данного ПВЗ
         employees = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id)
         if not employees:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"В ПВЗ с id={pvz_id} не найдено сотрудников.",
-            )
+            raise NoEmployeesInPVZException("В ПВЗ нет сотрудников")
 
         return [EmployeeResponseSchema.model_validate(e) for e in employees]
