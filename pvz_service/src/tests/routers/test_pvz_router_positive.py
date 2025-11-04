@@ -11,7 +11,7 @@ async def test_add_pvz(client):
         "code": "API-TEST-PVZ",
         "type": "ozon",
         "address": "123 Test Street",
-        "group": "B",
+        "group_id": 0,
         "owner_id": 5,
         "curator_id": 15,
     }
@@ -42,7 +42,7 @@ async def test_get_pvzs_with_query_params(client):
     """
     Тестируем эндпоинт GET /pvzs/ с query-параметрами
     """
-    response = await client.get("/pvzs/", params={"code": "SOME-CODE", "group": "C"})
+    response = await client.get("/pvzs/", params={"code": "SOME-CODE", "group_id": 0})
 
     assert response.status_code == 200
     assert isinstance(response.json(), list)
@@ -52,7 +52,12 @@ async def test_update_pvz(client):
     """
     Тестируем эндпоинт PATCH /pvzs/{id} для обновления данных
     """
-    update_data = {"address": "Новый обновленный адрес", "owner_id": 99, "curator_id": 88, "group": "Z"}
+    update_data = {
+        "address": "Новый обновленный адрес",
+        "owner_id": 99,
+        "curator_id": 88,
+        "group_id": 1,
+    }
 
     response = await client.patch("/pvzs/123", json=update_data)
 

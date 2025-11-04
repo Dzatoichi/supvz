@@ -1,13 +1,20 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 
 from src.dao.employeesDAO import EmployeesDAO
+from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import EmployeeResponseSchema
+from src.schemas.pvz_group_schemas import AssignPVZToGroupSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
-from src.utils.dependencies import get_employees_repo, get_pvz_repo, get_pvz_service
+from src.utils.dependencies import (
+    get_employees_repo,
+    get_pvz_groups_repo,
+    get_pvz_repo,
+    get_pvz_service,
+)
 
 pvz_router = APIRouter(prefix="/pvzs", tags=["pvzs"])
 
@@ -17,10 +24,9 @@ async def add_pvz(
     pvz_in: PVZAdd,
     repo: PVZsDAO = Depends(get_pvz_repo),
     pvz_service: PVZService = Depends(get_pvz_service),
+    group_repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
 ):
-    """Создаёт новый пункт выдачи заказов (ПВЗ)."""
-
-    pvz = await pvz_service.add_pvz(data=pvz_in, repo=repo)
+    pvz = await pvz_service.add_pvz(data=pvz_in, repo=repo, group_repo=group_repo)
 
     return pvz
 
@@ -55,7 +61,7 @@ async def get_pvzs(
     code: Optional[str] = Query(None),
     type: Optional[str] = Query(None),
     address: Optional[str] = Query(None),
-    group: Optional[str] = Query(None),
+    group_id: Optional[int] = Query(None),
     repo: PVZsDAO = Depends(get_pvz_repo),
     pvz_service: PVZService = Depends(get_pvz_service),
 ):
@@ -65,7 +71,7 @@ async def get_pvzs(
         code=code,
         type=type,
         address=address,
-        group=group,
+        group_id=group_id,
         repo=repo,
     )
     return pvzs
@@ -106,3 +112,24 @@ async def delete_pvz_by_id(
 
     result = await pvz_service.delete_pvz_by_id(pvz_id=pvz_id, repo=repo)
     return result
+
+
+@pvz_router.patch(
+    "/group_assignment",
+    status_code=status.HTTP_200_OK,
+)
+async def assign_pvz_to_group(
+    group_id: int,
+    data: AssignPVZToGroupSchema,
+    service: PVZService = Depends(get_pvz_service),
+    repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+):
+    """Привязка одного или нескольких ПВЗ к указанной группе."""
+
+    return await service.assign_pvz_to_group(
+        group_id=group_id,
+        pvz_ids=data.pvz_ids,
+        repo=repo,
+        pvz_repo=pvz_repo,
+    )
