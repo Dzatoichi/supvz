@@ -22,7 +22,7 @@ async def test_add_pvz_with_conflicting_code(client):
         "code": "EXISTING-CODE",
         "type": "ozon",
         "address": "Some Address",
-        "group": "A",
+        "group_id": 0,
         "owner_id": 1,
         "curator_id": 1,
     }
