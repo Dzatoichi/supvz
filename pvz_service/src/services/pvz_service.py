@@ -25,15 +25,6 @@ class PVZService:
         if pvz:
             raise PVZAlreadyExistsException("ПВЗ с таким кодом уже существует")
 
-        payload = {
-            "code": data.code,
-            "type": data.type,
-            "address": data.address,
-            "group": data.group,
-            "owner_id": data.owner_id,
-            "curator_id": data.curator_id,
-        }
-
         # Если указан group_id, проверяем владельца
         if data.group_id == 0:
             data.group_id = None
@@ -71,7 +62,7 @@ class PVZService:
             "address": data.address,
             "owner_id": data.owner_id,
             "curator_id": data.curator_id,
-            "group": data.group,
+            "group_id": data.group_id,
         }
         pvz_update = await repo.update(id=pvz_id, **payload)
 

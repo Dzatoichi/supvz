@@ -71,7 +71,7 @@ class TestPVZService:
 
         service = PVZService()
         with pytest.raises(PVZAlreadyExistsException):
-            await service.add_pvz(data=input_data, repo=mock_repo)
+            await service.add_pvz(data=input_data, repo=mock_repo, group_repo=mock_repo)
 
         mock_repo.create.assert_not_called()
 
