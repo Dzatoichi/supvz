@@ -81,4 +81,5 @@ async def test_add_pvz_with_invalid_data(client):
 
     assert response.status_code == 422
     data = response.json()
-    assert "owner_id" in str(data["detail"])
+    # проверяем, что в сообщениях есть про integer
+    assert any("integer" in msg for msg in data["detail"])

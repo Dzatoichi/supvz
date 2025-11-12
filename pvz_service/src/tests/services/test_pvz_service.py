@@ -2,10 +2,14 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import HTTPException
 
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
+from src.utils.exceptions import (
+    PVZAlreadyExistsException,
+    PVZDeleteFailedException,
+    PVZNotFoundException,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -66,11 +70,8 @@ class TestPVZService:
         )
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZAlreadyExistsException):
             await service.add_pvz(data=input_data, repo=mock_repo, group_repo=mock_repo)
-
-        assert excinfo.value.status_code == 409
-        assert excinfo.value.detail == "PVZ с кодом PVZ-123 уже существует"
 
         mock_repo.create.assert_not_called()
 
@@ -114,11 +115,10 @@ class TestPVZService:
         input_data = PVZUpdate(address="any", owner_id=1, curator_id=1, group_id=0)
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZNotFoundException):
             await service.update_pvz_by_id(pvz_id=999, data=input_data, repo=mock_repo)
 
-        assert excinfo.value.status_code == 404
-        assert excinfo.value.detail == "Pvz not found"
+        mock_repo.update.assert_not_called()
 
     async def test_get_pvz_by_id_success(self):
         """
@@ -152,11 +152,8 @@ class TestPVZService:
         mock_repo.get_pvz.return_value = None
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZNotFoundException):
             await service.get_pvz_by_id(pvz_id=999, repo=mock_repo)
-
-        assert excinfo.value.status_code == 404
-        assert excinfo.value.detail == "Pvz not found"
 
     async def test_get_pvzs_with_filters(self):
         """
@@ -210,10 +207,9 @@ class TestPVZService:
         mock_repo.get_pvz.return_value = None
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZNotFoundException):
             await service.delete_pvz_by_id(pvz_id=999, repo=mock_repo)
 
-        assert excinfo.value.status_code == 404
         mock_repo.delete.assert_not_called()
 
     async def test_delete_pvz_by_id_dao_failure(self):
@@ -225,8 +221,7 @@ class TestPVZService:
         mock_repo.delete.return_value = False
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZDeleteFailedException):
             await service.delete_pvz_by_id(pvz_id=1, repo=mock_repo)
 
-        assert excinfo.value.status_code == 500
-        assert excinfo.value.detail == "Failed to delete PVZ"
+        mock_repo.delete.assert_called_once()

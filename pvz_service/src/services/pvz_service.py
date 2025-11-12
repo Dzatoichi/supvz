@@ -1,11 +1,17 @@
-from fastapi import HTTPException, status
-
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.models.pvzs.PVZs import PVZs
 from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
+from src.utils.exceptions import (
+    EmployeeNotAllowedException,
+    EmployeeNotFoundException,
+    NoEmployeesInPVZException,
+    PVZAlreadyExistsException,
+    PVZDeleteFailedException,
+    PVZNotFoundException,
+)
 
 
 class PVZService:
@@ -17,10 +23,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(code=data.code)
         if pvz:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                detail=f"PVZ с кодом {data.code} уже существует",
-            )
+            raise PVZAlreadyExistsException("ПВЗ с таким кодом уже существует")
 
         # Если указан group_id, проверяем владельца
         if data.group_id == 0:
@@ -54,11 +57,25 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
+            raise PVZNotFoundException("ПВЗ с таким id не найдено")
+        payload = {
+            "address": data.address,
+            "owner_id": data.owner_id,
+            "curator_id": data.curator_id,
+            "group_id": data.group_id,
+        }
+        pvz_update = await repo.update(id=pvz_id, **payload)
 
-        pvz_update = await repo.update(id=pvz_id, **data.model_dump(exclude_unset=True))
-
-        return PVZRead.model_validate(pvz_update)
+        return PVZRead(
+            id=pvz_update.id,
+            code=pvz_update.code,
+            type=pvz_update.type,
+            address=pvz_update.address,
+            owner_id=pvz_update.owner_id,
+            group=pvz_update.group,
+            curator_id=pvz_update.curator_id,
+            created_at=pvz_update.created_at,
+        )
 
     async def get_pvz_by_id(
         self,
@@ -67,7 +84,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
+            raise PVZNotFoundException("ПВЗ с таким id не найдено")
 
         return PVZRead.model_validate(pvz)
 
@@ -99,7 +116,7 @@ class PVZService:
     ) -> PVZRead:
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pvz not found")
+            raise PVZNotFoundException("ПВЗ с таким id не найдено")
         pvz_info = {
             "id": pvz.id,
             "code": pvz.code,
@@ -112,7 +129,7 @@ class PVZService:
         }
         success = await repo.delete(id=pvz_id)
         if not success:
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete PVZ")
+            raise PVZDeleteFailedException("Ошибка при удалении ПВЗ")
 
         return pvz_info
 
@@ -129,25 +146,16 @@ class PVZService:
         """
         employee = await repo.get_employee(user_id=user_id)
         if not employee:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Сотрудник с user_id={user_id} не найден.",
-            )
+            raise EmployeeNotFoundException("Сотрудник не найден")
 
         # Проверка, что сотрудник действительно привязан к указанному ПВЗ
         if not any(pvz.id == pvz_id for pvz in employee.pvzs):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Вы не можете просматривать сотрудников этого ПВЗ.",
-            )
+            raise EmployeeNotAllowedException("Нет доступа к этому ПВЗ")
 
         # Получаем всех сотрудников данного ПВЗ
         employees = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id)
         if not employees:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"В ПВЗ с id={pvz_id} не найдено сотрудников.",
-            )
+            raise NoEmployeesInPVZException("В ПВЗ нет сотрудников")
 
         return [EmployeeResponseSchema.model_validate(e) for e in employees]
 
