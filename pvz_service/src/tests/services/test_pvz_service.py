@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from fastapi_pagination import Params
 
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
@@ -162,12 +163,16 @@ class TestPVZService:
         mock_repo = AsyncMock()
         mock_repo.get_pvzs.return_value = []
 
+        params = Params(page=1, size=50)
+
         service = PVZService()
         await service.get_pvzs(
             code="PVZ-007",
             type=None,
             address="г. Москва",
+            group_id=None,
             repo=mock_repo,
+            params=params,
         )
 
         expected_filters = {"code": "PVZ-007", "address": "г. Москва"}

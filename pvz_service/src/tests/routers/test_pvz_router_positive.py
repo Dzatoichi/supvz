@@ -45,7 +45,11 @@ async def test_get_pvzs_with_query_params(client):
     response = await client.get("/pvzs/", params={"code": "SOME-CODE", "group_id": 0})
 
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    body = response.json()
+
+    # формат Page
+    assert "items" in body
+    assert isinstance(body["items"], list)
 
 
 async def test_update_pvz(client):

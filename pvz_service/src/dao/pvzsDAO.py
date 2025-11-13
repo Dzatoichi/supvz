@@ -1,5 +1,7 @@
 from typing import Optional
 
+from fastapi_pagination import Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,7 +57,7 @@ class PVZsDAO(BaseDAO[PVZs]):
             await session.commit()
 
     @BaseDAO.with_exception
-    async def get_employees_by_pvz_id(self, pvz_id: int):
+    async def get_employees_by_pvz_id(self, pvz_id: int, params: Params):
         async with self._get_session() as session:
             stmt = (
                 select(Employees)
@@ -65,8 +67,7 @@ class PVZsDAO(BaseDAO[PVZs]):
                 )
                 .where(employee_pvz_association.c.pvz_id == pvz_id)
             )
-            result = await session.scalars(stmt)
-            return result.all()
+            return await paginate(session, stmt, params=params)
 
     @BaseDAO.with_exception
     async def update_pvzs_curator_by_group(self, group_id: int, curator_id: int):

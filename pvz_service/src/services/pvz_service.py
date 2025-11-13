@@ -1,3 +1,6 @@
+from fastapi import HTTPException, status
+from fastapi_pagination import Page, Params, paginate
+
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
@@ -94,8 +97,9 @@ class PVZService:
         type: str,
         address: str,
         repo: PVZsDAO,
+        params: Params,
         group_id: int | None = None,
-    ) -> list[PVZRead]:
+    ) -> Page[PVZRead]:
         filters = {}
         if code is not None:
             filters["code"] = code
@@ -105,9 +109,15 @@ class PVZService:
             filters["address"] = address
         if group_id is not None:
             filters["group_id"] = group_id
+
         pvzs = await repo.get_pvzs(**filters)
 
-        return [PVZRead.model_validate(pvz) for pvz in pvzs]
+        pvzs_page = paginate(pvzs, params=params)
+
+        # конвертация ORM -> Pydantic
+        pvzs_page.items = [PVZRead.model_validate(pvz) for pvz in pvzs_page.items]
+
+        return pvzs_page
 
     async def delete_pvz_by_id(
         self,
@@ -139,7 +149,8 @@ class PVZService:
         pvz_id: int,
         repo: EmployeesDAO,
         pvz_repo: PVZsDAO,
-    ) -> list[EmployeeResponseSchema]:
+        params: Params,
+    ) -> Page[EmployeeResponseSchema]:
         """
         Возвращает список сотрудников указанного ПВЗ, если запрашивающий сотрудник
         действительно привязан к этому ПВЗ.
@@ -153,11 +164,14 @@ class PVZService:
             raise EmployeeNotAllowedException("Нет доступа к этому ПВЗ")
 
         # Получаем всех сотрудников данного ПВЗ
-        employees = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id)
-        if not employees:
+        employees_page = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id, params=params)
+        if not employees_page.items:
             raise NoEmployeesInPVZException("В ПВЗ нет сотрудников")
 
-        return [EmployeeResponseSchema.model_validate(e) for e in employees]
+        # конвертируем ORM -> Pydantic
+        employees_page.items = [EmployeeResponseSchema.model_validate(e) for e in employees_page.items]
+
+        return employees_page
 
     async def assign_pvz_to_group(
         self,

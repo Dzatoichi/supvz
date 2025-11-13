@@ -1,12 +1,19 @@
 from fastapi import APIRouter, Depends, Request
+from fastapi_pagination import Page, Params
 
+from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
-from src.schemas.users_schemas import UserAuthRequestSchema, UserReadSchema, UserUpdateSchema
+from src.schemas.users_schemas import (
+    UserAuthRequestSchema,
+    UserReadSchema,
+    UserUpdateSchema,
+)
 from src.services.token_service import JWTTokensService
 from src.services.user_service import UserService
 from src.utils.dependencies import (
     get_access_token_from_cookie,
     get_jwt_tokens_service,
+    get_refresh_token_dao,
     get_user_service,
     get_users_dao,
 )
@@ -16,7 +23,7 @@ users_router = APIRouter(prefix="/users", tags=["users"])
 
 
 @limiter.limit("5/minute")
-@users_router.post("/{user_id}/set-paid-sub", response_model=UserReadSchema)
+@users_router.post("/{user_id}/set_paid_sub", response_model=UserReadSchema)
 async def set_paid_sub(
     request: Request,
     user_id: int,
@@ -46,14 +53,15 @@ async def get_user(
     return result
 
 
-@users_router.get("", response_model=list[UserReadSchema])
+@users_router.get("", response_model=Page[UserReadSchema])
 async def get_users(
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
+    params: Params = Depends(),
 ):
     """Получает список данных о каждом юзере"""
 
-    result = await user_service.get_users(repo=repo)
+    result = await user_service.get_users(repo=repo, params=params)
     return result
 
 
@@ -64,11 +72,18 @@ async def update_user(
     user_service: UserService = Depends(get_user_service),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
     repo: UsersDAO = Depends(get_users_dao),
+    refresh_repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
 ):
     """Заменяет имя и номер телефона существующего пользователя"""
 
     token = UserAuthRequestSchema(access_token=access_token)
-    result = await user_service.update_user(token=token, token_service=token_service, user=user, repo=repo)
+    result = await user_service.update_user(
+        token=token,
+        token_service=token_service,
+        user=user,
+        repo=repo,
+        refresh_repo=refresh_repo,
+    )
     return result
 
 
@@ -78,7 +93,5 @@ async def delete_user(
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
 ):
-    """Удаление пользователя по id"""
-
-    result = await user_service.delete_user(user_id=user_id, repo=repo)
-    return result
+    """Удаление пользователя по id (только с правом DELETE_EMPLOYEES)"""
+    await user_service.delete_user(user_id=user_id, repo=repo)
