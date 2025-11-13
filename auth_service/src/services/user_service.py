@@ -5,9 +5,10 @@ from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
+    SubscriptionEnum,
     UserAuthRequestSchema,
     UserReadSchema,
-    UserRole,
+    UserRoleEnum,
     UserUpdateSchema,
 )
 from src.services.token_service import JWTTokensService
@@ -28,7 +29,7 @@ class UserService:
         if not user:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
-        if user.role != UserRole.owner:
+        if user.role != UserRoleEnum.owner:
             logger.error(
                 "Пользователю не удалось поменять подписку, т.к у него нет роли owner!",
                 user_id=user.id,
@@ -75,21 +76,18 @@ class UserService:
         user: UserUpdateSchema,
         repo: UsersDAO,
         refresh_repo: RefreshTokensDAO,
-    ) -> UserUpdateSchema:
+    ) -> UserReadSchema:
         """Обновляет данные пользователя"""
 
         token_payload = await token_service.validate_token(
             token.access_token,
             TokenTypesEnum.access,
-            repo=refresh_repo,
         )
 
-        # Проверяем существование пользователя
         prev_user = await repo.get_by_id(user.id)
         if not prev_user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        # Проверяем, что пользователь обновляет свои данные
         current_user_id = token_payload.get("user_id")
         if current_user_id != user.id:
             raise HTTPException(
@@ -97,7 +95,6 @@ class UserService:
                 detail="Можно обновлять только свои данные",
             )
 
-        # Обновляем данные
         updated_user = await repo.update(
             prev_user.id,
             email=user.email,
@@ -107,7 +104,7 @@ class UserService:
             "Информация о пользователе id={user_id} успешно обновлена!",
             user_id=user.id,
         )
-        return UserUpdateSchema.model_validate(updated_user)
+        return updated_user
 
     async def delete_user(self, user_id: int, repo: UsersDAO):
         """Удаляет пользователя по id"""

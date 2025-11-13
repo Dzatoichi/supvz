@@ -7,7 +7,7 @@ from src.models.users.users import Users
 
 class UsersDAO(BaseDAO[Users]):
     """
-    Класс, наслдующий базовый DAO для работы с сущностями пользователя.
+    Класс, наследующий базовый DAO для работы с сущностями пользователя.
     """
 
     def __init__(self):
@@ -28,7 +28,7 @@ class UsersDAO(BaseDAO[Users]):
         """
         Метод изменения пароля.
         """
-        updated_user = await self.update(user_id, password=hashed_password)
+        updated_user = await self.update(id=user_id, hashed_password=hashed_password)
         if not updated_user:
             raise NoResultFound(f"Пользователь с id={user_id} не найден")
         return True

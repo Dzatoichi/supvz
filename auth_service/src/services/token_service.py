@@ -1,6 +1,5 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
@@ -19,7 +18,7 @@ class JWTTokensService:
     Класс сервиса для работы с jwt токенами.
     """
 
-    def __init__(self, repo: RefreshTokensDAO | None = None):
+    def __init__(self, repo: RefreshTokensDAO) -> None:
         self.repo = repo
 
     async def create_token(
@@ -90,7 +89,7 @@ class JWTTokensService:
             "refresh_token": new_refresh_token,
         }
 
-    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: RefreshTokensDAO) -> dict:
+    async def validate_token(self, token: str, token_type: TokenTypesEnum) -> dict:
         """
         Функция для валидации refresh или access токена.
         """
@@ -121,7 +120,7 @@ class StatefulTokenService:
     Класс сервиса обработки stateful токенов.
     """
 
-    def __init__(self, dao: Optional[StatefulTokenDAO] = None):
+    def __init__(self, dao: StatefulTokenDAO) -> None:
         self.dao = dao
 
     async def create_stateful_token(
@@ -143,7 +142,7 @@ class StatefulTokenService:
         }
         return await self.dao.create(payload)
 
-    async def get_reset_token_data(self, token: str) -> Optional[StatefulTokens]:
+    async def get_reset_token_data(self, token: str) -> StatefulTokens | None:
         """
         Метод получения данных токена и его валиадации.
         """
@@ -161,7 +160,7 @@ class StatefulTokenService:
     async def validate_token(
         self,
         token: str,
-    ) -> Optional[StatefulTokens]:
+    ) -> StatefulTokens | None:
         """
         Метод валидации stateful токена.
         """
