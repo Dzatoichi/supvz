@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request
 from fastapi_pagination import Page, Params
 
-from src.core.security.permissions import PermissionEnum
 from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import (

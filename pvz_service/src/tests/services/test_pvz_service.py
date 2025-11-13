@@ -2,11 +2,15 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import HTTPException
 from fastapi_pagination import Params
 
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
+from src.utils.exceptions import (
+    PVZAlreadyExistsException,
+    PVZDeleteFailedException,
+    PVZNotFoundException,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -27,7 +31,7 @@ class TestPVZService:
         created_pvz_from_repo.type = "ozon"
         created_pvz_from_repo.address = "г. Москва, ул. Ленина, 1"
         created_pvz_from_repo.owner_id = 10
-        created_pvz_from_repo.group = "A"
+        created_pvz_from_repo.group_id = 0
         created_pvz_from_repo.curator_id = 20
         created_pvz_from_repo.created_at = datetime.now()
 
@@ -38,12 +42,12 @@ class TestPVZService:
             type="ozon",
             address="г. Москва, ул. Ленина, 1",
             owner_id=10,
-            group="A",
+            group_id=0,
             curator_id=20,
         )
 
         service = PVZService()
-        result = await service.add_pvz(data=input_data, repo=mock_repo)
+        result = await service.add_pvz(data=input_data, repo=mock_repo, group_repo=mock_repo)
 
         assert isinstance(result, PVZRead)
         assert result.id == 1
@@ -62,16 +66,13 @@ class TestPVZService:
             type="ozon",
             address="addr",
             owner_id=1,
-            group="A",
+            group_id=0,
             curator_id=1,
         )
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
-            await service.add_pvz(data=input_data, repo=mock_repo)
-
-        assert excinfo.value.status_code == 409
-        assert excinfo.value.detail == "Pvz already exists"
+        with pytest.raises(PVZAlreadyExistsException):
+            await service.add_pvz(data=input_data, repo=mock_repo, group_repo=mock_repo)
 
         mock_repo.create.assert_not_called()
 
@@ -91,13 +92,13 @@ class TestPVZService:
                 "address": "Новый адрес",
                 "owner_id": 11,
                 "curator_id": 22,
-                "group": "B",
+                "group_id": 1,
                 "type": "wb",
             },
         )
         mock_repo.update.return_value = updated_pvz_from_repo
 
-        input_data = PVZUpdate(address="Новый адрес", owner_id=11, curator_id=22, group="B")
+        input_data = PVZUpdate(address="Новый адрес", owner_id=11, curator_id=22, group_id=1)
 
         service = PVZService()
         result = await service.update_pvz_by_id(pvz_id=1, data=input_data, repo=mock_repo)
@@ -112,14 +113,13 @@ class TestPVZService:
         mock_repo = AsyncMock()
         mock_repo.get_pvz.return_value = None
 
-        input_data = PVZUpdate(address="any", owner_id=1, curator_id=1, group="A")
+        input_data = PVZUpdate(address="any", owner_id=1, curator_id=1, group_id=0)
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZNotFoundException):
             await service.update_pvz_by_id(pvz_id=999, data=input_data, repo=mock_repo)
 
-        assert excinfo.value.status_code == 404
-        assert excinfo.value.detail == "Pvz not found"
+        mock_repo.update.assert_not_called()
 
     async def test_get_pvz_by_id_success(self):
         """
@@ -133,7 +133,7 @@ class TestPVZService:
             address="Some Address",
             created_at=datetime.now(),
             owner_id=1,
-            group="A",
+            group_id=0,
             curator_id=1,
             type="ozon",
         )
@@ -153,11 +153,8 @@ class TestPVZService:
         mock_repo.get_pvz.return_value = None
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZNotFoundException):
             await service.get_pvz_by_id(pvz_id=999, repo=mock_repo)
-
-        assert excinfo.value.status_code == 404
-        assert excinfo.value.detail == "Pvz not found"
 
     async def test_get_pvzs_with_filters(self):
         """
@@ -173,7 +170,7 @@ class TestPVZService:
             code="PVZ-007",
             type=None,
             address="г. Москва",
-            group=None,
+            group_id=None,
             repo=mock_repo,
             params=params,
         )
@@ -193,7 +190,7 @@ class TestPVZService:
             address="...",
             created_at=datetime.now(),
             owner_id=1,
-            group="A",
+            group_id=0,
             curator_id=1,
             type="ozon",
         )
@@ -215,10 +212,9 @@ class TestPVZService:
         mock_repo.get_pvz.return_value = None
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZNotFoundException):
             await service.delete_pvz_by_id(pvz_id=999, repo=mock_repo)
 
-        assert excinfo.value.status_code == 404
         mock_repo.delete.assert_not_called()
 
     async def test_delete_pvz_by_id_dao_failure(self):
@@ -230,8 +226,7 @@ class TestPVZService:
         mock_repo.delete.return_value = False
 
         service = PVZService()
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(PVZDeleteFailedException):
             await service.delete_pvz_by_id(pvz_id=1, repo=mock_repo)
 
-        assert excinfo.value.status_code == 500
-        assert excinfo.value.detail == "Failed to delete PVZ"
+        mock_repo.delete.assert_called_once()
