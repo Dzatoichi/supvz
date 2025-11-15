@@ -1,5 +1,7 @@
 from typing import Optional
 
+from fastapi_pagination import Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import select, update
 
 from src.dao.baseDAO import BaseDAO
@@ -84,11 +86,11 @@ class EmployeesDAO(BaseDAO[Employees]):
             return updated
 
     @BaseDAO.with_exception
-    async def get_employees_filtered(self, user_id: int, pvz_id: int | None = None) -> list[Employees]:
+    async def get_employees_filtered(self, user_id: int, params: Params, pvz_id: int | None = None):
         """Возвращает список сотрудников владельца, при необходимости фильтрует по ID ПВЗ."""
         async with self._get_session() as session:
             stmt = select(self.model).where(self.model.owner_id == user_id)
             if pvz_id is not None:
                 stmt = stmt.where(self.model.pvzs.any(id=pvz_id))
-            result = await session.execute(stmt)
-            return result.scalars().all()
+            # paginate добавит LIMIT и OFFSET прямо в SQL-запрос
+            return await paginate(session, stmt, params=params)

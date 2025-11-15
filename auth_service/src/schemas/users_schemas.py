@@ -17,7 +17,7 @@ from src.core.security.permissions.role_permissions import get_permissions_for_r
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
-class UserRole(str, Enum):
+class UserRoleEnum(str, Enum):
     """
     Перечисление ролей пользователя.
     """
@@ -31,6 +31,10 @@ class UserRole(str, Enum):
 
 
 class SubscriptionEnum(Enum):
+    """
+    Перечисление статусов подписки.
+    """
+
     paid = "paid"
     test = "test"
     expired = "expired"
@@ -95,7 +99,7 @@ class UserReadSchema(UserBaseSchema):
     """
 
     id: int
-    role: UserRole
+    role: UserRoleEnum
     subscription: SubscriptionEnum
     permissions: list[PermissionEnum] = []
     created_at: datetime
@@ -109,18 +113,11 @@ class UserReadSchema(UserBaseSchema):
 
 
 class UserAuthRequestSchema(BaseModel):
-    """Pydantic model for user authorization request."""
+    """
+    Схема для принятия авторизационного запроса(токена).
+    """
 
     access_token: str
-
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-
-class UserAuthResponseSchema(BaseModel):
-    """Pydantic model for user authorization response."""
-
-    role: UserRole
-    permissions: list[PermissionEnum]
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -136,9 +133,6 @@ class PasswordResetConfirmSchema(BaseModel):
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "PasswordResetConfirmSchema":
-        """
-        Метод проверки на совпадение пароля.
-        """
         if self.new_password != self.confirm_new_password:
             raise ValueError("Passwords do not match")
         return self
@@ -157,9 +151,6 @@ class UserPasswordUpdateSchema(BaseModel):
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserPasswordUpdateSchema":
-        """
-        Метод проверки на совпадение пароля.
-        """
         if self.new_password != self.confirm_password:
             raise ValueError("Passwords do not match")
         return self
@@ -183,9 +174,7 @@ class UserForgotPasswordSchema(BaseModel):
 class UserRegisterEmployeeSchema(BaseModel):
     pvz_id: int
     owner_id: int
-    role: UserRole
+    role: UserRoleEnum
 
     class Config:
         from_attributes = True
-
-
