@@ -19,7 +19,7 @@ class TokenHandler:
         self.token_type = token_type
         self.algorithm, self.key, self.expire_time = settings.get_jwt_params(token_type=token_type).values()
 
-    def sign_jwt(self, user_id: int, **additional_payload: Any) -> tuple[Any, datetime | int | None]:
+    def sign_jwt(self, user_id: int) -> tuple[Any, datetime | int | None]:
         """
         Метод шифрования jwt токена.
         """
@@ -39,7 +39,9 @@ class TokenHandler:
         return token, payload.get("exp")
 
     def sign_registration_jwt(
-        self, user_id: int, pvz_id: int, target_role: str, email: str = None
+        self,
+        pvz_id: int,
+        target_role: str,
     ) -> tuple[Any, datetime | int | None]:
         """
         Метод шифрования registration jwt токена с дополнительными данными.
@@ -50,15 +52,10 @@ class TokenHandler:
         expire_time = timedelta(hours=self.expire_time)
 
         payload = {
-            "user_id": user_id,
-            "type": self.token_type.value,
             "pvz_id": pvz_id,
             "target_role": target_role,
             "exp": datetime.now(timezone.utc) + expire_time,
         }
-
-        if email:
-            payload["email"] = email
 
         token = jwt.encode(
             payload=payload,

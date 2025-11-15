@@ -37,8 +37,6 @@ class AuthService:
 
         payload = {
             "email": data.email,
-            "phone_number": data.phone_number,
-            "name": data.name,
             "hashed_password": hashed_password,
         }
         user = await repo.create(payload)
