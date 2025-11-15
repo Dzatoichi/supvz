@@ -92,5 +92,27 @@ async def get_сurrent_user(
 ):
     """Получение профиля пользователя"""
 
-    result = await user_service.get_current_user(access_token=access_token, token_service=token_service, repo=repo)
+    result = await user_service.get_current_user(
+        access_token=access_token,
+        token_service=token_service,
+        repo=repo
+    )
+    return result
+
+@users_router.patch("/me", response_model=UserReadSchema)
+async def update_current_user(
+        user_email: UserUpdateSchema,
+        access_token: str = Depends(get_access_token_from_cookie),
+        user_service: UserService = Depends(get_user_service),
+        repo: UsersDAO = Depends(get_users_dao),
+        token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+):
+    """Редактирование профиля"""
+
+    result = await user_service.update_current_user(
+        user_email=user_email,
+        access_token=access_token,
+        token_service=token_service,
+        repo=repo
+    )
     return result

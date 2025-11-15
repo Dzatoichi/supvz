@@ -84,8 +84,7 @@ class UserUpdateSchema(BaseModel):
     Схема изменения пользователя.
     """
 
-    id: int
-    email: EmailStr | None = None
+    email: EmailStr
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -188,3 +187,5 @@ class UserRegisterEmployeeSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+

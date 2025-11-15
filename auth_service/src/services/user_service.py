@@ -4,8 +4,9 @@ from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import SubscriptionEnum, UserReadSchema, UserRole
 from src.utils.logger_settings import logger
 
-from auth_service.src.schemas.tokens_schemas import TokenTypesEnum
-from auth_service.src.services.token_service import JWTTokensService
+from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import UserUpdateSchema
+from src.services.token_service import JWTTokensService
 
 
 class UserService:
@@ -57,7 +58,40 @@ class UserService:
     ) -> UserReadSchema:
         payload = token_service.validate_token(
             token=access_token,
-            token_type=TokenTypesEnum.access)
+            token_type=TokenTypesEnum.access
+        )
         user = repo.get_by_id(payload["id"])
+        return UserReadSchema(
+            email=user.email,
+            name=user.name,
+            role=user.role,
+            subscription=user.subscription,
+            created_at=user.created_at,
+        )
+
+    async def update_current_user(
+            self,
+            user_email: UserUpdateSchema,
+            access_token: str,
+            repo: UsersDAO,
+            token_service: JWTTokensService,
+    ) -> UserReadSchema:
+        payload = token_service.validate_token(
+            token=access_token,
+            token_type=TokenTypesEnum.access
+        )
+        user = repo.get_by_id(payload["id"])
+        if not user:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
+        updated_user = await repo.update(id=user.id, email=user_email.email)
+        return UserReadSchema(
+            email=updated_user.email,
+            name=updated_user.name,
+            role=updated_user.role,
+            subscription=updated_user.subscription,
+            created_at=updated_user.created_at,
+        )
+
+
 
 
