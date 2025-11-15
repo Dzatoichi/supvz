@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, Params
 
 from src.dao.tokensDAO import RefreshTokensDAO
@@ -17,22 +17,19 @@ from src.utils.dependencies import (
     get_user_service,
     get_users_dao,
 )
-from src.utils.rate_limiter import limiter
 
-users_router = APIRouter(prefix="/users", tags=["users"])
+users_router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@limiter.limit("5/minute")
 @users_router.post("/{user_id}/set_paid_sub", response_model=UserReadSchema)
 async def set_paid_sub(
-    request: Request,
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
-):
+) -> UserReadSchema:
     """
     Ручка обновления подписки владельца с test → paid.
-    Обычно вызывается после успешной оплаты (например из webhook платёжки).
+    Обычно вызывается после успешной оплаты.
     """
 
     result = await user_service.set_paid_owner(user_id=user_id, repo=repo)
@@ -44,7 +41,7 @@ async def get_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
-):
+) -> UserReadSchema:
     """
     Получает все данные о юзере по id
     """
@@ -58,14 +55,16 @@ async def get_users(
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
     params: Params = Depends(),
-):
-    """Получает список данных о каждом юзере"""
+) -> Page[UserReadSchema]:
+    """
+    Получает список данных о каждом юзере
+    """
 
     result = await user_service.get_users(repo=repo, params=params)
     return result
 
 
-@users_router.patch("", response_model=UserUpdateSchema)
+@users_router.patch("", response_model=UserReadSchema)
 async def update_user(
     user: UserUpdateSchema,
     access_token: str = Depends(get_access_token_from_cookie),
@@ -73,8 +72,10 @@ async def update_user(
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
     repo: UsersDAO = Depends(get_users_dao),
     refresh_repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
-):
-    """Заменяет имя и номер телефона существующего пользователя"""
+) -> UserReadSchema:
+    """
+    Ручка для обновления пользователя.
+    """
 
     token = UserAuthRequestSchema(access_token=access_token)
     result = await user_service.update_user(
@@ -87,11 +88,13 @@ async def update_user(
     return result
 
 
-@users_router.delete("/{user_id}", response_model=UserReadSchema)
+@users_router.delete("/{user_id}", status_code=204)
 async def delete_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     repo: UsersDAO = Depends(get_users_dao),
-):
-    """Удаление пользователя по id (только с правом DELETE_EMPLOYEES)"""
+) -> None:
+    """
+    Удаление пользователя по id
+    """
     await user_service.delete_user(user_id=user_id, repo=repo)

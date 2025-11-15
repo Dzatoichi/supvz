@@ -4,7 +4,6 @@ from fastapi import HTTPException, Response, status
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.permissions import PermissionEnum, has_permission
-from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
@@ -28,23 +27,16 @@ class AuthService:
         """
         Метод регистрации пользователя.
         """
-        user = await repo.get_user_by_email(data.email)
+        user = await repo.get_user_by_email(email=data.email)
         if user:
             raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
 
-        hashed_password = hash_helper.hash(data.password)
+        hashed_password = hash_helper.hash(plain_str=data.password)
         payload = {
             "email": data.email,
             "hashed_password": hashed_password,
         }
-        user = await repo.create(payload)
-        return UserReadSchema(
-            id=user.id,
-            email=user.email,
-            role=user.role,
-            sub=user.subscription,
-            created_at=user.created_at,
-        )
+        return await repo.create(payload=payload)
 
     async def login_user(
         self,
@@ -55,7 +47,7 @@ class AuthService:
         """
         Метод аутентификации пользователя.
         """
-        user = await repo.get_user_by_email(credentials.email)
+        user = await repo.get_user_by_email(email=credentials.email)
         if not user:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
 
@@ -84,7 +76,7 @@ class AuthService:
         """
         Метод сброса пароля пользователя.
         """
-        token_data = await token_service.get_reset_token_data(token)
+        token_data = await token_service.get_reset_token_data(token=token)
 
         if not token_data:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
@@ -95,9 +87,9 @@ class AuthService:
         if token_data.expires_at < datetime.now(timezone.utc):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
 
-        hashed_password = hash_helper.hash(new_password)
+        hashed_password = hash_helper.hash(plain_str=new_password)
         result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)
-        await token_service.mark_token_as_used(token_data)
+        await token_service.mark_token_as_used(token_obj=token_data)
 
         return result
 
@@ -112,10 +104,10 @@ class AuthService:
         Метод генерации токена сброса пароля и инициации его отправки на email через notification_service.
         """
 
-        user = await repo.get_user_by_email(user_email)
+        user = await repo.get_user_by_email(email=user_email)
 
         if user:
-            token = await token_service.create_stateful_token(user.id)
+            token = await token_service.create_stateful_token(user_id=user.id)
 
             # Интеграция с notification_service (пока заглушка)
             # reset_url = f"https://frontend.example.com/reset-password?token={token}"
@@ -143,16 +135,17 @@ class AuthService:
         token: str,
         token_service: JWTTokensService,
         repo: UsersDAO,
-        token_repo: RefreshTokensDAO,
         permission: PermissionEnum,
     ) -> None:
+        """
+        Метод для авторизации пользователя.
+        """
         token_payload = await token_service.validate_token(
             token=token,
             token_type=TokenTypesEnum.access,
-            repo=token_repo,
         )
         user_id = token_payload.get("user_id")
-        user = await repo.get_by_id(user_id)
+        user = await repo.get_by_id(id=user_id)
         if not user or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
