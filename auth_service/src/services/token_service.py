@@ -1,6 +1,5 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
@@ -19,23 +18,19 @@ class JWTTokensService:
     Класс сервиса для работы с jwt токенами.
     """
 
-    def __init__(self, repo: RefreshTokensDAO | None = None):
+    def __init__(self, repo: RefreshTokensDAO) -> None:
         self.repo = repo
 
     async def create_token(
         self,
         token_type: TokenTypesEnum,
         user_id: int,
-        **additional_payload: Any,
     ) -> str:
         """
         Функция генерации access или refresh токена.
         """
         token_handler = TokenHandler(token_type=token_type)
-        if token_type == TokenTypesEnum.register:
-            token, expires_at = token_handler.sign_jwt(user_id=user_id, **additional_payload)
-        else:
-            token, expires_at = token_handler.sign_jwt(user_id=user_id)
+        token, expires_at = token_handler.sign_jwt(user_id=user_id)
 
         if token_type == TokenTypesEnum.refresh:
             token_hash = hash_helper.hash_token(token=token)
@@ -54,7 +49,6 @@ class JWTTokensService:
         pvz_id: int,
         owner_id: int,
         role: str,
-        email: Optional[str] = None,
     ) -> str:
         """
         Создание JWT токена для регистрации сотрудника.
@@ -66,7 +60,6 @@ class JWTTokensService:
             pvz_id=pvz_id,
             owner_id=owner_id,
             role=role,
-            email=email,
         )
 
     async def revoke_token(
@@ -114,7 +107,7 @@ class JWTTokensService:
             "refresh_token": new_refresh_token,
         }
 
-    async def validate_token(self, token: str, token_type: TokenTypesEnum, repo: RefreshTokensDAO) -> dict:
+    async def validate_token(self, token: str, token_type: TokenTypesEnum) -> dict:
         """
         Функция для валидации refresh или access токена.
         """
@@ -138,9 +131,6 @@ class JWTTokensService:
                     raise InvalidTokenException(f"Missing required field: {field}")
             return token_payload
 
-        if repo is None:
-            raise InvalidTokenException("Repository required for refresh token validation")
-
         token_hash = hash_helper.hash_token(token=token)
         token_info = await self.repo.get_token_by_token_hash(token_hash=token_hash)
 
@@ -155,7 +145,7 @@ class StatefulTokenService:
     Класс сервиса обработки stateful токенов.
     """
 
-    def __init__(self, dao: Optional[StatefulTokenDAO] = None):
+    def __init__(self, dao: StatefulTokenDAO) -> None:
         self.dao = dao
 
     async def create_stateful_token(
@@ -177,7 +167,7 @@ class StatefulTokenService:
         }
         return await self.dao.create(payload)
 
-    async def get_reset_token_data(self, token: str) -> Optional[StatefulTokens]:
+    async def get_reset_token_data(self, token: str) -> StatefulTokens | None:
         """
         Метод получения данных токена и его валиадации.
         """
@@ -195,7 +185,7 @@ class StatefulTokenService:
     async def validate_token(
         self,
         token: str,
-    ) -> Optional[StatefulTokens]:
+    ) -> StatefulTokens | None:
         """
         Метод валидации stateful токена.
         """

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy import select
 
 from src.dao.baseDAO import BaseDAO
@@ -16,21 +14,15 @@ class StatefulTokenDAO(BaseDAO[StatefulTokens]):
     def __init__(self):
         super().__init__(model=StatefulTokens)
 
-    async def create_token(self, payload: dict) -> StatefulTokens:
-        """
-        Метод создания токена.
-        """
-        return await self.create(payload)
-
     @BaseDAO.with_exception
-    async def get_by_token(self, token: str) -> Optional[StatefulTokens]:
+    async def get_by_token(self, token: str) -> StatefulTokens | None:
         """Получает токен по строке токена."""
         stmt = select(self.model).where(self.model.token == token)
         async with self._get_session() as session:
             res = await session.execute(stmt)
             return res.scalars().first()
 
-    async def mark_as_used(self, token_id: int) -> Optional[StatefulTokens]:
+    async def mark_as_used(self, token_id: int) -> StatefulTokens | None:
         """Помечает токен как использованный."""
         return await self.update(token_id, used=True)
 
@@ -44,7 +36,7 @@ class RefreshTokensDAO(BaseDAO[RefreshTokens]):
         super().__init__(model=RefreshTokens)
 
     @BaseDAO.with_exception
-    async def get_token_by_token_hash(self, token_hash: str) -> Optional[RefreshTokens]:
+    async def get_token_by_token_hash(self, token_hash: str) -> RefreshTokens | None:
         """
         Метод для получения токена по хеш-строке.
         """

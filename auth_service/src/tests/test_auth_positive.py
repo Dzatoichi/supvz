@@ -11,7 +11,7 @@ async def test_register_user(client):
             "confirm_password": "12345678",
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["email"] == "test@example.com"
 
