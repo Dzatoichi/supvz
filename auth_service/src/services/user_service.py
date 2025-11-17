@@ -115,6 +115,8 @@ class UserService:
         repo: UsersDAO,
         token_service: JWTTokensService,
     ) -> UserReadSchema:
+        """Получает данные о пользователе по access token"""
+
         token_payload = token_service.validate_token(token=token.access_token, token_type=TokenTypesEnum.access)
         user_id = token_payload.get("user_id")
         user = repo.get_by_id(user_id)
