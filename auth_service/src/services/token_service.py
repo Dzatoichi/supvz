@@ -1,13 +1,12 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from src.schemas.users_schemas import UserRoleEnum
-
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.models.tokens.stateful_tokens import StatefulTokens
 from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import UserRoleEnum
 from src.settings.config import settings
 from src.utils.exceptions import (
     InvalidTokenException,
