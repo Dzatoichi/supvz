@@ -24,7 +24,7 @@ class AuthService:
         self,
         data: UserRegisterSchema,
         repo: UsersDAO,
-        token_service: JWTTokensService,
+        token_service: JWTTokensService | None,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.

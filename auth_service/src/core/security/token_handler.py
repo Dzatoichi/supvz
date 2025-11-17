@@ -2,9 +2,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
-from auth_service.src.schemas.users_schemas import UserRoleEnum
 
 from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import UserRoleEnum
 from src.settings.config import settings
 
 

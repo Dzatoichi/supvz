@@ -30,16 +30,23 @@ async def register_user(
     user_in: UserRegisterSchema,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
-    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    token_service: JWTTokensService | None = Depends(get_jwt_tokens_service),
 ) -> UserReadSchema:
     """
     Ручка регистрации пользователя.
     POST [/auth/register]
     """
+    if user_in.register_token:
+        user = await auth_service.register_user(
+            data=user_in,
+            repo=repo,
+            token_service=token_service,
+        )
+        return user
+
     user = await auth_service.register_user(
         data=user_in,
         repo=repo,
-        token_service=token_service,
     )
 
     return user
