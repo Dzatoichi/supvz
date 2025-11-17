@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from auth_service.src.schemas.users_schemas import UserRoleEnum
+from src.schemas.users_schemas import UserRoleEnum
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
