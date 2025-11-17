@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
+from auth_service.src.schemas.users_schemas import UserRoleEnum
 
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.settings.config import settings
@@ -38,10 +39,11 @@ class TokenHandler:
         )
         return token, payload.get("exp")
 
-    def sign_registration_jwt(
+    def sign_register_jwt(
         self,
         pvz_id: int,
-        target_role: str,
+        owner_id: int,
+        role: UserRoleEnum,
     ) -> tuple[Any, datetime | int | None]:
         """
         Метод шифрования registration jwt токена с дополнительными данными.
@@ -53,7 +55,8 @@ class TokenHandler:
 
         payload = {
             "pvz_id": pvz_id,
-            "target_role": target_role,
+            "owner_id": owner_id,
+            "role": role,
             "exp": datetime.now(timezone.utc) + expire_time,
         }
 

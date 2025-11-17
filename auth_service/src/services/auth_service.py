@@ -24,6 +24,7 @@ class AuthService:
         self,
         data: UserRegisterSchema,
         repo: UsersDAO,
+        token_service: JWTTokensService,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.
@@ -31,12 +32,19 @@ class AuthService:
         user = await repo.get_user_by_email(email=data.email)
         if user:
             raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
-
         hashed_password = hash_helper.hash(plain_str=data.password)
         payload = {
             "email": data.email,
             "hashed_password": hashed_password,
         }
+
+        if data.register_token:
+            register_token_payload = token_service.validate_token(
+                token=data.register_token,
+                token_type=TokenTypesEnum.register,
+            )
+            payload.update(register_token_payload)
+
         return await repo.create(payload=payload)
 
     async def login_user(
@@ -136,11 +144,11 @@ class AuthService:
         employee_data: UserRegisterEmployeeSchema,
         token_service: JWTTokensService,
     ) -> dict:
-        register_token = await token_service.create_token(
+        register_token = await token_service.create_register_token(
             token_type=TokenTypesEnum.register,
-            user_id=employee_data.owner_id,
-            owner_id=employee_data.owner_id,
             pvz_id=employee_data.pvz_id,
+            owner_id=employee_data.owner_id,
+            role=employee_data.role,
         )
         return {"register_token": register_token}
 

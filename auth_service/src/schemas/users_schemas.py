@@ -72,6 +72,7 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
+    register_token: str | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -175,6 +176,6 @@ class UserForgotPasswordSchema(BaseModel):
 class UserRegisterEmployeeSchema(BaseModel):
     pvz_id: int
     owner_id: int
-    role: UserRole
+    role: UserRoleEnum
 
     model_config = ConfigDict(from_attributes=True)
