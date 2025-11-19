@@ -4,6 +4,7 @@ from typing import Any
 import jwt
 
 from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import UserRoleEnum
 from src.settings.config import settings
 
 
@@ -38,27 +39,26 @@ class TokenHandler:
         )
         return token, payload.get("exp")
 
-    def sign_registration_jwt(
-        self, user_id: int, pvz_id: int, target_role: str, email: str = None
+    def sign_register_jwt(
+        self,
+        pvz_id: int,
+        owner_id: int,
+        role: UserRoleEnum,
     ) -> tuple[Any, datetime | int | None]:
         """
-        Метод шифрования registration jwt токена с дополнительными данными.
+        Метод шифрования register jwt токена с дополнительными данными.
         """
-        if self.token_type != TokenTypesEnum.registration:
+        if self.token_type != TokenTypesEnum.register:
             raise ValueError("This method can only be used for registration tokens")
 
         expire_time = timedelta(hours=self.expire_time)
 
         payload = {
-            "user_id": user_id,
-            "type": self.token_type.value,
             "pvz_id": pvz_id,
-            "target_role": target_role,
+            "owner_id": owner_id,
+            "role": role,
             "exp": datetime.now(timezone.utc) + expire_time,
         }
-
-        if email:
-            payload["email"] = email
 
         token = jwt.encode(
             payload=payload,

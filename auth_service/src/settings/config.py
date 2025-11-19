@@ -45,7 +45,7 @@ class Settings(BaseSettings):
                 "secret_key": self.JWT_ACCESS_SECRET_KEY,
                 "expire_time": self.JWT_ACCESS_EXPIRE_TIME,
             }
-        elif token_type == "registration":
+        elif token_type == "register":
             added_jwt_params = {
                 "secret_key": self.JWT_REGISTER_SECRET_KEY,
                 "expire_time": self.JWT_REGISTER_EXPIRE_TIME,

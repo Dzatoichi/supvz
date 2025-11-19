@@ -6,6 +6,7 @@ from src.core.security.token_handler import TokenHandler
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.models.tokens.stateful_tokens import StatefulTokens
 from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import UserRoleEnum
 from src.settings.config import settings
 from src.utils.exceptions import (
     InvalidTokenException,
@@ -44,23 +45,20 @@ class JWTTokensService:
 
         return token
 
-    async def create_registration_token(
+    async def create_register_token(
         self,
+        token_type: TokenTypesEnum,
         pvz_id: int,
         owner_id: int,
-        role: str,
+        role: UserRoleEnum,
     ) -> str:
         """
         Создание JWT токена для регистрации сотрудника.
-        Использует общий метод create_token с дополнительными данными.
         """
-        return await self.create_token(
-            token_type=TokenTypesEnum.registration,
-            user_id=owner_id,
-            pvz_id=pvz_id,
-            owner_id=owner_id,
-            role=role,
-        )
+
+        token_handler = TokenHandler(token_type=token_type)
+        token, expires_at = token_handler.sign_register_jwt(pvz_id=pvz_id, owner_id=owner_id, role=role)
+        return token
 
     async def revoke_token(
         self,
@@ -125,7 +123,7 @@ class JWTTokensService:
             return token_payload
 
         if token_type == TokenTypesEnum.register:
-            required_fields = ["pvz_id", "owner_id", "target_role"]
+            required_fields = ["pvz_id", "owner_id", "role"]
             for field in required_fields:
                 if field not in token_payload:
                     raise InvalidTokenException(f"Missing required field: {field}")

@@ -72,6 +72,7 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
+    register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -176,5 +177,4 @@ class UserRegisterEmployeeSchema(BaseModel):
     owner_id: int
     role: UserRoleEnum
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
