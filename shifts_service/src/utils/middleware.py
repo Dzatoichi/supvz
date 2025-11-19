@@ -1,0 +1,39 @@
+import time
+
+from fastapi import Request
+from loguru import logger
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
+        start_time = time.time()
+        client_ip = request.headers.get("x-forwarded-for", request.client.host)
+        client_port = request.client.port if request.client else "-"
+        method = request.method
+        path = request.url.path
+        http_version = request.scope.get("http_version", "1.1")
+        response = await call_next(request)
+        status_code = response.status_code
+        process_time = (time.time() - start_time) * 1000
+
+        log = logger.bind(
+            client_ip=client_ip,
+            client_port=client_port,
+            method=method,
+            path=path,
+            http_version=http_version,
+            status_code=status_code,
+            process_time=f"{process_time:.2f}ms",
+        )
+
+        if status_code >= 500:
+            log.error("HTTP Request")
+        elif status_code == 429:
+            log.debug("HTTP Request (rate limited)")
+        elif status_code >= 400:
+            log.warning("HTTP Request")
+        else:
+            log.info("HTTP Request")
+
+        return response
