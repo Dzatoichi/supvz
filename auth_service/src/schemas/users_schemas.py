@@ -72,7 +72,7 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
-    register_token: str | None = None
+    register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":

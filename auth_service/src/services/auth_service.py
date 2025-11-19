@@ -24,7 +24,7 @@ class AuthService:
         self,
         data: UserRegisterSchema,
         repo: UsersDAO,
-        token_service: JWTTokensService | None,
+        token_service: JWTTokensService | None = None,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.
@@ -39,11 +39,11 @@ class AuthService:
         }
 
         if data.register_token:
-            register_token_payload = token_service.validate_token(
+            register_token_payload = await token_service.validate_token(
                 token=data.register_token,
                 token_type=TokenTypesEnum.register,
             )
-            payload.update(register_token_payload)
+            payload["role"] = register_token_payload.get("role")
 
         return await repo.create(payload=payload)
 

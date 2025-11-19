@@ -47,6 +47,7 @@ async def register_user(
     user = await auth_service.register_user(
         data=user_in,
         repo=repo,
+        token_service=None,
     )
 
     return user
