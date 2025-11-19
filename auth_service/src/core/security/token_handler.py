@@ -46,9 +46,9 @@ class TokenHandler:
         role: UserRoleEnum,
     ) -> tuple[Any, datetime | int | None]:
         """
-        Метод шифрования registration jwt токена с дополнительными данными.
+        Метод шифрования register jwt токена с дополнительными данными.
         """
-        if self.token_type != TokenTypesEnum.registration:
+        if self.token_type != TokenTypesEnum.register:
             raise ValueError("This method can only be used for registration tokens")
 
         expire_time = timedelta(hours=self.expire_time)
