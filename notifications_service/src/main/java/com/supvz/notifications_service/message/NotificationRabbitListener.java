@@ -20,7 +20,7 @@ public class NotificationRabbitListener implements MessageListener {
     private final EventProcessingService processingService;
 
     @Override
-    @RabbitListener(queues = {"${messaging.notifications_queue}"})
+    @RabbitListener(queues = {"${app.messaging.notifications_queue}"})
     public void listen(String message) {
         log.debug("Listened raw message: [{}]", message);
         try {

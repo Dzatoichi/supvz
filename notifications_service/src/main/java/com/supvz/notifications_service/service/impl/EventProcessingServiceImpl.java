@@ -30,6 +30,7 @@ public class EventProcessingServiceImpl implements EventProcessingService {
 
         InboxEvent inboxEvent = inboxEventService.create(messageDto);
         notificationService.create(inboxEvent);
+//        todo: а что если дубль прошел и уже такой существует?
 
         log.info("Notification message [{}] is initialized.", messageDto.eventId());
     }
@@ -40,17 +41,19 @@ public class EventProcessingServiceImpl implements EventProcessingService {
         log.debug("Process notification by event [{}].", eventId);
 
         Notification notification = notificationService.getByEventId(eventId);
+//        todo: ну а если нотификация не найдена? тоже надо учесть. исключение перехватить и че то сделать
         switch (notification.getNotificationType()) {
             case email -> emailNotificationService.send(notification);
             case web -> webNotificationService.send(notification);
             case push -> pushNotificationService.send(notification);
         }
 
-//        todo: рассмотреть сценарий, если уведомление не обработалось. придумать компенсирующие события. обработчики ошибок
+//        todo: рассмотреть сценарий, если уведомление не обработалось, перехват исключения в send. придумать компенсирующие события. обработчики ошибок
 
         LocalDateTime sentAndProcessedAt = LocalDateTime.now();
         notificationService.markAsSent(notification, sentAndProcessedAt);
         inboxEventService.markProcessed(notification.getEvent(), sentAndProcessedAt);
+//        todo: обработка и отметка нотификации должна выполняться атомарно.
 
         log.info("Notification [{}] by event [{}] is processed.", notification.getId(), eventId);
     }

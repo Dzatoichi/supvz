@@ -14,12 +14,12 @@ CREATE TABLE IF NOT EXISTS inbox_events
 (
 	event_id UUID PRIMARY KEY,
 	event_type notification_type NOT NULL,
-	reserved_to TIMESTAMP,
 	payload TEXT NOT NULL,
-	created_at TIMESTAMP NOT NULL,
 	received_at TIMESTAMP NOT NULL DEFAULT now(),
+	reserved_to TIMESTAMP,
 	processed_at TIMESTAMP,
 	processed BOOLEAN NOT NULL DEFAULT FALSE
+	created_at TIMESTAMP NOT NULL,
 );
 
 --changeset re1kur:3
