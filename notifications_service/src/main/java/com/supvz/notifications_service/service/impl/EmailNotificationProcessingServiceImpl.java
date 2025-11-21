@@ -25,7 +25,6 @@ public class EmailNotificationProcessingServiceImpl implements EmailNotification
     @Override
     public void send(Notification notification) {
         log.debug("Sending email notification [{}].", notification.getId());
-//        todo: validate notification for email
         try {
             SimpleMailMessage mailMessage = mapper.mail(notification);
             mailSender.send(mailMessage);

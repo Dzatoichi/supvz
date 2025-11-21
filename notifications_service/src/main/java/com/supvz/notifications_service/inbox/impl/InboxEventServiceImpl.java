@@ -23,7 +23,7 @@ public class InboxEventServiceImpl implements InboxEventService {
     private final InboxEventMapper mapper;
     private final InboxEventRepository repo;
 
-    @Value("${inbox.reservation_in_minutes}")
+    @Value("${app.inbox.reservation_in_minutes}")
     private int reservationMinutes;
 
     @Override

@@ -20,7 +20,7 @@ public class InboxPollerImpl implements InboxPoller {
     private final InboxEventService inboxEventService;
     private final EventProcessingService processingService;
 
-    @Value("${inbox.polling.to_process_by_time.number}")
+    @Value("${app.inbox.polling.to_process_by_time.number}")
     private int firstNumber;
 
     @Override

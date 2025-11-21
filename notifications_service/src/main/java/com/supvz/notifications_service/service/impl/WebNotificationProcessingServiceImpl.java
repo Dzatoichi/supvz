@@ -21,8 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WebNotificationProcessingServiceImpl implements WebNotificationProcessingService {
     private final SimpMessagingTemplate messagingTemplate;
-
-    @Value("${websocket.baseTopic}")
+    @Value("${app.websocket.base-topic}")
     private String baseTopic;
 
     /**

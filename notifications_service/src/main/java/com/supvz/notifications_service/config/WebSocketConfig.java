@@ -17,8 +17,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    @Value("${websocket.allowed_origins}")
+    @Value("${app.websocket.allowed-origins:*}")
     private String[] origins;
+    @Value("{app.websocket.base-topic}")
+    private String baseTopic;
 
     /**
      * Настройка ручки, по которой можно подключить клиента с сервером.
@@ -27,8 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-//                todo: поменять обязательно для прода
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(origins)
                 .withSockJS();
     }
 
@@ -37,8 +38,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
-
+        registry.enableSimpleBroker(baseTopic);
         registry.setApplicationDestinationPrefixes("/backend");
     }
 }

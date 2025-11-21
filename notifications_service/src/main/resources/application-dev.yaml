@@ -20,20 +20,33 @@ spring:
           connectiontimeout: 5000
           timeout: 10000
           writetimeout: 10000
+  datasource:
+    username: developer
+    password: developer
+    url: jdbc:postgresql://localhost:5432/notifications_db
 
 logging:
   level:
     com.supvz.notifications_service: trace
 
-messaging:
-  notifications_queue: notifications_queue
-
-websocket:
-  baseTopic: topic
-  allowed_origins: "*"
-
-inbox:
-  reservation_in_minutes: 5
-  polling:
-    to_process_by_time:
-      number: 10
+app:
+  websocket:
+    base-topic: topic
+    allowed-origins:
+      - "*"
+  cors:
+    allowed-origins:
+      - "*"
+    allowed-methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+  messaging:
+    notifications_queue: notifications_queue
+  inbox:
+    reservation_in_minutes: 5
+    polling:
+      to_process_by_time:
+        number: 10
