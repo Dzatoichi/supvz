@@ -35,6 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
         log.debug("Create notification by type [{}], by event [{}].", event.getEventType(), event.getEventId());
         Notification mapped = mapper.create(event);
         Notification saved = repo.save(mapped);
+//        todo: проверить, юник ли нотификация. чтобы не создавалось на один ивент куча нотификаций(одного типа по крайней мере)
         log.info("Notification [{}] by event [{}] is created.", saved.getId(), event.getEventId());
     }
 
@@ -43,6 +44,7 @@ public class NotificationServiceImpl implements NotificationService {
         log.debug("Get event [{}].", eventId);
         return repo.findByEventId(eventId)
                 .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found.".formatted(eventId)));
+//        todo: исключение не то вообще и сообщение исключения тоже. исправить.
     }
 
     @Override
@@ -51,6 +53,8 @@ public class NotificationServiceImpl implements NotificationService {
         log.debug("Mark notification [{}] as sent.", notification.getId());
         notification.setSentAt(sentAndProcessedAt);
         repo.save(notification);
+//        todo: проверка состояния при апдейте. вдруг сообщение уже было отправлено и таймстемп перезапишется в итоге.
+//        todo: также вынести обновление статуса в метод репозитория для разделения бизнес логики и бд слоя
         log.debug("Notification [{}] is marked as sent.", notification.getId());
     }
 
@@ -64,7 +68,7 @@ public class NotificationServiceImpl implements NotificationService {
         NotificationType type = filter.type();
         Boolean viewed = filter.viewed();
         DateNotificationFilter dateFilter = filter.dateFilter();
-        boolean filterByDate = dateFilter != null && (dateFilter.startDate() != null & dateFilter.endDate() != null);
+        boolean filterByDate = dateFilter != null && (dateFilter.startDate() != null && dateFilter.endDate() != null);
 //      Получение странички.
         Page<Notification> notificationPage;
         if (filterByDate) {
@@ -73,6 +77,7 @@ public class NotificationServiceImpl implements NotificationService {
         } else {
             notificationPage = repo.findAll(pageable, recipientId, eventId, type, viewed);
         }
+//        todo: проверку дат сделать
         return mapper.readPage(notificationPage);
     }
 }

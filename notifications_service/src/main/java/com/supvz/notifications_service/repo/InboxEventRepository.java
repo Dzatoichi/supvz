@@ -22,6 +22,7 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
             """)
     List<InboxEvent> findAllUnprocessed(
             @Param("number") int number);
+//    todo: опасная часть, тк два сервиса могут прочитать один и тот же батч. подумать о конкуренции
 
     @Modifying
     @Query(value = """
@@ -33,6 +34,7 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     int reserve(
             @Param("event") InboxEvent event,
             @Param("reservationTime") LocalDateTime reservationMinutes);
+//    todo: не тянуть за собой сущность. проблема производительности
 
     @Modifying
     @Query(value = """

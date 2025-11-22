@@ -38,11 +38,13 @@ public class InboxEventServiceImpl implements InboxEventService {
                 mapped.getCreatedAt()
         );
         if (result.isEmpty()) {
+//            todo: возможно, стоит возвращать существующую сущность.
             throw new InboxEventConflictException
                     ("Inbox event [%s] is already exists.".formatted(messageDto.eventId()));
         }
         log.info("Inbox event [{}] is created.", messageDto.eventId());
         return repo.findById(messageDto.eventId()).orElseThrow();
+//        todo: подумать, как сохранить и отдать за одну строку. два запроса делается. проблема производительности
     }
 
     @Override
@@ -52,6 +54,7 @@ public class InboxEventServiceImpl implements InboxEventService {
 
     @Transactional
     public void reserveEvent(InboxEvent event) {
+//        todo: batched reserve надо
         LocalDateTime reservedTo = LocalDateTime.now().plusMinutes(reservationMinutes);
         int i = repo.reserve(event, reservedTo);
 
@@ -69,6 +72,7 @@ public class InboxEventServiceImpl implements InboxEventService {
 
         event.setProcessedAt(processedAt);
         event.setProcessed(true);
+//        todo: жестко подумать про конкуренцию и проверку, зарезервирован ли.
 
         repo.save(event);
 

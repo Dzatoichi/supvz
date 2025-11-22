@@ -42,6 +42,7 @@ public class EventProcessingServiceImpl implements EventProcessingService {
 
         Notification notification = notificationService.getByEventId(eventId);
 //        todo: ну а если нотификация не найдена? тоже надо учесть. исключение перехватить и че то сделать
+//        todo: учесть, если нотификация уже отправлена. чтобы повторно не отправить.
         switch (notification.getNotificationType()) {
             case email -> emailNotificationService.send(notification);
             case web -> webNotificationService.send(notification);
