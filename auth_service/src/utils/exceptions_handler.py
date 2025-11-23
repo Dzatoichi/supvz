@@ -5,14 +5,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.utils.exceptions import (
     IncorrectPasswordException,
-    InvalidEmailFormatException,
-    InvalidPhoneFormatException,
     InvalidTokenException,
     PermissionDeniedException,
     TokenExpiredException,
     UserAlreadyExistsException,
     UserNotFoundException,
-    WeakPasswordException,
 )
 from src.utils.logger_settings import logger
 
@@ -101,60 +98,6 @@ def setup_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={"error": "user_already_exists", "detail": str(exc)},
-        )
-
-    @app.exception_handler(WeakPasswordException)
-    async def weak_password_handler(
-        request: Request,
-        exc: WeakPasswordException,
-    ):
-        logger.error(
-            "WeakPasswordException",
-            method=request.method,
-            path=request.url.path,
-            detail=str(exc),
-            client_ip=request.client.host if request.client else None,
-        )
-
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={"error": "weak_password", "detail": str(exc)},
-        )
-
-    @app.exception_handler(InvalidEmailFormatException)
-    async def invalid_email_format_handler(
-        request: Request,
-        exc: InvalidEmailFormatException,
-    ):
-        logger.error(
-            "InvalidEmailFormatException",
-            method=request.method,
-            path=request.url.path,
-            detail=str(exc),
-            client_ip=request.client.host if request.client else None,
-        )
-
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={"error": "invalid_email_format", "detail": str(exc)},
-        )
-
-    @app.exception_handler(InvalidPhoneFormatException)
-    async def invalid_phone_format_handler(
-        request: Request,
-        exc: InvalidPhoneFormatException,
-    ):
-        logger.error(
-            "InvalidPhoneFormatException",
-            method=request.method,
-            path=request.url.path,
-            detail=str(exc),
-            client_ip=request.client.host if request.client else None,
-        )
-
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={"error": "invalid_phone_format", "detail": str(exc)},
         )
 
     @app.exception_handler(UserNotFoundException)
