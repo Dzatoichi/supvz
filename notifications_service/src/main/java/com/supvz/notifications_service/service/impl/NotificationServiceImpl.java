@@ -1,5 +1,6 @@
 package com.supvz.notifications_service.service.impl;
 
+import com.supvz.notifications_service.core.exception.NotificationNotFoundException;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.PageDto;
 import com.supvz.notifications_service.core.exception.InboxEventNotFoundException;
@@ -41,10 +42,9 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Notification getByEventId(UUID eventId) {
-        log.debug("Get event [{}].", eventId);
+        log.debug("Get notification by event [{}].", eventId);
         return repo.findByEventId(eventId)
-                .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found.".formatted(eventId)));
-//        todo: исключение не то вообще и сообщение исключения тоже. исправить.
+                .orElseThrow(() -> new NotificationNotFoundException("Notification by event [%s] was not found.".formatted(eventId)));
     }
 
     @Override

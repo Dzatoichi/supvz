@@ -30,6 +30,8 @@ logging:
     com.supvz.notifications_service: trace
 
 app:
+  notification:
+    number-retry-attempts: 3
   websocket:
     base-topic: topic
     allowed-origins:
@@ -46,7 +48,7 @@ app:
   messaging:
     notifications_queue: notifications_queue
   inbox:
-    reservation_in_minutes: 5
+    reservation-min: 5
     polling:
-      to_process_by_time:
-        number: 10
+      delay-ms: 10000
+      batch-size: 10

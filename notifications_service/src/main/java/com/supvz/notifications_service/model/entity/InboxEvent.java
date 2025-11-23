@@ -8,7 +8,7 @@ import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Table(name = "inbox_events")
+@Table(name = "inbox")
 @Entity
 @Getter
 @Setter
@@ -21,7 +21,8 @@ public class InboxEvent {
 
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "event_type")
-    private NotificationType eventType;
+    private InboxEventType eventType;
+//    todo: изменить sql
 
     private String payload;
 

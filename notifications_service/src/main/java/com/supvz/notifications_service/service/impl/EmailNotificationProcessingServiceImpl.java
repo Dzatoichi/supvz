@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,18 +24,22 @@ public class EmailNotificationProcessingServiceImpl implements EmailNotification
     private final MailMapper mapper;
 
     @Override
+    @Retryable(retryFor = MailException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
     public void send(Notification notification) {
-        log.debug("Sending email notification [{}].", notification.getId());
+        log.debug("Sending email notification [{}] to [{}].", notification.getId(), notification.getRecipientId());
         try {
 //            todo: валидация данных до отправки
+            validate(notification);
             SimpleMailMessage mailMessage = mapper.mail(notification);
             mailSender.send(mailMessage);
-//            todo: как оказывается, smtp не гарантирует успешную доставку писем. Придумать компенсирующее событие.
             log.info("Email notification [{}] is sent.", notification.getId());
         } catch (MailException e) {
-            log.error("Couldn't send email notification [{}]: {}.", notification.getId(), e.getMessage());
-//            todo: логировать сам объект ошибки является нехорошей практикой.
+            log.error("Couldn't send email notification [{}].", notification.getId(), e);
             throw e;
         }
+    }
+
+    private void validate(Notification notification) {
+//        if (notification.getBody() == null)
     }
 }

@@ -1,6 +1,7 @@
 package com.supvz.notifications_service.service.impl;
 
-import com.supvz.notifications_service.model.dto.MessageDto;
+import com.supvz.notifications_service.core.exception.NotificationConflictException;
+import com.supvz.notifications_service.model.dto.InboxEventPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.inbox.InboxEventService;
@@ -25,31 +26,29 @@ public class EventProcessingServiceImpl implements EventProcessingService {
 
     @Override
     @Transactional
-    public void initNotification(MessageDto messageDto) {
-        log.debug("Initialize notification message: [{}].", messageDto.eventId());
+    public void initNotification(InboxEventPayload inboxEventPayload) {
+        log.debug("Initialize notification message: [{}].", inboxEventPayload.eventId());
 
-        InboxEvent inboxEvent = inboxEventService.create(messageDto);
+        InboxEvent inboxEvent = inboxEventService.create(inboxEventPayload);
         notificationService.create(inboxEvent);
 //        todo: а что если дубль прошел и уже такой существует?
 
-        log.info("Notification message [{}] is initialized.", messageDto.eventId());
+        log.info("Notification message [{}] is initialized.", inboxEventPayload.eventId());
     }
 
     @Override
     @Transactional
     public void processNotification(UUID eventId) {
         log.debug("Process notification by event [{}].", eventId);
-
         Notification notification = notificationService.getByEventId(eventId);
-//        todo: ну а если нотификация не найдена? тоже надо учесть. исключение перехватить и че то сделать
-//        todo: учесть, если нотификация уже отправлена. чтобы повторно не отправить.
+        if (notification.getSent()) {
+            throw new NotificationConflictException("Notification [%s] already sent.".formatted(notification.getId()));
+        }
         switch (notification.getNotificationType()) {
             case email -> emailNotificationService.send(notification);
             case web -> webNotificationService.send(notification);
             case push -> pushNotificationService.send(notification);
         }
-
-//        todo: рассмотреть сценарий, если уведомление не обработалось, перехват исключения в send. придумать компенсирующие события. обработчики ошибок
 
         LocalDateTime sentAndProcessedAt = LocalDateTime.now();
         notificationService.markAsSent(notification, sentAndProcessedAt);

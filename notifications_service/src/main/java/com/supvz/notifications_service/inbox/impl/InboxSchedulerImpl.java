@@ -20,34 +20,25 @@ public class InboxSchedulerImpl implements InboxScheduler {
     private final InboxEventService inboxEventService;
     private final EventProcessingService processingService;
 
-    @Value("${app.inbox.polling.to_process_by_time.number}")
+    @Value("${app.inbox.polling.batch-size}")
     private Integer batchSize;
 
-//    todo: делэй вынести в проперти. @Scheduled(fixedDelayString = "${app.inbox.polling.delay-ms:10000}")
     @Override
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelayString = "${app.inbox.polling.delay-ms:10000}")
     public void poll() {
         log.debug("Polling inbox events.");
-        List<InboxEvent> events = inboxEventService.readFirstUnprocessed(batchSize);
-//        todo: проблема конкурентности. если много реплик, то мб что они в один момент возьмут тот же батч,
-//        todo: оба зарезервируют и обработают. дубли. Надо подумать о том, как за один запрос сделать апдейт reserve_to
-//        todo: и получить ивенты
-        List<UUID> eventsIds = reserveEvents(events);
-//        todo: нет проверки на пустой список.
-        for (UUID eventId : eventsIds) {
+        List<UUID> reservedBatch = inboxEventService.readAndReserveUnprocessedBatch(batchSize);
+        log.debug("Found and reserved batch of events. Size [{}]", reservedBatch.size());
+        if (!reservedBatch.isEmpty()) {
+            for (UUID eventId : reservedBatch) {
 //            todo: сделать try-catch. Если один ивент упадет -- весь полер остановится
-            processingService.processNotification(eventId);
+                try {
+                    processingService.processNotification(eventId);
+//                    todo: может, можно это сделать асинхронно? либо на каждую нотификацию поток(это мне больше нравится)
+                } catch (RuntimeException e) {
+                    log.error("Couldn't process notification by event [{}]", eventId, e);
+                }
+            }
         }
-    }
-
-    private List<UUID> reserveEvents(List<InboxEvent> events) {
-        List<UUID> eventsIds = events.stream().map(InboxEvent::getEventId).toList();
-        log.debug("Reserve events {}.", eventsIds.isEmpty() ? "[EMPTY LIST]" : eventsIds);
-//        todo: неправильные логи. если список большой, то может нагрузить логи текстом. придумать лучше. Допустим длину списка.
-        for (InboxEvent event : events) {
-//        todo: если я получаю батч, тогда и резервировать надо батчем. тоже проблема конкуренции и плохо для производительности
-            inboxEventService.reserveEvent(event);
-        }
-        return eventsIds;
     }
 }

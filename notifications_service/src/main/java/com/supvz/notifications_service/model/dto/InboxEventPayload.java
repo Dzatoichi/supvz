@@ -1,14 +1,16 @@
 package com.supvz.notifications_service.model.dto;
 
 
+import com.supvz.notifications_service.model.entity.InboxEventType;
 import com.supvz.notifications_service.model.entity.NotificationType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record MessageDto (
+public record InboxEventPayload(
         UUID eventId,
-        NotificationType eventType,
+        InboxEventType eventType,
+//    todo: изменить sql
         String payload,
 //       todo:  это антипатерн. строка пейлоада
         LocalDateTime createdAt

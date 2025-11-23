@@ -10,7 +10,7 @@ CREATE TYPE notification_type AS ENUM (
 );
 
 --changeset re1kur:2
-CREATE TABLE IF NOT EXISTS inbox_events
+CREATE TABLE IF NOT EXISTS inbox
 (
 	event_id UUID PRIMARY KEY,
 	event_type notification_type NOT NULL,

@@ -14,15 +14,21 @@ import java.util.UUID;
 @Repository
 public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     @Query(value = """
-            FROM InboxEvent i WHERE
-            i.processed IS FALSE
-            AND (i.reservedTo IS NULL OR i.reservedTo < CURRENT_TIMESTAMP)
-            ORDER BY receivedAt
-            LIMIT :number
-            """)
-    List<InboxEvent> findAllUnprocessed(
-            @Param("number") int number);
-//    todo: опасная часть, тк два сервиса могут прочитать один и тот же батч. подумать о конкуренции
+            WITH batch AS (
+            SELECT id FROM inbox i
+            WHERE i.processed IS FALSE
+            AND (i.reserved_to IS NULL OR i.reserved_to < now())
+            ORDER BY i.received_at
+            LIMIT :batchSize
+            )
+            UPDATE inbox i
+            SET i.reserved_to = :reservedTo
+            WHERE i.event_id IN (SELECT event_id FROM batch)
+            RETURNING i.event_id
+            """, nativeQuery = true)
+    List<UUID> findAndReserveUnprocessedInBatch(
+            @Param("batchSize") int batchSize,
+            @Param("reservedTo") LocalDateTime reservedTo);
 
     @Modifying
     @Query(value = """

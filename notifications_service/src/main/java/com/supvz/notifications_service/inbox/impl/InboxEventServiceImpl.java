@@ -1,7 +1,8 @@
 package com.supvz.notifications_service.inbox.impl;
 
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;
-import com.supvz.notifications_service.model.dto.MessageDto;
+import com.supvz.notifications_service.core.exception.InboxEventNotFoundException;
+import com.supvz.notifications_service.model.dto.InboxEventPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.inbox.InboxEventMapper;
@@ -22,15 +23,14 @@ import java.util.UUID;
 public class InboxEventServiceImpl implements InboxEventService {
     private final InboxEventMapper mapper;
     private final InboxEventRepository repo;
-
-    @Value("${app.inbox.reservation_in_minutes}")
-    private int reservationMinutes;
+    @Value("${app.inbox.reservation-min}")
+    private int reservationInMinutes;
 
     @Override
     @Transactional
-    public InboxEvent create(MessageDto messageDto) {
-        log.debug("Create inbox event [{}].", messageDto.eventId());
-        InboxEvent mapped = mapper.create(messageDto);
+    public InboxEvent create(InboxEventPayload inboxEventPayload) {
+        log.debug("Create inbox event [{}].", inboxEventPayload.eventId());
+        InboxEvent mapped = mapper.create(inboxEventPayload);
         List<UUID> result = repo.saveIfNotExists(
                 mapped.getEventId(),
                 mapped.getEventType().name(),
@@ -40,22 +40,23 @@ public class InboxEventServiceImpl implements InboxEventService {
         if (result.isEmpty()) {
 //            todo: возможно, стоит возвращать существующую сущность.
             throw new InboxEventConflictException
-                    ("Inbox event [%s] is already exists.".formatted(messageDto.eventId()));
+                    ("Inbox event [%s] is already exists.".formatted(inboxEventPayload.eventId()));
         }
-        log.info("Inbox event [{}] is created.", messageDto.eventId());
-        return repo.findById(messageDto.eventId()).orElseThrow();
+        log.info("Inbox event [{}] is created.", inboxEventPayload.eventId());
+        return repo.findById(inboxEventPayload.eventId()).orElseThrow();
 //        todo: подумать, как сохранить и отдать за одну строку. два запроса делается. проблема производительности
     }
 
     @Override
-    public List<InboxEvent> readFirstUnprocessed(int firstNumber) {
-        return repo.findAllUnprocessed(firstNumber);
+    public List<UUID> readAndReserveUnprocessedBatch(int batchSize) {
+        LocalDateTime reservedTo = LocalDateTime.now().plusMinutes(reservationInMinutes);
+        return repo.findAndReserveUnprocessedInBatch(batchSize, reservedTo);
     }
 
     @Transactional
     public void reserveEvent(InboxEvent event) {
 //        todo: batched reserve надо
-        LocalDateTime reservedTo = LocalDateTime.now().plusMinutes(reservationMinutes);
+        LocalDateTime reservedTo = LocalDateTime.now().plusMinutes(reservationInMinutes);
         int i = repo.reserve(event, reservedTo);
 
         if (i == 0) {
@@ -77,5 +78,12 @@ public class InboxEventServiceImpl implements InboxEventService {
         repo.save(event);
 
         log.debug("Event [{}] is marked as processed.", event.getEventId());
+    }
+
+    @Override
+    public InboxEvent getById(UUID eventId) {
+        return repo.findById(eventId)
+                .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
+                        .formatted(eventId)));
     }
 }
