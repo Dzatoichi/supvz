@@ -8,4 +8,8 @@ public interface InboxEventMapper {
     InboxEvent create(InboxEventPayload inboxEventPayload);
 
     InboxEventDto read(InboxEvent inboxEvent);
+
+    void markAsProcessed(InboxEvent event);
+
+    void markAsFailed(InboxEvent event);
 }

@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     @Query(value = """
             WITH batch AS (
-            SELECT id FROM inbox i
+            SELECT event_id FROM inbox i
             WHERE i.processed IS FALSE
             AND (i.reserved_to IS NULL OR i.reserved_to < now())
             ORDER BY i.received_at
@@ -32,26 +32,28 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
 
     @Modifying
     @Query(value = """
-            UPDATE InboxEvent i
-            SET i.reservedTo = :reservationTime
-            WHERE i = :event AND
-            (i.reservedTo IS NULL OR i.reservedTo < CURRENT_TIMESTAMP)
-            """)
-    int reserve(
-            @Param("event") InboxEvent event,
-            @Param("reservationTime") LocalDateTime reservationMinutes);
-//    todo: не тянуть за собой сущность. проблема производительности
-
-    @Modifying
-    @Query(value = """
-            INSERT INTO inbox_events (event_id, event_type, payload, created_at, received_at, processed)
-                VALUES (:eventId, (:eventType)::notification_type, :payload, :createdAt, NOW(), FALSE)
+            INSERT INTO inbox_events (event_id, event_type, payload, received_at, processed)
+                VALUES (:eventId, (:eventType)::event_type, :payload, NOW(), FALSE)
                 ON CONFLICT (event_id) DO NOTHING
-                RETURNING event_id
+                RETURNING *
             """, nativeQuery = true)
-    List<UUID> saveIfNotExists(
+    InboxEvent saveIfNotExists(
             @Param("eventId") UUID eventId,
             @Param("eventType") String eventType,
-            @Param("payload") String payload,
-            @Param("createdAt") LocalDateTime createdAt);
+            @Param("payload") String payload);
+
+    @Query(value = """
+            WITH batch AS (
+            SELECT event_id FROM inbox i
+            WHERE i.processed IS TRUE
+            AND i.status == 'failed'
+            ORDER BY i.updated_at
+            LIMIT :batchSize
+            )
+            DELETE FROM inbox i
+            WHERE i.event_id IN (SELECT event_id FROM batch)
+            RETURNING i.event_id
+            """, nativeQuery = true)
+    List<UUID> deleteFailedInBatch(Integer batchSize);
+
 }

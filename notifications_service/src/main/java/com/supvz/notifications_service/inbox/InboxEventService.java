@@ -3,7 +3,6 @@ package com.supvz.notifications_service.inbox;
 import com.supvz.notifications_service.model.dto.InboxEventPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,9 +11,9 @@ public interface InboxEventService {
 
     List<UUID> readAndReserveUnprocessedBatch(int batchSize);
 
-    void reserveEvent(InboxEvent event);
+    void markAsSuccess(UUID eventId);
 
-    void markProcessed(InboxEvent event, LocalDateTime sentAndProcessedAt);
+    void markAsFailed(UUID eventId);
 
-    InboxEvent getById(UUID eventId);
+    List<UUID> deleteFailedBatch(Integer batchSize);
 }

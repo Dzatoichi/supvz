@@ -50,7 +50,7 @@ public class WebNotificationProcessingServiceImpl implements WebNotificationProc
     }
 
     private String getDestination(Notification notification) {
-        String subject = URLEncoder.encode(notification.getSubject(), StandardCharsets.UTF_8);
-        return "/".concat(baseTopic).concat("/").concat(subject);
+        String recipient = URLEncoder.encode(notification.getRecipientId(), StandardCharsets.UTF_8);
+        return "/".concat(baseTopic).concat("/").concat(recipient);
     }
 }

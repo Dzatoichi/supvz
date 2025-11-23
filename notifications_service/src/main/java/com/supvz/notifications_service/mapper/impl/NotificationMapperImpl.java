@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.PageDto;
 import com.supvz.notifications_service.core.exception.InvalidMessagePatternException;
-import com.supvz.notifications_service.model.dto.MessagePayloadDto;
+import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.model.entity.NotificationType;
@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -24,25 +25,19 @@ public class NotificationMapperImpl implements NotificationMapper {
     private final ObjectMapper objectMapper;
 
     @Override
-    public Notification create(InboxEvent event) {
-        try {
-            MessagePayloadDto payload = objectMapper.readValue(event.getPayload(), MessagePayloadDto.class);
-
-            Notification build = Notification.builder()
-                    .event(event)
-                    .notificationType(event.getEventType())
-                    .body(payload.body())
-                    .subject(payload.subject())
-                    .recipientId(payload.recipientId())
-                    .build();
-            if (event.getEventType() == NotificationType.push || event.getEventType() == NotificationType.web) {
-                build.setViewed(false);
-            }
-            return build;
-        } catch (IOException e) {
-            throw new InvalidMessagePatternException("Failed to deserialize" +
-                    " payload [%s] of event [%s].".formatted(event.getPayload(), event.getEventId()));
+    public Notification create(InboxEvent event, NotificationPayload payload) {
+        NotificationType type = payload.type();
+        Notification build = Notification.builder()
+                .event(event)
+                .notificationType(type)
+                .body(payload.body())
+                .subject(payload.subject())
+                .recipientId(payload.recipientId())
+                .build();
+        if (type == NotificationType.push || type == NotificationType.web) {
+            build.setViewed(false);
         }
+        return build;
     }
 
     @Override
@@ -55,6 +50,14 @@ public class NotificationMapperImpl implements NotificationMapper {
                 .sentAt(notification.getSentAt())
                 .recipientId(notification.getRecipientId())
                 .build();
+    }
+
+    @Override
+    public void markAsSent(Notification notification) {
+        if (notification.getSent())
+            return;
+        notification.setSentAt(LocalDateTime.now());
+        notification.setSent(true);
     }
 
     @Override

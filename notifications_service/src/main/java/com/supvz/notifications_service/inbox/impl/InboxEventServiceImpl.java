@@ -31,20 +31,16 @@ public class InboxEventServiceImpl implements InboxEventService {
     public InboxEvent create(InboxEventPayload inboxEventPayload) {
         log.debug("Create inbox event [{}].", inboxEventPayload.eventId());
         InboxEvent mapped = mapper.create(inboxEventPayload);
-        List<UUID> result = repo.saveIfNotExists(
+        InboxEvent created = repo.saveIfNotExists(
                 mapped.getEventId(),
                 mapped.getEventType().name(),
-                mapped.getPayload(),
-                mapped.getCreatedAt()
-        );
-        if (result.isEmpty()) {
-//            todo: возможно, стоит возвращать существующую сущность.
+                mapped.getPayload());
+        if (created == null) {
             throw new InboxEventConflictException
                     ("Inbox event [%s] is already exists.".formatted(inboxEventPayload.eventId()));
         }
         log.info("Inbox event [{}] is created.", inboxEventPayload.eventId());
-        return repo.findById(inboxEventPayload.eventId()).orElseThrow();
-//        todo: подумать, как сохранить и отдать за одну строку. два запроса делается. проблема производительности
+        return created;
     }
 
     @Override
@@ -53,37 +49,31 @@ public class InboxEventServiceImpl implements InboxEventService {
         return repo.findAndReserveUnprocessedInBatch(batchSize, reservedTo);
     }
 
-    @Transactional
-    public void reserveEvent(InboxEvent event) {
-//        todo: batched reserve надо
-        LocalDateTime reservedTo = LocalDateTime.now().plusMinutes(reservationInMinutes);
-        int i = repo.reserve(event, reservedTo);
-
-        if (i == 0) {
-            log.debug("Inbox event [{}] is already reserved.", event.getEventId());
-            return;
-        }
-        log.info("Inbox event [{}] reserved to {}.", event.getEventId(), reservedTo);
-    }
-
     @Override
     @Transactional
-    public void markProcessed(InboxEvent event, LocalDateTime processedAt) {
-        log.debug("Marking event [{}] as processed.", event.getEventId());
-
-        event.setProcessedAt(processedAt);
-        event.setProcessed(true);
-//        todo: жестко подумать про конкуренцию и проверку, зарезервирован ли.
-
+    public void markAsSuccess(UUID eventId) {
+        log.debug("Marking event [{}] as processed.", eventId);
+        InboxEvent event = repo.findById(eventId)
+                .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
+                        .formatted(eventId)));
+        mapper.markAsProcessed(event);
         repo.save(event);
-
         log.debug("Event [{}] is marked as processed.", event.getEventId());
     }
 
     @Override
-    public InboxEvent getById(UUID eventId) {
-        return repo.findById(eventId)
+    public void markAsFailed(UUID eventId) {
+        log.debug("Marking event [{}] as failed.", eventId);
+        InboxEvent event = repo.findById(eventId)
                 .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
                         .formatted(eventId)));
+        mapper.markAsFailed(event);
+        repo.save(event);
+        log.debug("Event [{}] is marked as failed.", event.getEventId());
+    }
+
+    @Override
+    public List<UUID> deleteFailedBatch(Integer batchSize) {
+        return repo.deleteFailedInBatch(batchSize);
     }
 }

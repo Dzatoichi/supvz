@@ -10,19 +10,36 @@ CREATE TYPE notification_type AS ENUM (
 );
 
 --changeset re1kur:2
-CREATE TABLE IF NOT EXISTS inbox
-(
-	event_id UUID PRIMARY KEY,
-	event_type notification_type NOT NULL,
-	payload TEXT NOT NULL,
-	received_at TIMESTAMP NOT NULL DEFAULT now(),
-	reserved_to TIMESTAMP,
-	processed_at TIMESTAMP,
-	processed BOOLEAN NOT NULL DEFAULT FALSE
-	created_at TIMESTAMP NOT NULL,
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM pg_type WHERE typname = 'event_type';
+CREATE TYPE event_type AS ENUM (
+    'notification',
+    'other'
 );
 
 --changeset re1kur:3
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM pg_type WHERE typname = 'event_status';
+CREATE TYPE event_status AS ENUM (
+    'failed',
+    'success'
+);
+
+--changeset re1kur:4
+CREATE TABLE IF NOT EXISTS inbox
+(
+	event_id UUID PRIMARY KEY,
+	event_type event_type NOT NULL,
+	payload TEXT NOT NULL,
+	reserved_to TIMESTAMP,
+	processed_at TIMESTAMP,
+	processed BOOLEAN NOT NULL DEFAULT FALSE,
+	status event_status,
+	created_at TIMESTAMP NOT NULL DEFAULT now(),
+	updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+--changeset re1kur:5
 CREATE TABLE IF NOT EXISTS notifications
 (
 	id BIGSERIAL PRIMARY KEY,
@@ -36,9 +53,9 @@ CREATE TABLE IF NOT EXISTS notifications
 	viewed BOOLEAN,
 	created_at TIMESTAMP NOT NULL DEFAULT now(),
 	updated_at TIMESTAMP NOT NULL DEFAULT now(),
-	FOREIGN KEY(event_id) REFERENCES inbox_events(event_id) ON DELETE CASCADE
+	FOREIGN KEY(event_id) REFERENCES inbox (event_id) ON DELETE CASCADE
 );
 
---changeset re1kur:4
-CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox_events (received_at) WHERE processed = FALSE;
+--changeset re1kur:6
+CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox (received_at) WHERE processed = FALSE;
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications (recipient_id);

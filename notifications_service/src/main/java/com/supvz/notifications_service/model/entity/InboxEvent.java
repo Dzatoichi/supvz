@@ -22,7 +22,7 @@ public class InboxEvent {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "event_type")
     private InboxEventType eventType;
-//    todo: изменить sql
+
 
     private String payload;
 
@@ -30,15 +30,18 @@ public class InboxEvent {
 
     private LocalDateTime createdAt;
 
-    private LocalDateTime receivedAt;
-
     private LocalDateTime processedAt;
 
     private Boolean processed;
 
+
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "event_status")
+    private InboxEventStatus status;
+
     @PrePersist
     private void prePersist() {
-        if (receivedAt == null) receivedAt = LocalDateTime.now();
+        if (createdAt == null) createdAt = LocalDateTime.now();
         if (processed == null) processed = false;
     }
 

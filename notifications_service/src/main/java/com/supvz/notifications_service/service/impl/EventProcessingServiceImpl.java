@@ -1,9 +1,10 @@
 package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
+import com.supvz.notifications_service.core.exception.NotificationNotFoundException;
 import com.supvz.notifications_service.model.dto.InboxEventPayload;
+import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
-import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.service.*;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -20,41 +20,37 @@ import java.util.UUID;
 public class EventProcessingServiceImpl implements EventProcessingService {
     private final InboxEventService inboxEventService;
     private final NotificationService notificationService;
-    private final EmailNotificationProcessingService emailNotificationService;
-    private final WebNotificationProcessingService webNotificationService;
-    private final PushNotificationProcessingService pushNotificationService;
 
     @Override
     @Transactional
-    public void initNotification(InboxEventPayload inboxEventPayload) {
+    public void initNotification(InboxEventPayload inboxEventPayload, NotificationPayload notificationPayload) {
         log.debug("Initialize notification message: [{}].", inboxEventPayload.eventId());
-
         InboxEvent inboxEvent = inboxEventService.create(inboxEventPayload);
-        notificationService.create(inboxEvent);
-//        todo: а что если дубль прошел и уже такой существует?
-
+        notificationService.create(inboxEvent, notificationPayload);
         log.info("Notification message [{}] is initialized.", inboxEventPayload.eventId());
     }
 
     @Override
     @Transactional
     public void processNotification(UUID eventId) {
+//        todo: отправлять обработку в Executor (CompletableFuture.runAsync)
+//         либо — использовать @Async на processNotification()
         log.debug("Process notification by event [{}].", eventId);
-        Notification notification = notificationService.getByEventId(eventId);
-        if (notification.getSent()) {
-            throw new NotificationConflictException("Notification [%s] already sent.".formatted(notification.getId()));
+        try {
+            notificationService.processByEventId(eventId);
+            inboxEventService.markAsSuccess(eventId);
+        } catch (NotificationConflictException ex) {
+            log.warn(ex.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Couldn't successfully process notification by event [{}]", eventId, e);
+            inboxEventService.markAsFailed(eventId);
+//            todo: если че то упало, то будет фейлом и потом удалится. использовать ретрай либо че нибудь еще
         }
-        switch (notification.getNotificationType()) {
-            case email -> emailNotificationService.send(notification);
-            case web -> webNotificationService.send(notification);
-            case push -> pushNotificationService.send(notification);
-        }
+        log.info("Notification event [{}] is processed.", eventId);
+    }
 
-        LocalDateTime sentAndProcessedAt = LocalDateTime.now();
-        notificationService.markAsSent(notification, sentAndProcessedAt);
-        inboxEventService.markProcessed(notification.getEvent(), sentAndProcessedAt);
-//        todo: обработка и отметка нотификации должна выполняться атомарно.
-
-        log.info("Notification [{}] by event [{}] is processed.", notification.getId(), eventId);
+    @Override
+    public void initOther(InboxEventPayload inboxEventPayload) {
+        log.debug("Listening other event type. Event [{}].", inboxEventPayload.eventId());
     }
 }

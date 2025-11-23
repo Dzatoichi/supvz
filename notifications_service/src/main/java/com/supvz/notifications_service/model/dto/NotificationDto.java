@@ -12,6 +12,5 @@ public record NotificationDto(
         String subject,
         LocalDateTime sentAt,
         boolean viewed
-
 ) {
 }

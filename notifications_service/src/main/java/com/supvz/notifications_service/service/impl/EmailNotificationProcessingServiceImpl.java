@@ -1,5 +1,6 @@
 package com.supvz.notifications_service.service.impl;
 
+import com.supvz.notifications_service.core.exception.NotificationProcessingException;
 import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.mapper.MailMapper;
 import com.supvz.notifications_service.service.EmailNotificationProcessingService;
@@ -28,7 +29,6 @@ public class EmailNotificationProcessingServiceImpl implements EmailNotification
     public void send(Notification notification) {
         log.debug("Sending email notification [{}] to [{}].", notification.getId(), notification.getRecipientId());
         try {
-//            todo: валидация данных до отправки
             validate(notification);
             SimpleMailMessage mailMessage = mapper.mail(notification);
             mailSender.send(mailMessage);
@@ -40,6 +40,11 @@ public class EmailNotificationProcessingServiceImpl implements EmailNotification
     }
 
     private void validate(Notification notification) {
-//        if (notification.getBody() == null)
+        if (notification.getBody() == null || notification.getBody().isBlank())
+            throw new NotificationProcessingException("Validation failed. Invalid body.");
+        if (notification.getRecipientId() == null || notification.getRecipientId().isBlank())
+            throw new NotificationProcessingException("Validation failed. Invalid recipient.");
+        if (notification.getSubject() == null || notification.getSubject().isBlank())
+            throw new NotificationProcessingException("Validation failed. Invalid subject.");
     }
 }

@@ -46,7 +46,7 @@ app:
       - "DELETE"
       - "OPTIONS"
   messaging:
-    notifications_queue: notifications_queue
+    inbox-queue: inbox-queue
   inbox:
     reservation-min: 5
     polling:
