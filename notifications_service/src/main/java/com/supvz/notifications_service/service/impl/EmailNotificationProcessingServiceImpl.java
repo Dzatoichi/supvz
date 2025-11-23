@@ -26,11 +26,14 @@ public class EmailNotificationProcessingServiceImpl implements EmailNotification
     public void send(Notification notification) {
         log.debug("Sending email notification [{}].", notification.getId());
         try {
+//            todo: валидация данных до отправки
             SimpleMailMessage mailMessage = mapper.mail(notification);
             mailSender.send(mailMessage);
+//            todo: как оказывается, smtp не гарантирует успешную доставку писем. Придумать компенсирующее событие.
             log.info("Email notification [{}] is sent.", notification.getId());
         } catch (MailException e) {
             log.error("Couldn't send email notification [{}]: {}.", notification.getId(), e.getMessage());
+//            todo: логировать сам объект ошибки является нехорошей практикой.
             throw e;
         }
     }

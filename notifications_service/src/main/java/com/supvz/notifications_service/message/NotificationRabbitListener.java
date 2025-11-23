@@ -23,15 +23,38 @@ public class NotificationRabbitListener implements MessageListener {
     @RabbitListener(queues = {"${app.messaging.notifications_queue}"})
     public void listen(String message) {
         log.debug("Listened raw message: [{}]", message);
+//        todo: опасный лог.
         try {
             MessageDto messageDto = objectMapper.readValue(message, MessageDto.class);
+//            todo:  подумать про десереализацию энама. чтобы вместо ошибки налл ставился. Или вернуть ошибку, но без падения listener.
             processingService.initNotification(messageDto);
+//            todo: узкое горлышко: снизу нейросетка описала это так:
+//            ⚠️ Большой архитектурный нюанс:
+//
+//              Если initNotification вызывает логику inbox/outbox (по вашему предыдущему коду), то:
+//
+//              это CPU-heavy работа
+//
+//              listener блокируется
+//
+//              throughput падает
+//
+//              Лучше использовать:
+//
+//              ✔️ Listener only → push to internal queue → worker processes events
+//
+//              Или как минимум:
+//
+//              ✔️ Добавить @Async
+//              ✔️ Или использовать Executor в RabbitListener контейнере
             log.info("Message [{}] is successfully listened.", messageDto.eventId());
         } catch (IOException e) {
             log.error("Failed to deserialize message [{}]: {}", message, e.getMessage());
+//            todo: ну тоже лог не очень.
             throw new InvalidMessagePatternException(e.getMessage());
         } catch (InvalidMessagePatternException e) {
             log.error("Invalid message pattern: {}.", e.getMessage());
+//            todo: блок возможно бесполезен
             throw e;
         } catch (InboxEventConflictException e) {
             log.info("Inbox event conflict: {}", e.getMessage());
