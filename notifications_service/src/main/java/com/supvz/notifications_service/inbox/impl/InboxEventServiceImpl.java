@@ -25,6 +25,8 @@ public class InboxEventServiceImpl implements InboxEventService {
     private final InboxEventRepository repo;
     @Value("${app.inbox.reservation-min}")
     private int reservationInMinutes;
+    @Value("${app.inbox.cleaning-min}")
+    private int cleaningInMinutes;
 
     @Override
     @Transactional
@@ -51,7 +53,7 @@ public class InboxEventServiceImpl implements InboxEventService {
 
     @Override
     @Transactional
-    public void markAsSuccess(UUID eventId) {
+    public void setProcessed(UUID eventId) {
         log.debug("Marking event [{}] as processed.", eventId);
         InboxEvent event = repo.findById(eventId)
                 .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
@@ -62,12 +64,14 @@ public class InboxEventServiceImpl implements InboxEventService {
     }
 
     @Override
-    public void markAsFailed(UUID eventId) {
+    @Transactional
+    public void setCleanAfter(UUID eventId) {
         log.debug("Marking event [{}] as failed.", eventId);
         InboxEvent event = repo.findById(eventId)
                 .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
                         .formatted(eventId)));
-        mapper.markAsFailed(event);
+        LocalDateTime cleanAfter = LocalDateTime.now().plusMinutes(cleaningInMinutes);
+        mapper.setCleanAfter(event, cleanAfter);
         repo.save(event);
         log.debug("Event [{}] is marked as failed.", event.getEventId());
     }

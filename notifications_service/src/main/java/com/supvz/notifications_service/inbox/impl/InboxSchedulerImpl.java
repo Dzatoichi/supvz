@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Service
@@ -19,30 +20,33 @@ import java.util.UUID;
 public class InboxSchedulerImpl implements InboxScheduler {
     private final InboxEventService inboxEventService;
     private final EventProcessingService processingService;
-
-    @Value("${app.inbox.polling.batch-size}")
-    private Integer batchSize;
+    private final Executor notificationProcessingExecutor;
+    @Value("${app.inbox.polling.processing.batch-size}")
+    private Integer processingBatchSize;
+    @Value("${app.inbox.polling.cleaning.batch-size}")
+    private Integer cleaningBatchSize;
 
     @Override
-    @Scheduled(fixedDelayString = "${app.inbox.polling.delay-ms:10000}")
+    @Scheduled(fixedDelayString = "${app.inbox.polling.processing.delay-ms:10000}")
     @Async("inboxProcessingExecutor")
     public void pollForProcessing() {
         log.debug("Polling [PROCESS] inbox events.");
-        List<UUID> reservedBatch = inboxEventService.readAndReserveUnprocessedBatch(batchSize);
+        List<UUID> reservedBatch = inboxEventService.readAndReserveUnprocessedBatch(processingBatchSize);
         log.debug("Found and reserved batch of events. Size [{}]", reservedBatch.size());
         if (!reservedBatch.isEmpty()) {
             for (UUID eventId : reservedBatch) {
-                processingService.processNotification(eventId);
+                notificationProcessingExecutor.execute(() ->
+                        processingService.processNotification(eventId));
             }
         }
     }
 
     @Override
-    @Scheduled(fixedDelayString = "${app.inbox.polling.delay-ms:10000}")
+    @Scheduled(fixedDelayString = "${app.inbox.polling.cleaning.delay-ms:5000}")
     @Async("inboxCleaningExecutor")
     public void pollForCleaning() {
         log.debug("Polling [CLEAN] inbox events.");
-        List<UUID> batch = inboxEventService.deleteFailedBatch(batchSize);
+        List<UUID> batch = inboxEventService.deleteFailedBatch(cleaningBatchSize);
         log.debug("Failed inbox events are deleted, size: [{}].", batch.size());
     }
 }

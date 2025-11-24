@@ -18,14 +18,6 @@ CREATE TYPE event_type AS ENUM (
 );
 
 --changeset re1kur:3
---preconditions onFail:MARK_RAN
---precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM pg_type WHERE typname = 'event_status';
-CREATE TYPE event_status AS ENUM (
-    'failed',
-    'success'
-);
-
---changeset re1kur:4
 CREATE TABLE IF NOT EXISTS inbox
 (
 	event_id UUID PRIMARY KEY,
@@ -34,12 +26,12 @@ CREATE TABLE IF NOT EXISTS inbox
 	reserved_to TIMESTAMP,
 	processed_at TIMESTAMP,
 	processed BOOLEAN NOT NULL DEFAULT FALSE,
-	status event_status,
+	clean_after TIMESTAMP,
 	created_at TIMESTAMP NOT NULL DEFAULT now(),
 	updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
---changeset re1kur:5
+--changeset re1kur:4
 CREATE TABLE IF NOT EXISTS notifications
 (
 	id BIGSERIAL PRIMARY KEY,
@@ -56,6 +48,12 @@ CREATE TABLE IF NOT EXISTS notifications
 	FOREIGN KEY(event_id) REFERENCES inbox (event_id) ON DELETE CASCADE
 );
 
---changeset re1kur:6
-CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox (received_at) WHERE processed = FALSE;
+--changeset re1kur:5
+CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox (created_at) WHERE processed = FALSE;
+CREATE INDEX IF NOT EXISTS idx_inbox_events_failed ON inbox (clean_after) WHERE processed = FALSE;
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications (recipient_id);
+CREATE INDEX IF NOT EXISTS idx_inbox_unprocessed_reservation ON inbox (processed, reserved_to) WHERE processed = FALSE;
+CREATE INDEX IF NOT EXISTS idx_inbox_failed ON inbox (clean_after) WHERE clean_after IS NOT NULL;
+
+
+--    todo: индексы подумать

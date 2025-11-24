@@ -50,5 +50,9 @@ app:
   inbox:
     reservation-min: 5
     polling:
-      delay-ms: 10000
-      batch-size: 10
+      cleaning:
+        batch-size: 10
+        delay-ms: 100000
+      processing:
+        batch-size: 10
+        delay-ms: 10000

@@ -23,21 +23,19 @@ public class InboxEvent {
     @Column(name = "event_type")
     private InboxEventType eventType;
 
-
     private String payload;
 
     private LocalDateTime reservedTo;
 
     private LocalDateTime createdAt;
 
+    private LocalDateTime updatedAt;
+
     private LocalDateTime processedAt;
 
     private Boolean processed;
 
-
-    @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(name = "event_status")
-    private InboxEventStatus status;
+    private LocalDateTime cleanAfter;
 
     @PrePersist
     private void prePersist() {

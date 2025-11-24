@@ -1,7 +1,6 @@
 package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
-import com.supvz.notifications_service.core.exception.NotificationNotFoundException;
 import com.supvz.notifications_service.model.dto.InboxEventPayload;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
@@ -33,20 +32,19 @@ public class EventProcessingServiceImpl implements EventProcessingService {
     @Override
     @Transactional
     public void processNotification(UUID eventId) {
-//        todo: отправлять обработку в Executor (CompletableFuture.runAsync)
-//         либо — использовать @Async на processNotification()
         log.debug("Process notification by event [{}].", eventId);
         try {
             notificationService.processByEventId(eventId);
-            inboxEventService.markAsSuccess(eventId);
+            inboxEventService.setProcessed(eventId);
+            log.info("Notification event [{}] is processed.", eventId);
         } catch (NotificationConflictException ex) {
-            log.warn(ex.getMessage());
-        } catch (RuntimeException e) {
-            log.error("Couldn't successfully process notification by event [{}]", eventId, e);
-            inboxEventService.markAsFailed(eventId);
-//            todo: если че то упало, то будет фейлом и потом удалится. использовать ретрай либо че нибудь еще
+            log.warn("Conflict: {}", ex.getMessage());
+            inboxEventService.setProcessed(eventId);
         }
-        log.info("Notification event [{}] is processed.", eventId);
+        catch (RuntimeException e) {
+            log.error("Couldn't successfully process notification by event [{}]", eventId, e);
+            inboxEventService.setCleanAfter(eventId);
+        }
     }
 
     @Override

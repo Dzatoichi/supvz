@@ -11,9 +11,9 @@ public interface InboxEventService {
 
     List<UUID> readAndReserveUnprocessedBatch(int batchSize);
 
-    void markAsSuccess(UUID eventId);
+    void setProcessed(UUID eventId);
 
-    void markAsFailed(UUID eventId);
+    void setCleanAfter(UUID eventId);
 
     List<UUID> deleteFailedBatch(Integer batchSize);
 }

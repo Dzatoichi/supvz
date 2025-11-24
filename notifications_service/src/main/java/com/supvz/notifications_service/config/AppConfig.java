@@ -35,5 +35,11 @@ public class AppConfig {
     public Executor inboxCleaningExecutor() {
         return Executors.newCachedThreadPool();
     }
+
+    @Bean("notificationProcessingExecutor")
+    public Executor notificationProcessingExecutor() {
+        return Executors.newFixedThreadPool(10);
+    }
+
 //    todo: cachedThreadPool опасен, создает беск. колво потоков
 }

@@ -1,6 +1,6 @@
 package com.supvz.notifications_service.service.impl;
 
-import com.supvz.notifications_service.core.exception.NotificationProcessingException;
+import com.supvz.notifications_service.core.exception.NotificationValidationException;
 import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.mapper.MailMapper;
 import com.supvz.notifications_service.service.EmailNotificationProcessingService;
@@ -41,10 +41,10 @@ public class EmailNotificationProcessingServiceImpl implements EmailNotification
 
     private void validate(Notification notification) {
         if (notification.getBody() == null || notification.getBody().isBlank())
-            throw new NotificationProcessingException("Validation failed. Invalid body.");
+            throw new NotificationValidationException("Validation failed. Invalid body.");
         if (notification.getRecipientId() == null || notification.getRecipientId().isBlank())
-            throw new NotificationProcessingException("Validation failed. Invalid recipient.");
+            throw new NotificationValidationException("Validation failed. Invalid recipient.");
         if (notification.getSubject() == null || notification.getSubject().isBlank())
-            throw new NotificationProcessingException("Validation failed. Invalid subject.");
+            throw new NotificationValidationException("Validation failed. Invalid subject.");
     }
 }

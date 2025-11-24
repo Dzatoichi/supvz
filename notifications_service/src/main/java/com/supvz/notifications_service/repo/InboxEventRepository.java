@@ -18,7 +18,7 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
             SELECT event_id FROM inbox i
             WHERE i.processed IS FALSE
             AND (i.reserved_to IS NULL OR i.reserved_to < now())
-            ORDER BY i.received_at
+            ORDER BY i.created_at
             LIMIT :batchSize
             )
             UPDATE inbox i
@@ -33,9 +33,9 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     @Modifying
     @Query(value = """
             INSERT INTO inbox_events (event_id, event_type, payload, received_at, processed)
-                VALUES (:eventId, (:eventType)::event_type, :payload, NOW(), FALSE)
-                ON CONFLICT (event_id) DO NOTHING
-                RETURNING *
+            VALUES (:eventId, (:eventType)::event_type, :payload, now(), FALSE)
+            ON CONFLICT (event_id) DO NOTHING
+            RETURNING *
             """, nativeQuery = true)
     InboxEvent saveIfNotExists(
             @Param("eventId") UUID eventId,
@@ -45,9 +45,10 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     @Query(value = """
             WITH batch AS (
             SELECT event_id FROM inbox i
-            WHERE i.processed IS TRUE
-            AND i.status == 'failed'
-            ORDER BY i.updated_at
+            WHERE i.processed IS FALSE
+            AND (i.reserved_to IS NULL OR i.reserved_to < now())
+            AND (i.clean_after IS NOT NULL AND i.clean_after < now())
+            ORDER BY i.clean_after
             LIMIT :batchSize
             )
             DELETE FROM inbox i
@@ -55,5 +56,4 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
             RETURNING i.event_id
             """, nativeQuery = true)
     List<UUID> deleteFailedInBatch(Integer batchSize);
-
 }

@@ -2,7 +2,6 @@ package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
 import com.supvz.notifications_service.core.exception.NotificationNotFoundException;
-import com.supvz.notifications_service.core.exception.NotificationProcessingException;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.dto.PageDto;
