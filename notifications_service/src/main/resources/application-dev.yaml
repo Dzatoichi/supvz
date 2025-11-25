@@ -29,6 +29,7 @@ logging:
   level:
     com.supvz.notifications_service: trace
 
+# noinspection undefined
 app:
   notification:
     number-retry-attempts: 3

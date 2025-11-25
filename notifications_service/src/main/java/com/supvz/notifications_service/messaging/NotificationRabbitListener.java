@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.message;
+package com.supvz.notifications_service.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;

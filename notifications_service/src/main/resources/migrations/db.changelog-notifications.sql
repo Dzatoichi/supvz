@@ -49,11 +49,14 @@ CREATE TABLE IF NOT EXISTS notifications
 );
 
 --changeset re1kur:5
-CREATE INDEX IF NOT EXISTS idx_inbox_events_unprocessed ON inbox (created_at) WHERE processed = FALSE;
-CREATE INDEX IF NOT EXISTS idx_inbox_events_failed ON inbox (clean_after) WHERE processed = FALSE;
-CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications (recipient_id);
-CREATE INDEX IF NOT EXISTS idx_inbox_unprocessed_reservation ON inbox (processed, reserved_to) WHERE processed = FALSE;
-CREATE INDEX IF NOT EXISTS idx_inbox_failed ON inbox (clean_after) WHERE clean_after IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient
+    ON notifications (recipient_id);
 
+CREATE INDEX IF NOT EXISTS idx_inbox_processing
+    ON inbox (reserved_to, created_at)
+    WHERE processed = FALSE;
 
---    todo: индексы подумать
+CREATE INDEX IF NOT EXISTS idx_inbox_failed_cleanup
+    ON inbox (clean_after, processed)
+    WHERE processed = FALSE
+    AND clean_after IS NOT NULL;
