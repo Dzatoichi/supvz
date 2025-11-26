@@ -26,30 +26,6 @@ spring:
           connectiontimeout: ${SMTP_CON_TIMEOUT}
           timeout: ${SMTP_TIMEOUT}
           writetimeout: ${SMTP_WRITE_TIMEOUT}
-
-## noinspection undefined
-#app:
-#  websocket:
-#    base-topic: topic
-#    allowed-origins:
-#      - "*"
-#  cors:
-#    allowed-origins:
-#      - "*"
-#    allowed-methods:
-#      - "GET"
-#      - "POST"
-#      - "PUT"
-#      - "DELETE"
-#      - "OPTIONS"
-#  messaging:
-#    notifications_queue: ${MESSAGING_INBOX_QUEUE}
-#  inbox:
-#    reservation_in_minutes: ${INBOX_RESERVATION_IN_MINUTES}
-#    polling:
-#      to_process_by_time:
-#        number: ${SCHEDULING_POLLING_COUNT_BY_TIME}
-
 # noinspection undefined
 app:
   notification:
