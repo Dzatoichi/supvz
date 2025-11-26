@@ -21,7 +21,7 @@
   ],
   "exchanges": [
     {
-      "name": "notifications_service",
+      "name": "notifications-service",
       "vhost": "/",
       "type": "topic",
       "durable": true
@@ -29,17 +29,17 @@
   ],
   "queues": [
     {
-      "name": "notifications_queue",
+      "name": "inbox-queue",
       "vhost": "/",
       "durable": true
     }
   ],
   "bindings": [
     {
-      "source": "notifications_service",
+      "source": "notifications-service",
       "vhost": "/",
-      "destination": "notifications_queue",
-      "routing_key": "new_notification",
+      "destination": "inbox-queue",
+      "routing_key": "new-inbox",
       "destination_type": "queue"
     }
   ]

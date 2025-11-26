@@ -19,3 +19,5 @@ COPY --from=builder /app/target/notifications_service-0.0.1-SNAPSHOT.jar app.jar
 RUN apk add --no-cache curl
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
+
+# todo: создать юзера с правами. короче по бест практис сделать

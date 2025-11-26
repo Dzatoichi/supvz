@@ -48,7 +48,6 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public PageDto<NotificationDto> findAll(int page, int size, NotificationFilter filter) {
         log.debug("Read all. Page {}, size {}.", page, size);
-//      Параметры фильтрации
         Pageable pageable = PageRequest.of(page, size);
         String recipientId = filter.recipientId();
         UUID eventId = filter.eventId();
@@ -56,7 +55,6 @@ public class NotificationServiceImpl implements NotificationService {
         Boolean viewed = filter.viewed();
         DateNotificationFilter dateFilter = filter.dateFilter();
         boolean filterByDate = dateFilter != null && (dateFilter.startDate() != null && dateFilter.endDate() != null);
-//      Получение странички.
         Page<Notification> notificationPage;
         if (filterByDate) {
             notificationPage = repo.findAllWithDateFilter(pageable, recipientId,

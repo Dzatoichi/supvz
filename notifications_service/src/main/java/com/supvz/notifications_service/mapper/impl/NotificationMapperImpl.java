@@ -3,7 +3,6 @@ package com.supvz.notifications_service.mapper.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.PageDto;
-import com.supvz.notifications_service.core.exception.InvalidMessagePatternException;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.model.entity.Notification;
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 

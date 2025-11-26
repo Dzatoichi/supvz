@@ -50,6 +50,7 @@ app:
     inbox-queue: inbox-queue
   inbox:
     reservation-min: 5
+    cleaning-min: 15
     polling:
       cleaning:
         batch-size: 10

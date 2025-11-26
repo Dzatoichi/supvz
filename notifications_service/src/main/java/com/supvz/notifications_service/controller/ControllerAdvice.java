@@ -34,9 +34,11 @@ public class ControllerAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity.internalServerError().body(body);
     }
 
-    @ExceptionHandler(InboxEventConflictException.class)
+    @ExceptionHandler(InboxEventNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleInboxEventNotFoundException(InboxEventNotFoundException ex) {
         Map<String, Object> body = Map.of("status", HttpStatus.BAD_REQUEST, "message", ex.getMessage());
         return ResponseEntity.internalServerError().body(body);
     }
+
+//    todo: еще исключения появились
 }

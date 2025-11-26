@@ -15,16 +15,16 @@ import java.util.UUID;
 public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
     @Query(value = """
             WITH batch AS (
-            SELECT event_id FROM inbox i
-            WHERE i.processed IS FALSE
-            AND (i.reserved_to IS NULL OR i.reserved_to < now())
-            ORDER BY i.created_at
+            SELECT event_id FROM inbox
+            WHERE processed IS FALSE
+            AND (reserved_to IS NULL OR reserved_to < now())
+            ORDER BY created_at
             LIMIT :batchSize
             )
-            UPDATE inbox i
-            SET i.reserved_to = :reservedTo
-            WHERE i.event_id IN (SELECT event_id FROM batch)
-            RETURNING i.event_id
+            UPDATE inbox
+            SET reserved_to = :reservedTo
+            WHERE event_id IN (SELECT event_id FROM batch)
+            RETURNING event_id
             """, nativeQuery = true)
     List<UUID> findAndReserveUnprocessedInBatch(
             @Param("batchSize") int batchSize,
