@@ -26,15 +26,15 @@ public class NotificationsLoadGenerator {
     private static String host;
     private static int port;
     private static String exchange;
-    private static String queue;
+    private static String routingKey;
 
     private static final ObjectMapper json = new ObjectMapper();
 
     public static void main(String[] args) {
         parseEnv();
-        int totalMessages = Integer.parseInt(System.getProperty("count", "10000"));
-        int threads = Integer.parseInt(System.getProperty("threads", "5"));
-        int rate = Integer.parseInt(System.getProperty("rate", "1000"));
+        int totalMessages = Integer.parseInt(System.getProperty("count", "100"));
+        int threads = Integer.parseInt(System.getProperty("threads", "2"));
+        int rate = Integer.parseInt(System.getProperty("rate", "10000"));
         int delayPerMessageMs = Math.max(1, 1000 / (rate / threads));
         System.out.printf("""
                 Starting load generator:
@@ -59,7 +59,7 @@ public class NotificationsLoadGenerator {
                             long sendStart = System.nanoTime();
                             channel.basicPublish(
                                     exchange,
-                                    queue,
+                                    routingKey,
                                     MessageProperties.PERSISTENT_TEXT_PLAIN,
                                     body
                             );
@@ -79,6 +79,7 @@ public class NotificationsLoadGenerator {
             executor.shutdown();
             printStats(latencies, Duration.between(start, end), totalMessages);
         } catch (Exception e) {
+            System.err.println("CONNECTION CREATE");
             e.printStackTrace();
         } finally {
             closeConnection();
@@ -92,7 +93,7 @@ public class NotificationsLoadGenerator {
         host = System.getenv("RABBITMQ_HOST");
         port = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
         exchange = System.getenv("MESSAGING_INBOX_EXCHANGE");
-        queue = System.getenv("MESSAGING_INBOX_QUEUE");
+        routingKey = System.getenv("MESSAGING_INBOX_ROUTING_KEY");
     }
 
     private static Connection createConnection() throws IOException, TimeoutException {
@@ -109,11 +110,12 @@ public class NotificationsLoadGenerator {
         try {
             if (connection != null && connection.isOpen())
                 connection.close();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            System.err.println("CONNECTION CLOSE");
+        }
     }
 
     // ------------ METRICS ------------
-
     private static void printStats(List<Long> latencies, Duration elapsed, int total) {
 
         latencies.sort(Long::compare);
