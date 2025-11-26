@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, Response, status
+from fastapi import Response
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.permissions import PermissionEnum, has_permission
@@ -12,6 +12,14 @@ from src.schemas.users_schemas import (
     UserRegisterSchema,
 )
 from src.services.token_service import JWTTokensService, StatefulTokenService
+from src.utils.exceptions import (
+    IncorrectPasswordException,
+    InvalidTokenException,
+    PermissionDeniedException,
+    TokenExpiredException,
+    UserAlreadyExistsException,
+    UserNotFoundException,
+)
 
 
 class AuthService:
@@ -29,7 +37,7 @@ class AuthService:
         """
         user = await repo.get_user_by_email(email=data.email)
         if user:
-            raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
+            raise UserAlreadyExistsException("User already exists")
 
         hashed_password = hash_helper.hash(plain_str=data.password)
         payload = {
@@ -49,10 +57,10 @@ class AuthService:
         """
         user = await repo.get_user_by_email(email=credentials.email)
         if not user:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
+            raise UserNotFoundException("User not found")
 
         if not hash_helper.verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
+            raise IncorrectPasswordException("Incorrect password")
 
         access_token = await token_service.create_token(
             token_type=TokenTypesEnum.access,
@@ -79,13 +87,13 @@ class AuthService:
         token_data = await token_service.get_reset_token_data(token=token)
 
         if not token_data:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
+            raise InvalidTokenException("Invalid token")
 
         if token_data.used:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token already used")
+            raise InvalidTokenException("Token is already used")
 
         if token_data.expires_at < datetime.now(timezone.utc):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
+            raise TokenExpiredException("Token has expired")
 
         hashed_password = hash_helper.hash(plain_str=new_password)
         result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)
@@ -125,6 +133,10 @@ class AuthService:
         """
         Метод завершения сессии/выхода пользователя.
         """
+
+        if not refresh_token:
+            raise InvalidTokenException("Invalid token")
+
         await token_service.revoke_token(token=refresh_token)
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
@@ -147,12 +159,6 @@ class AuthService:
         user_id = token_payload.get("user_id")
         user = await repo.get_by_id(id=user_id)
         if not user or not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Пользователь не найден или неактивен",
-            )
+            raise UserNotFoundException("User not found")
         if not has_permission(role=user.role, permission=permission):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Недостаточно прав",
-            )
+            raise PermissionDeniedException("Not enough permissions")

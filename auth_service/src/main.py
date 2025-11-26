@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from .routers import api_router
-from .utils.exceptions import setup_exception_handlers
+from .utils.exceptions_handler import setup_exception_handlers
 from .utils.middleware import LoggingMiddleware
 
 app = FastAPI()
