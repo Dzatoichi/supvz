@@ -61,7 +61,7 @@ class FakeJWTTokensService:
     Класс-заглушка (mock) для сервиса работы с JWT токенами.
     """
 
-    async def refresh_token(self, refresh_token, repo):
+    async def refresh_token(self, refresh_token):
         return {"refresh_token": "refresh", "access_token": "access"}
 
 

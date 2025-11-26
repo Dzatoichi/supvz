@@ -1,4 +1,3 @@
-from fastapi import HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
 from src.dao.tokensDAO import RefreshTokensDAO
@@ -8,10 +7,10 @@ from src.schemas.users_schemas import (
     SubscriptionEnum,
     UserAuthRequestSchema,
     UserReadSchema,
-    UserRoleEnum,
     UserUpdateSchema,
 )
 from src.services.token_service import JWTTokensService
+from src.utils.exceptions import PermissionDeniedException, UserNotFoundException
 from src.utils.logger_settings import logger
 
 
@@ -27,7 +26,7 @@ class UserService:
 
         user = await repo.get_by_id(user_id)
         if not user:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
+            raise UserNotFoundException("User not found")
 
         if user.role != UserRoleEnum.owner:
             logger.error(
@@ -35,10 +34,7 @@ class UserService:
                 user_id=user.id,
             )
 
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                "User is not owner",
-            )
+            raise PermissionDeniedException("User is not owner")
 
         updated_user = await repo.update(id=user_id, subscription=SubscriptionEnum.paid)
 
@@ -54,7 +50,7 @@ class UserService:
 
         user = await repo.get_by_id(user_id)
         if not user:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+            raise UserNotFoundException("User not found")
 
         return UserReadSchema.model_validate(user)
 
@@ -86,14 +82,11 @@ class UserService:
 
         prev_user = await repo.get_by_id(user.id)
         if not prev_user:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+            raise UserNotFoundException("User not found")
 
         current_user_id = token_payload.get("user_id")
         if current_user_id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Можно обновлять только свои данные",
-            )
+            raise PermissionDeniedException("You can update just yours data")
 
         updated_user = await repo.update(
             prev_user.id,
@@ -111,7 +104,7 @@ class UserService:
 
         user = await repo.get_by_id(user_id)
         if not user:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+            raise UserNotFoundException("User not found")
 
         logger.info(
             "Пользователь id={user_id} успешно удален!",

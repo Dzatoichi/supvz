@@ -11,23 +11,9 @@ from pydantic import (
     model_validator,
 )
 
-from src.core.security.permissions import PermissionEnum
-from src.core.security.permissions.role_permissions import get_permissions_for_role
+from src.schemas.perm_positions_schemas import PermissionRead
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
-
-
-class UserRoleEnum(str, Enum):
-    """
-    Перечисление ролей пользователя.
-    """
-
-    administrator = "administrator"
-    owner = "owner"
-    curator = "curator"
-    employee = "employee"
-    intern = "intern"
-    handyman = "handyman"
 
 
 class SubscriptionEnum(Enum):
@@ -72,6 +58,7 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
+    position_id: int
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -100,17 +87,11 @@ class UserReadSchema(UserBaseSchema):
     """
 
     id: int
-    role: UserRoleEnum
     subscription: SubscriptionEnum
-    permissions: list[PermissionEnum] = []
+    permissions: list[PermissionRead] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-    @model_validator(mode="after")
-    def set_permissions(self) -> "UserReadSchema":
-        self.permissions = get_permissions_for_role(self.role)
-        return self
 
 
 class UserAuthRequestSchema(BaseModel):
@@ -170,3 +151,10 @@ class UserForgotPasswordSchema(BaseModel):
         return v.lower()
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
+class UserPermissionRead(BaseModel):
+    user_id: int
+    permission_id: int
+
+    model_config = ConfigDict(from_attributes=True)

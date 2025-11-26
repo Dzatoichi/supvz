@@ -1,7 +1,9 @@
 from fastapi import Depends, HTTPException, Request, status
 
+from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
+from src.database.base import db_helper
 from src.schemas.users_schemas import UserAuthRequestSchema
 from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.services.user_service import UserService
@@ -24,6 +26,11 @@ def get_refresh_token_dao() -> RefreshTokensDAO:
     return RefreshTokensDAO()
 
 
+def get_permissions_dao() -> PermissionsDAO:
+    """Создаем DAO для работы с Permissions."""
+    return PermissionsDAO()
+
+
 # region Сервисы
 
 
@@ -38,7 +45,7 @@ def get_auth_service() -> "AuthService":  # type: ignore
     """Создаёт сервис для работы с авторизацией."""
     from src.services.auth_service import AuthService
 
-    return AuthService()
+    return AuthService(db_helper=db_helper)
 
 
 def get_user_service() -> "UserService":
@@ -58,5 +65,8 @@ def get_access_token_from_cookie(request: Request) -> UserAuthRequestSchema:
     """Зависимость для получения access токена из куки"""
     access_token = request.cookies.get("access_token")
     if not access_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token not found in cookies")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access token not found in cookies",
+        )
     return access_token
