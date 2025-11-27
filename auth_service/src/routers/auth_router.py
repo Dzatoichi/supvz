@@ -195,6 +195,7 @@ async def generate_register_token(
     employee_data: UserRegisterEmployeeSchema,
     auth_service: AuthService = Depends(get_auth_service),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    repo: UsersDAO = Depends(get_users_dao),
 ):
     """
     Создание токена регистрации сотрудника
@@ -202,5 +203,6 @@ async def generate_register_token(
     result = await auth_service.generate_register_token(
         employee_data=employee_data,
         token_service=token_service,
+        repo=repo,
     )
     return result

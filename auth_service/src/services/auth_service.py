@@ -43,6 +43,11 @@ class AuthService:
                 token=data.register_token,
                 token_type=TokenTypesEnum.register,
             )
+
+            owner = repo.get_by_id(register_token_payload.get("owner_id"))
+            if not owner:
+                raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Referenced owner_id not found")
+
             payload["role"] = register_token_payload.get("role")
 
         return await repo.create(payload=payload)
@@ -143,7 +148,12 @@ class AuthService:
         self,
         employee_data: UserRegisterEmployeeSchema,
         token_service: JWTTokensService,
+        repo: UsersDAO,
     ) -> dict:
+        owner = repo.get_by_id(employee_data.owner_id)
+        if not owner:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Referenced owner_id not found")
+
         register_token = await token_service.create_register_token(
             token_type=TokenTypesEnum.register,
             pvz_id=employee_data.pvz_id,
