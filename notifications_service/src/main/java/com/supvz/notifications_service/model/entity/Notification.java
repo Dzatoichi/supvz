@@ -2,8 +2,6 @@ package com.supvz.notifications_service.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.LocalDateTime;
 
@@ -18,37 +16,28 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
     private InboxEvent event;
-
-    @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "notification_type")
+    @Enumerated(EnumType.STRING)
     private NotificationType notificationType;
-
     private String recipientId;
-
     private String body;
-
     private String subject;
-
-    private LocalDateTime createdAt;
-
     private LocalDateTime sentAt;
-
     private Boolean sent;
-
     private Boolean viewed;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    //    todo: реализовать updated_at
 
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
-
         if (!(o instanceof Notification notification)) return false;
-
         if (id == null || notification.id == null) return false;
-
         return id.equals(notification.id);
     }
 
@@ -60,6 +49,7 @@ public class Notification {
     @PrePersist
     private void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
         if (sent == null) sent = false;
     }
 }

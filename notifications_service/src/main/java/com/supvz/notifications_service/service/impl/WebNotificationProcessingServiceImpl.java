@@ -39,6 +39,7 @@ public class WebNotificationProcessingServiceImpl implements WebNotificationProc
         log.debug("Sending web notification [{}] to destination [{}].", notification.getId(), destination);
         try {
             messagingTemplate.convertAndSend(destination, objectMapper.writeValueAsString(notification));
+//            todo: dto должны передавать, а не сущность
             log.info("Web notification [{}] is sent.", notification.getId());
         } catch (MessagingException e) {
             log.error("Couldn't send web notification [{}]: {}.", notification.getId(), e.getMessage());

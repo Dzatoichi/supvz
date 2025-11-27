@@ -34,7 +34,7 @@ public class NotificationsLoadGenerator {
         parseEnv();
         int totalMessages = Integer.parseInt(System.getProperty("count", "100"));
         int threads = Integer.parseInt(System.getProperty("threads", "2"));
-        int rate = Integer.parseInt(System.getProperty("rate", "10000"));
+        int rate = Integer.parseInt(System.getProperty("rate", "100000"));
         int delayPerMessageMs = Math.max(1, 1000 / (rate / threads));
         System.out.printf("""
                 Starting load generator:

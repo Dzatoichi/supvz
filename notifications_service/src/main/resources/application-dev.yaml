@@ -50,11 +50,12 @@ app:
     inbox-queue: inbox-queue
   inbox:
     reservation-min: 5
-    cleaning-min: 15
+    cleaning-min: 1
     polling:
       cleaning:
         batch-size: 10
-        delay-ms: 100000
+        delay-ms: 3000
       processing:
         batch-size: 10
         delay-ms: 10000
+#        todo: процессинг каждый раз резервирует и не позволяет удалить

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ public class InboxEventServiceImpl implements InboxEventService {
     public InboxEvent create(InboxEventPayload inboxEventPayload) {
         log.debug("Create inbox event [{}].", inboxEventPayload.eventId());
         InboxEvent mapped = mapper.create(inboxEventPayload);
+        log.debug("mapped event type obj: {}. class: {}", mapped.getEventType(), mapped.getEventType().getClass());
         InboxEvent created = repo.saveIfNotExists(
                 mapped.getEventId(),
                 mapped.getEventType().name(),
@@ -52,24 +54,33 @@ public class InboxEventServiceImpl implements InboxEventService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void setProcessed(UUID eventId) {
         log.debug("Marking event [{}] as processed.", eventId);
         InboxEvent event = repo.findById(eventId)
                 .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
                         .formatted(eventId)));
+        if (event.getProcessed()) {
+            log.debug("Event [{}] already marked as processed.", event.getEventId());
+            return;
+        }
         mapper.markAsProcessed(event);
         repo.save(event);
         log.debug("Event [{}] is marked as processed.", event.getEventId());
+//        TODO: ставить null в clean_after
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void setCleanAfter(UUID eventId) {
         log.debug("Marking event [{}] as failed.", eventId);
         InboxEvent event = repo.findById(eventId)
                 .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
                         .formatted(eventId)));
+        if (event.getCleanAfter() != null) {
+            log.debug("Event [{}] already marked as failed.", event.getEventId());
+            return;
+        }
         LocalDateTime cleanAfter = LocalDateTime.now().plusMinutes(cleaningInMinutes);
         mapper.setCleanAfter(event, cleanAfter);
         repo.save(event);

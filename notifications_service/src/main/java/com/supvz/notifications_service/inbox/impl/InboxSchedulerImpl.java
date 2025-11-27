@@ -6,7 +6,6 @@ import com.supvz.notifications_service.service.EventProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +20,7 @@ public class InboxSchedulerImpl implements InboxScheduler {
     private final InboxEventService inboxEventService;
     private final EventProcessingService processingService;
     private final Executor notificationProcessingExecutor;
+    private final Executor inboxCleaningExecutor;
     @Value("${app.inbox.polling.processing.batch-size}")
     private Integer processingBatchSize;
     @Value("${app.inbox.polling.cleaning.batch-size}")
@@ -28,7 +28,8 @@ public class InboxSchedulerImpl implements InboxScheduler {
 
     @Override
     @Scheduled(fixedDelayString = "${app.inbox.polling.processing.delay-ms:10000}")
-    @Async("inboxProcessingExecutor")
+//    @Async("inboxProcessingExecutor")
+//    todo: асинк почитать где использовать и почему я сделал то, что в том числе погубило сервис и положило его на лопаточки
     public void pollForProcessing() {
         log.debug("Polling [PROCESS] inbox events.");
         List<UUID> reservedBatch = inboxEventService.readAndReserveUnprocessedBatch(processingBatchSize);
@@ -43,10 +44,15 @@ public class InboxSchedulerImpl implements InboxScheduler {
 
     @Override
     @Scheduled(fixedDelayString = "${app.inbox.polling.cleaning.delay-ms:5000}")
-    @Async("inboxCleaningExecutor")
+//    @Async("inboxCleaningExecutor")
+//    todo: а надо ли?
     public void pollForCleaning() {
         log.debug("Polling [CLEAN] inbox events.");
+//        inboxCleaningExecutor.execute(() -> {
         List<UUID> batch = inboxEventService.deleteFailedBatch(cleaningBatchSize);
         log.debug("Failed inbox events are deleted, size: [{}].", batch.size());
+//        });
+//        todo: надо ли тут многопоточность
     }
+//    todo: удалять те, которые просмотрены и прошла неделя или нечекнутые + месяц
 }

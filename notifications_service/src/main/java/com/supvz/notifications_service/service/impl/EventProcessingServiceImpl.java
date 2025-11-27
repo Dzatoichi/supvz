@@ -46,6 +46,7 @@ public class EventProcessingServiceImpl implements EventProcessingService {
             inboxEventService.setCleanAfter(eventId);
         }
     }
+//    todo: жестко подумать про вложенные транзакции
 
     @Override
     public void initOther(InboxEventPayload inboxEventPayload) {

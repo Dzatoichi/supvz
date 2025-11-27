@@ -2,7 +2,6 @@ package com.supvz.notifications_service.repo;
 
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,10 +29,9 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
             @Param("batchSize") int batchSize,
             @Param("reservedTo") LocalDateTime reservedTo);
 
-    @Modifying
     @Query(value = """
-            INSERT INTO inbox_events (event_id, event_type, payload, received_at, processed)
-            VALUES (:eventId, (:eventType)::event_type, :payload, now(), FALSE)
+            INSERT INTO inbox (event_id, event_type, payload)
+            VALUES (:eventId, :eventType, :payload)
             ON CONFLICT (event_id) DO NOTHING
             RETURNING *
             """, nativeQuery = true)
