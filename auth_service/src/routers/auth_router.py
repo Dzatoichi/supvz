@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 
-from src.dao.tokensDAO import RefreshTokensDAO
+from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
@@ -17,7 +17,6 @@ from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
-    get_refresh_token_dao,
     get_stateful_token_service,
     get_users_dao,
 )
@@ -144,13 +143,12 @@ async def refresh_token(
     response: Response,
     refresh_token: Annotated[str | None, Cookie()] = None,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
-    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
 ) -> None:
     """
     Ручка для обновления access-токена, выдачи нового refresh-токена.
     POST [/auth/refresh_token]
     """
-    result = await token_service.refresh_token(refresh_token=refresh_token, repo=repo)
+    result = await token_service.refresh_token(refresh_token=refresh_token)
     refresh_token = result["refresh_token"]
     access_token = result["access_token"]
 
@@ -171,7 +169,7 @@ async def refresh_token(
 @auth_router.post("/authorize", status_code=200)
 async def authorize_user(
     request: Request,
-    permission: str,
+    permission: PermissionEnum,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),

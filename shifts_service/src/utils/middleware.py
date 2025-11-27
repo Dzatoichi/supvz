@@ -27,6 +27,13 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             process_time=f"{process_time:.2f}ms",
         )
 
-        if status_code < 400:
+        if status_code >= 500:
+            log.error("HTTP Request")
+        elif status_code == 429:
+            log.debug("HTTP Request (rate limited)")
+        elif status_code >= 400:
+            log.warning("HTTP Request")
+        else:
             log.info("HTTP Request")
+
         return response
