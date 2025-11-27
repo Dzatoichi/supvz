@@ -17,8 +17,6 @@ class Permissions(Base):
     code_name: Mapped[str] = mapped_column(
         String(120),
         unique=True,
-        nullable=False,
-        index=True,
     )
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

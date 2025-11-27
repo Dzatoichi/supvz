@@ -52,7 +52,6 @@ class AuthService:
 
         permissions = await perm_repo.get_permissions_by_position(position_id=data.position_id)
 
-        # Создание пользователя и присвоение permissions
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
                 user = await user_repo.create_user(
@@ -62,12 +61,6 @@ class AuthService:
                 await user_repo.assign_permissions(
                     user_id=user.id,
                     permissions=permissions,
-                    session=session,
-                )
-
-                # запрос с selectinload
-                user = await user_repo.get_user_with_permissions(
-                    user_id=user.id,
                     session=session,
                 )
 

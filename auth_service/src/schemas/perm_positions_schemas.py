@@ -17,16 +17,19 @@ class PermissionRead(PermissionBase):
 
 
 class PositionBaseSchema(BaseModel):
-    name: str
+    title: str
     owner_id: int
 
 
 class PositionCreateSchema(PositionBaseSchema):
-    pass
+    permissions: list[int] | None = None
 
 
 class PositionReadSchema(PositionBaseSchema):
     id: int
-    permissions: list[PermissionRead] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PositionReadPermissionsSchema(PositionReadSchema):
+    permissions: list[PermissionRead] | None = []

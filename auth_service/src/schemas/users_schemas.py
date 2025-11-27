@@ -88,10 +88,15 @@ class UserReadSchema(UserBaseSchema):
 
     id: int
     subscription: SubscriptionEnum
-    permissions: list[PermissionRead] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
+class UserReadPermissionsSchema(UserReadSchema):
+    """Схема получения пользователя с правами."""
+
+    permissions: list[PermissionRead] = []
 
 
 class UserAuthRequestSchema(BaseModel):

@@ -1,6 +1,5 @@
 from fastapi_pagination import Page, Params, paginate
 
-from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
@@ -28,7 +27,7 @@ class UserService:
         if not user:
             raise UserNotFoundException("User not found")
 
-        if user.role != UserRoleEnum.owner:
+        if user.subscription != SubscriptionEnum.test:
             logger.error(
                 "Пользователю не удалось поменять подписку, т.к у него нет роли owner!",
                 user_id=user.id,
@@ -71,7 +70,6 @@ class UserService:
         token_service: JWTTokensService,
         user: UserUpdateSchema,
         repo: UsersDAO,
-        refresh_repo: RefreshTokensDAO,
     ) -> UserReadSchema:
         """Обновляет данные пользователя"""
 

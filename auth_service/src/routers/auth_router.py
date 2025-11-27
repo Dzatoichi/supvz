@@ -45,7 +45,7 @@ async def register_user(
     return user
 
 
-@auth_router.post("/login", responses={200: {"description": "Succesful login"}})
+@auth_router.post("/login", responses={200: {"description": "Successfully login"}})
 async def login(
     response: Response,
     credentials: UserLoginSchema,

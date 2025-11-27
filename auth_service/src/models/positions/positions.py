@@ -14,7 +14,7 @@ class Positions(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    name: Mapped[str | None] = mapped_column(String(255))
+    title: Mapped[str | None] = mapped_column(String(255))
 
     owner_id: Mapped[int] = mapped_column(
         Integer,
@@ -38,6 +38,7 @@ class PositionPermissions(Base):
         ForeignKey("positions.id", ondelete="CASCADE"),
         primary_key=True,
     )
+
     permission_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("permissions.id", ondelete="CASCADE"),

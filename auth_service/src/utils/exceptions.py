@@ -36,3 +36,15 @@ class PermissionDeniedException(Exception):
     """Недостаточно прав для выполнения действия."""
 
     pass
+
+
+class PositionNotFoundException(Exception):
+    """Должность не найдена."""
+
+    pass
+
+
+class PositionAlreadyExistsException(Exception):
+    """Должность уже существует."""
+
+    pass

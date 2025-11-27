@@ -1,10 +1,12 @@
 from fastapi import Depends, HTTPException, Request, status
 
 from src.dao.permissionsDAO import PermissionsDAO
+from src.dao.positionsDAO import PositionDAO
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.database.base import db_helper
 from src.schemas.users_schemas import UserAuthRequestSchema
+from src.services.position_service import PositionService
 from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.services.user_service import UserService
 
@@ -29,6 +31,11 @@ def get_refresh_token_dao() -> RefreshTokensDAO:
 def get_permissions_dao() -> PermissionsDAO:
     """Создаем DAO для работы с Permissions."""
     return PermissionsDAO()
+
+
+def get_position_dao() -> PositionDAO:
+    """Создаем DAO для работы с Position."""
+    return PositionDAO()
 
 
 # region Сервисы
@@ -59,6 +66,11 @@ def get_jwt_tokens_service(
     """Создаёт сервис для работы с JWT токенами."""
 
     return JWTTokensService(repo=repo)
+
+
+def get_position_service() -> "PositionService":
+    """Создает сервис для работы с должностями."""
+    return PositionService(db_helper=db_helper)
 
 
 def get_access_token_from_cookie(request: Request) -> UserAuthRequestSchema:
