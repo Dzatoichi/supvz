@@ -2,6 +2,7 @@ package com.supvz.notifications_service.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.supvz.notifications_service.core.exception.NotificationNotSerializedException;
 import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.service.WebNotificationProcessingService;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,7 @@ public class WebNotificationProcessingServiceImpl implements WebNotificationProc
             throw e;
         } catch (JsonProcessingException e) {
             log.error("Couldn't serialize notification [{}] to json.", notification.getId(), e);
-            throw new RuntimeException(e);
+            throw new NotificationNotSerializedException(null);
         }
     }
 

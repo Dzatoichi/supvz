@@ -24,6 +24,7 @@ public class InboxEventMapperImpl implements InboxEventMapper {
         event.setProcessed(true);
         event.setUpdatedAt(LocalDateTime.now());
         event.setReservedTo(null);
+        event.setCleanAfter(null);
     }
 
     @Override

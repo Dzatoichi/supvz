@@ -1,6 +1,8 @@
 package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
+import com.supvz.notifications_service.core.exception.NotificationIsNotSentException;
+import com.supvz.notifications_service.core.exception.UnexpectedExceptionSendingNotification;
 import com.supvz.notifications_service.model.dto.InboxEventPayload;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
@@ -30,7 +32,7 @@ public class EventProcessingServiceImpl implements EventProcessingService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = NotificationConflictException.class)
     public void processNotification(UUID eventId) {
         log.debug("Process notification by event [{}].", eventId);
         try {
@@ -40,12 +42,17 @@ public class EventProcessingServiceImpl implements EventProcessingService {
         } catch (NotificationConflictException ex) {
             log.warn("Conflict: {}", ex.getMessage());
             inboxEventService.setProcessed(eventId);
-        }
-        catch (RuntimeException e) {
-            log.error("Couldn't successfully process notification by event [{}]", eventId, e);
+        } catch (NotificationIsNotSentException ex) {
+            log.warn("Couldn't successfully process notification by event [{}]", eventId, ex);
             inboxEventService.setCleanAfter(eventId);
+        } catch (UnexpectedExceptionSendingNotification ex) {
+            log.warn("Unexpected exception while processing notification by event [{}]", eventId, ex);
+            inboxEventService.setCleanAfter(eventId);
+        } catch (RuntimeException ex) {
+            log.error("Unexpected runtime exception while processing notification by event [{}]", eventId, ex);
         }
     }
+//    todo: такую хуйню наделал что жесть. подумать заново и переделать
 //    todo: жестко подумать про вложенные транзакции
 
     @Override

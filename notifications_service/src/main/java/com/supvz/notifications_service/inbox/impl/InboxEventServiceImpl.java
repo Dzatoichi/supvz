@@ -54,7 +54,7 @@ public class InboxEventServiceImpl implements InboxEventService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional
     public void setProcessed(UUID eventId) {
         log.debug("Marking event [{}] as processed.", eventId);
         InboxEvent event = repo.findById(eventId)
@@ -67,11 +67,10 @@ public class InboxEventServiceImpl implements InboxEventService {
         mapper.markAsProcessed(event);
         repo.save(event);
         log.debug("Event [{}] is marked as processed.", event.getEventId());
-//        TODO: ставить null в clean_after
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional
     public void setCleanAfter(UUID eventId) {
         log.debug("Marking event [{}] as failed.", eventId);
         InboxEvent event = repo.findById(eventId)
