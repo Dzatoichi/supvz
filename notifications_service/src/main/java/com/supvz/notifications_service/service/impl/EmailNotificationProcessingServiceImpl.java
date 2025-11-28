@@ -1,7 +1,7 @@
 package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.NotificationValidationException;
-import com.supvz.notifications_service.model.entity.Notification;
+import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.mapper.MailMapper;
 import com.supvz.notifications_service.service.EmailNotificationProcessingService;
 import lombok.RequiredArgsConstructor;
@@ -26,25 +26,28 @@ public class EmailNotificationProcessingServiceImpl implements EmailNotification
 
     @Override
     @Retryable(retryFor = MailException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
-    public void send(Notification notification) {
-        log.debug("Sending email notification [{}] to [{}].", notification.getId(), notification.getRecipientId());
+    public void send(NotificationDto notification) {
+        log.debug("Sending email notification [{}] to [{}].", notification.id(), notification.recipientId());
         try {
-            validate(notification);
+//            validate(notification);
             SimpleMailMessage mailMessage = mapper.mail(notification);
             mailSender.send(mailMessage);
-            log.info("Email notification [{}] is sent.", notification.getId());
-        } catch (MailException e) {
-            log.error("Couldn't send email notification [{}].", notification.getId(), e);
-            throw e;
+            log.info("Email notification [{}] is sent.", notification.id());
+        } catch (MailException ex) {
+            log.error("Couldn't send email notification [{}].", notification.id(), ex);
+            throw ex;
         }
     }
 
-    private void validate(Notification notification) {
-        if (notification.getBody() == null || notification.getBody().isBlank())
-            throw new NotificationValidationException("Validation failed. Invalid body.");
-        if (notification.getRecipientId() == null || notification.getRecipientId().isBlank())
-            throw new NotificationValidationException("Validation failed. Invalid recipient.");
-        if (notification.getSubject() == null || notification.getSubject().isBlank())
-            throw new NotificationValidationException("Validation failed. Invalid subject.");
-    }
+//    private void validate(NotificationDto notification) {
+//        if (notification.getBody() == null || notification.getBody().isBlank())
+//            throw new NotificationValidationException("Validation failed. Invalid body.");
+//        if (notification.getRecipientId() == null || notification.getRecipientId().isBlank())
+//            throw new NotificationValidationException("Validation failed. Invalid recipient.");
+//        if (notification.getSubject() == null || notification.getSubject().isBlank())
+//            throw new NotificationValidationException("Validation failed. Invalid subject.");
+//    }
+//    todo: насколько целесообразно делать валидацию здесь, а не при получении ивента сразу?
+//     разве не производительней будет получить и сразу его удалить, а не сохранять, доставать, пробовать обрабатывать?
+//     как будто я сам уже ответил на вопрос :)
 }

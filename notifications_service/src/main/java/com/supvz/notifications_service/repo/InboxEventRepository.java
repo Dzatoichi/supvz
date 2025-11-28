@@ -17,7 +17,8 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
             SELECT event_id FROM inbox
             WHERE processed IS FALSE
             AND (reserved_to IS NULL OR reserved_to < now())
-            ORDER BY created_at
+            AND (clean_after IS NULL OR clean_after > now())
+            ORDER BY created_at ASC
             LIMIT :batchSize
             )
             UPDATE inbox

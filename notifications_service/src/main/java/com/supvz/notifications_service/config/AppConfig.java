@@ -26,23 +26,9 @@ public class AppConfig {
                 .registerModule(new JavaTimeModule());
     }
 
-    @Bean
-    public Executor inboxProcessingExecutor() {
-        return Executors.newCachedThreadPool();
-    }
-
-    @Bean
-    public Executor inboxCleaningExecutor() {
-        return Executors.newCachedThreadPool();
-    }
-//    todo: только что из за этого положил сервис. еблан подумай сколько потоков и почему надо использовать
-//              вообще это крон-лайк задача, а не задача многопоточности(кроме процессинга), поэтому надо
-//              использовать ограниченные по потокам executor'ы
-
     @Bean("notificationProcessingExecutor")
     public Executor notificationProcessingExecutor() {
-        return Executors.newFixedThreadPool(10);
+        return Executors.newFixedThreadPool(30);
     }
 
-//    todo: cachedThreadPool опасен, создает беск. колво потоков
 }

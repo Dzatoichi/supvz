@@ -1,5 +1,6 @@
 package com.supvz.notifications_service.model.dto;
 
+import com.supvz.notifications_service.model.entity.NotificationType;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ public record NotificationDto(
         String body,
         String subject,
         LocalDateTime sentAt,
-        boolean viewed
+        Boolean viewed,
+        NotificationType notificationType
 ) {
 }

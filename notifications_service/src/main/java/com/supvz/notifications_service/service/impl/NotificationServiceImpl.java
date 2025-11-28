@@ -20,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.mail.MailException;
-import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,32 +65,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional(noRollbackFor = {MailException.class, MessagingException.class, NotificationNotSerializedException.class})
-    public void processByEventId(UUID eventId) throws NotificationIsNotSentException, UnexpectedExceptionSendingNotification {
+    @Transactional
+    public void processByEventId(UUID eventId) {
         Notification notification = repo.findByEventId(eventId)
                 .orElseThrow(() -> new NotificationNotFoundException("Notification by event [%s] was not found."
                         .formatted(eventId)));
+        NotificationDto dto = mapper.read(notification);
         log.debug("Processing notification [{}].", notification.getId());
+        if (notification.getSent()) throw new NotificationConflictException(
+                "Notification [%s] already sent.".formatted(notification.getId()));
         try {
-            if (notification.getSent()) {
-                throw new NotificationConflictException("Notification [%s] already sent.".formatted(notification.getId()));
-            }
-            try {
-                switch (notification.getNotificationType()) {
-                    case email -> emailNotificationService.send(notification);
-                    case web -> webNotificationService.send(notification);
-                    case push -> pushNotificationService.send(notification);
-                }
-            } catch (MailException | MessagingException | NotificationNotSerializedException ex) {
-                log.warn("Exception while sent notification [{}].", notification.getId(), ex);
-                throw new NotificationIsNotSentException(ex.getMessage());
-            }
-            mapper.markAsSent(notification);
-            repo.save(notification);
-            log.debug("Notification [{}] is sent.", notification.getId());
+            sendNotification(dto);
         } catch (RuntimeException ex) {
-            log.error("Unexpected exception while sending notification [{}].", notification.getId(), ex);
-            throw new UnexpectedExceptionSendingNotification(ex.getMessage());
+            log.warn("Exception sending notification [{}].", notification.getId());
+            throw new NotificationIsNotSentException(ex.getMessage());
         }
+        mapper.markAsSent(notification);
+        repo.save(notification);
+        log.debug("Notification [{}] is sent.", notification.getId());
+    }
+
+    private void sendNotification(NotificationDto notificationDto) {
+        switch (notificationDto.notificationType()) {
+            case email -> emailNotificationService.send(notificationDto);
+            case web -> webNotificationService.send(notificationDto);
+            case push -> pushNotificationService.send(notificationDto);
+        }
+
     }
 }

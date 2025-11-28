@@ -1,6 +1,6 @@
 package com.supvz.notifications_service.mapper.impl;
 
-import com.supvz.notifications_service.model.entity.Notification;
+import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.mapper.MailMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -12,12 +12,12 @@ public class MailMapperImpl implements MailMapper {
     private String from;
 
     @Override
-    public SimpleMailMessage mail(Notification notification) {
+    public SimpleMailMessage mail(NotificationDto notification) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom(from);
-        mailMessage.setSubject(notification.getSubject());
-        mailMessage.setTo(notification.getRecipientId());
-        mailMessage.setText(notification.getBody());
+        mailMessage.setSubject(notification.subject());
+        mailMessage.setTo(notification.recipientId());
+        mailMessage.setText(notification.body());
 //        todo: есть возможность отправлять нескольким почтам сразу (mailMessage.setTo(... String to))
 
         return mailMessage;

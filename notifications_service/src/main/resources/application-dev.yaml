@@ -32,7 +32,7 @@ logging:
 # noinspection undefined
 app:
   notification:
-    number-retry-attempts: 3
+    number-retry-attempts: 2
   websocket:
     base-topic: topic
     allowed-origins:
@@ -49,13 +49,12 @@ app:
   messaging:
     inbox-queue: inbox-queue
   inbox:
-    reservation-min: 5
+    reservation-min: 1
     cleaning-min: 1
     polling:
       cleaning:
         batch-size: 10
-        delay-ms: 3000
+        delay-ms: 1000
       processing:
-        batch-size: 10
+        batch-size: 20
         delay-ms: 10000
-#        todo: процессинг каждый раз резервирует и не позволяет удалить

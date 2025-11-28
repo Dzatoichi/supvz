@@ -32,7 +32,6 @@ public class EventProcessingServiceImpl implements EventProcessingService {
     }
 
     @Override
-    @Transactional(noRollbackFor = NotificationConflictException.class)
     public void processNotification(UUID eventId) {
         log.debug("Process notification by event [{}].", eventId);
         try {
@@ -45,14 +44,11 @@ public class EventProcessingServiceImpl implements EventProcessingService {
         } catch (NotificationIsNotSentException ex) {
             log.warn("Couldn't successfully process notification by event [{}]", eventId, ex);
             inboxEventService.setCleanAfter(eventId);
-        } catch (UnexpectedExceptionSendingNotification ex) {
-            log.warn("Unexpected exception while processing notification by event [{}]", eventId, ex);
-            inboxEventService.setCleanAfter(eventId);
         } catch (RuntimeException ex) {
             log.error("Unexpected runtime exception while processing notification by event [{}]", eventId, ex);
+            inboxEventService.setCleanAfter(eventId);
         }
     }
-//    todo: такую хуйню наделал что жесть. подумать заново и переделать
 //    todo: жестко подумать про вложенные транзакции
 
     @Override

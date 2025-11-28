@@ -47,6 +47,7 @@ public class NotificationMapperImpl implements NotificationMapper {
                 .viewed(notification.getViewed())
                 .sentAt(notification.getSentAt())
                 .recipientId(notification.getRecipientId())
+                .notificationType(notification.getNotificationType())
                 .build();
     }
 

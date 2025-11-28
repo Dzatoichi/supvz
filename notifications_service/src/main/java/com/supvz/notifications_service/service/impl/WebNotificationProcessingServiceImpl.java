@@ -3,6 +3,7 @@ package com.supvz.notifications_service.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.core.exception.NotificationNotSerializedException;
+import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.service.WebNotificationProcessingService;
 import lombok.RequiredArgsConstructor;
@@ -35,24 +36,24 @@ public class WebNotificationProcessingServiceImpl implements WebNotificationProc
      */
     @Override
     @Retryable(retryFor = MessagingException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
-    public void send(Notification notification) {
+    public void send(NotificationDto notification) {
         String destination = getDestination(notification);
-        log.debug("Sending web notification [{}] to destination [{}].", notification.getId(), destination);
+        log.debug("Sending web notification [{}] to destination [{}].", notification.id(), destination);
         try {
             messagingTemplate.convertAndSend(destination, objectMapper.writeValueAsString(notification));
-//            todo: dto должны передавать, а не сущность
-            log.info("Web notification [{}] is sent.", notification.getId());
-        } catch (MessagingException e) {
-            log.error("Couldn't send web notification [{}]: {}.", notification.getId(), e.getMessage());
-            throw e;
-        } catch (JsonProcessingException e) {
-            log.error("Couldn't serialize notification [{}] to json.", notification.getId(), e);
-            throw new NotificationNotSerializedException(null);
+            log.info("Web notification [{}] is sent.", notification.id());
+        } catch (MessagingException ex) {
+            log.error("Couldn't send web notification [{}]: {}.", notification.id(), ex.getMessage());
+            throw ex;
+        } catch (JsonProcessingException ex) {
+            log.error("Couldn't serialize notification [{}] to json.", notification.id(), ex);
+            throw new NotificationNotSerializedException(ex.getMessage());
         }
     }
+//    todo: Retryable работает когда впервые выбрасывается или пробрасывается через метод?
 
-    private String getDestination(Notification notification) {
-        String recipient = URLEncoder.encode(notification.getRecipientId(), StandardCharsets.UTF_8);
+    private String getDestination(NotificationDto notification) {
+        String recipient = URLEncoder.encode(notification.recipientId(), StandardCharsets.UTF_8);
         return "/".concat(baseTopic).concat("/").concat(recipient);
     }
 }
