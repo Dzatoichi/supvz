@@ -18,7 +18,6 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN
 @EnableRetry
 @EnableAsync
 public class AppConfig {
-
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
@@ -30,5 +29,6 @@ public class AppConfig {
     public Executor notificationProcessingExecutor() {
         return Executors.newFixedThreadPool(30);
     }
-
+//    todo: в очередной раз задуматься, какие есть Executor'ы. Может, тут подходит ThreadPoolTaskExecutor?
+//     Если так, то почему?
 }

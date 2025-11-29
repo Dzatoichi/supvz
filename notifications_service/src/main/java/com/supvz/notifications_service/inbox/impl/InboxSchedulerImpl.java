@@ -37,6 +37,7 @@ public class InboxSchedulerImpl implements InboxScheduler {
                         processingService.processNotification(eventId));
             }
         }
+//        todo: не вычитывать из бд и ниче не делать, если пул потоков уже занят.
     }
 
     @Override
@@ -46,5 +47,6 @@ public class InboxSchedulerImpl implements InboxScheduler {
         List<UUID> batch = inboxEventService.deleteFailedBatch(cleaningBatchSize);
         log.debug("Failed inbox events are deleted, size: [{}].", batch.size());
     }
-//    todo: удалять те, которые просмотрены и прошла неделя или нечекнутые + месяц
+//    todo: удалять те, которые просмотрены и прошла неделя или нечекнутые + месяц.
+//     То есть создать новый щедулед метод.
 }

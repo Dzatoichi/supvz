@@ -63,6 +63,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
         return mapper.readPage(notificationPage);
     }
+//    todo: Spring Data Specifications использовать.
 
     @Override
     @Transactional
@@ -90,7 +91,8 @@ public class NotificationServiceImpl implements NotificationService {
             case email -> emailNotificationService.send(notificationDto);
             case web -> webNotificationService.send(notificationDto);
             case push -> pushNotificationService.send(notificationDto);
+//            todo: Внедрить паттерн Strategy. явная зависимость от свитча.
         }
-
+// todo: вынести из транзакции.
     }
 }

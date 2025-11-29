@@ -32,6 +32,7 @@ public class Notification {
     private LocalDateTime updatedAt;
 
     //    todo: реализовать updated_at
+//          есть какая то реализация от спринга
 
     @Override
     public boolean equals(Object o) {

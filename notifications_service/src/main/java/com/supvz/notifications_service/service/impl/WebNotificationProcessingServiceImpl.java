@@ -50,7 +50,6 @@ public class WebNotificationProcessingServiceImpl implements WebNotificationProc
             throw new NotificationNotSerializedException(ex.getMessage());
         }
     }
-//    todo: Retryable работает когда впервые выбрасывается или пробрасывается через метод?
 
     private String getDestination(NotificationDto notification) {
         String recipient = URLEncoder.encode(notification.recipientId(), StandardCharsets.UTF_8);

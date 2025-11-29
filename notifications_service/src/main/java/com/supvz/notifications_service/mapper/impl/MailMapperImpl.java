@@ -18,8 +18,6 @@ public class MailMapperImpl implements MailMapper {
         mailMessage.setSubject(notification.subject());
         mailMessage.setTo(notification.recipientId());
         mailMessage.setText(notification.body());
-//        todo: есть возможность отправлять нескольким почтам сразу (mailMessage.setTo(... String to))
-
         return mailMessage;
     }
 }

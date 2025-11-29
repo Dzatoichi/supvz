@@ -2,7 +2,6 @@ package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
 import com.supvz.notifications_service.core.exception.NotificationIsNotSentException;
-import com.supvz.notifications_service.core.exception.UnexpectedExceptionSendingNotification;
 import com.supvz.notifications_service.model.dto.InboxEventPayload;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
@@ -49,7 +48,6 @@ public class EventProcessingServiceImpl implements EventProcessingService {
             inboxEventService.setCleanAfter(eventId);
         }
     }
-//    todo: жестко подумать про вложенные транзакции
 
     @Override
     public void initOther(InboxEventPayload inboxEventPayload) {
