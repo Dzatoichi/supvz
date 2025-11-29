@@ -25,8 +25,8 @@ public class AppConfig {
                 .registerModule(new JavaTimeModule());
     }
 
-    @Bean("notificationProcessingExecutor")
-    public Executor notificationProcessingExecutor() {
+    @Bean
+    public Executor notificationExecutor() {
         return Executors.newFixedThreadPool(30);
     }
 //    todo: в очередной раз задуматься, какие есть Executor'ы. Может, тут подходит ThreadPoolTaskExecutor?

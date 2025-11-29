@@ -2,7 +2,7 @@ package com.supvz.notifications_service.inbox.impl;
 
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;
 import com.supvz.notifications_service.core.exception.InboxEventNotFoundException;
-import com.supvz.notifications_service.model.dto.InboxEventPayload;
+import com.supvz.notifications_service.model.dto.InboxEventMessage;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.inbox.InboxEventMapper;
@@ -30,9 +30,9 @@ public class InboxEventServiceImpl implements InboxEventService {
 
     @Override
     @Transactional
-    public InboxEvent create(InboxEventPayload inboxEventPayload) {
-        log.debug("Create inbox event [{}].", inboxEventPayload.eventId());
-        InboxEvent mapped = mapper.create(inboxEventPayload);
+    public InboxEvent create(InboxEventMessage inboxEventMessage) {
+        log.debug("Create inbox event [{}].", inboxEventMessage.eventId());
+        InboxEvent mapped = mapper.create(inboxEventMessage);
         log.debug("mapped event type obj: {}. class: {}", mapped.getEventType(), mapped.getEventType().getClass());
         InboxEvent created = repo.saveIfNotExists(
                 mapped.getEventId(),
@@ -40,9 +40,9 @@ public class InboxEventServiceImpl implements InboxEventService {
                 mapped.getPayload());
         if (created == null) {
             throw new InboxEventConflictException
-                    ("Inbox event [%s] is already exists.".formatted(inboxEventPayload.eventId()));
+                    ("Inbox event [%s] is already exists.".formatted(inboxEventMessage.eventId()));
         }
-        log.info("Inbox event [{}] is created.", inboxEventPayload.eventId());
+        log.info("Inbox event [{}] is created.", inboxEventMessage.eventId());
         return created;
     }
 

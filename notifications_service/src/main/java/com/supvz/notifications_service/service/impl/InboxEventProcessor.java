@@ -2,7 +2,7 @@ package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
 import com.supvz.notifications_service.core.exception.NotificationIsNotSentException;
-import com.supvz.notifications_service.model.dto.InboxEventPayload;
+import com.supvz.notifications_service.model.dto.InboxEventMessage;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.inbox.InboxEventService;
@@ -17,17 +17,17 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class EventProcessingServiceImpl implements EventProcessingService {
+public class InboxEventProcessor implements EventProcessor {
     private final InboxEventService inboxEventService;
     private final NotificationService notificationService;
 
     @Override
     @Transactional
-    public void initNotification(InboxEventPayload inboxEventPayload, NotificationPayload notificationPayload) {
-        log.debug("Initialize notification message: [{}].", inboxEventPayload.eventId());
-        InboxEvent inboxEvent = inboxEventService.create(inboxEventPayload);
+    public void initNotification(InboxEventMessage inboxEventMessage, NotificationPayload notificationPayload) {
+        log.debug("Initialize notification message: [{}].", inboxEventMessage.eventId());
+        InboxEvent inboxEvent = inboxEventService.create(inboxEventMessage);
         notificationService.create(inboxEvent, notificationPayload);
-        log.info("Notification message [{}] is initialized.", inboxEventPayload.eventId());
+        log.info("Notification message [{}] is initialized.", inboxEventMessage.eventId());
     }
 
     @Override
@@ -50,7 +50,7 @@ public class EventProcessingServiceImpl implements EventProcessingService {
     }
 
     @Override
-    public void initOther(InboxEventPayload inboxEventPayload) {
-        log.debug("Listening other event type. Event [{}].", inboxEventPayload.eventId());
+    public void initOther(InboxEventMessage inboxEventMessage) {
+        log.debug("Listening other event type. Event [{}].", inboxEventMessage.eventId());
     }
 }

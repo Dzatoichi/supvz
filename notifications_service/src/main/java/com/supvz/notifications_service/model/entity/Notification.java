@@ -31,8 +31,17 @@ public class Notification {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    //    todo: реализовать updated_at
-//          есть какая то реализация от спринга
+    @PrePersist
+    private void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
+        if (sent == null) sent = false;
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -45,12 +54,5 @@ public class Notification {
     @Override
     public int hashCode() {
         return id == null ? System.identityHashCode(this) : id.hashCode();
-    }
-
-    @PrePersist
-    private void prePersist() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        if (updatedAt == null) updatedAt = LocalDateTime.now();
-        if (sent == null) sent = false;
     }
 }

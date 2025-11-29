@@ -4,36 +4,43 @@ import com.supvz.notifications_service.core.exception.*;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.dto.PageDto;
-import com.supvz.notifications_service.core.filter.DateNotificationFilter;
 import com.supvz.notifications_service.core.filter.NotificationFilter;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.model.entity.Notification;
-import com.supvz.notifications_service.model.entity.NotificationType;
 import com.supvz.notifications_service.mapper.NotificationMapper;
+import com.supvz.notifications_service.model.entity.NotificationType;
 import com.supvz.notifications_service.repo.NotificationRepository;
-import com.supvz.notifications_service.service.EmailNotificationProcessingService;
-import com.supvz.notifications_service.service.NotificationService;
-import com.supvz.notifications_service.service.PushNotificationProcessingService;
-import com.supvz.notifications_service.service.WebNotificationProcessingService;
-import lombok.RequiredArgsConstructor;
+import com.supvz.notifications_service.util.NotificationSpecifications;
+import com.supvz.notifications_service.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationMapper mapper;
     private final NotificationRepository repo;
-    private final EmailNotificationProcessingService emailNotificationService;
-    private final WebNotificationProcessingService webNotificationService;
-    private final PushNotificationProcessingService pushNotificationService;
+    private final Map<NotificationType, NotificationProcessor> processors;
+
+    @Autowired
+    public NotificationServiceImpl(NotificationMapper mapper, NotificationRepository repo, List<NotificationProcessor> processorList) {
+        this.mapper = mapper;
+        this.repo = repo;
+        this.processors = processorList.stream().collect(
+                Collectors.toMap(NotificationProcessor::getType, Function.identity()));
+    }
 
     @Override
     @Transactional
@@ -48,22 +55,23 @@ public class NotificationServiceImpl implements NotificationService {
     public PageDto<NotificationDto> findAll(int page, int size, NotificationFilter filter) {
         log.debug("Read all. Page {}, size {}.", page, size);
         Pageable pageable = PageRequest.of(page, size);
-        String recipientId = filter.recipientId();
-        UUID eventId = filter.eventId();
-        NotificationType type = filter.type();
-        Boolean viewed = filter.viewed();
-        DateNotificationFilter dateFilter = filter.dateFilter();
-        boolean filterByDate = dateFilter != null && (dateFilter.startDate() != null && dateFilter.endDate() != null);
-        Page<Notification> notificationPage;
-        if (filterByDate) {
-            notificationPage = repo.findAllWithDateFilter(pageable, recipientId,
-                    eventId, type, viewed, dateFilter.startDate(), dateFilter.endDate());
-        } else {
-            notificationPage = repo.findAll(pageable, recipientId, eventId, type, viewed);
-        }
+        Specification<Notification> spec = configureSpecification(filter);
+        Page<Notification> notificationPage = repo.findAll(spec, pageable);
         return mapper.readPage(notificationPage);
     }
-//    todo: Spring Data Specifications использовать.
+
+    private Specification<Notification> configureSpecification(NotificationFilter filter) {
+        Specification<Notification> spec = NotificationSpecifications.hasRecipientId(filter.recipientId());
+        spec = spec
+                .and(NotificationSpecifications.hasEventId(filter.eventId()))
+                .and(NotificationSpecifications.hasType(filter.type()))
+                .and(NotificationSpecifications.isViewed(filter.viewed()))
+                .and(NotificationSpecifications.isSent(filter.sent()))
+                .and(NotificationSpecifications.likeSubject(filter.subject()))
+                .and(NotificationSpecifications.likeBody(filter.body()))
+                .and(NotificationSpecifications.betweenDates(filter.startDate(), filter.endDate()));
+        return spec;
+    }
 
     @Override
     @Transactional
@@ -76,7 +84,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (notification.getSent()) throw new NotificationConflictException(
                 "Notification [%s] already sent.".formatted(notification.getId()));
         try {
-            sendNotification(dto);
+            processors.get(dto.notificationType()).send(dto);
         } catch (RuntimeException ex) {
             log.warn("Exception sending notification [{}].", notification.getId());
             throw new NotificationIsNotSentException(ex.getMessage());
@@ -84,15 +92,5 @@ public class NotificationServiceImpl implements NotificationService {
         mapper.markAsSent(notification);
         repo.save(notification);
         log.debug("Notification [{}] is sent.", notification.getId());
-    }
-
-    private void sendNotification(NotificationDto notificationDto) {
-        switch (notificationDto.notificationType()) {
-            case email -> emailNotificationService.send(notificationDto);
-            case web -> webNotificationService.send(notificationDto);
-            case push -> pushNotificationService.send(notificationDto);
-//            todo: Внедрить паттерн Strategy. явная зависимость от свитча.
-        }
-// todo: вынести из транзакции.
     }
 }

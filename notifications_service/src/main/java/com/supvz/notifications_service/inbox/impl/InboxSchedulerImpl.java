@@ -2,7 +2,7 @@ package com.supvz.notifications_service.inbox.impl;
 
 import com.supvz.notifications_service.inbox.InboxEventService;
 import com.supvz.notifications_service.inbox.InboxScheduler;
-import com.supvz.notifications_service.service.EventProcessingService;
+import com.supvz.notifications_service.service.EventProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,8 +18,8 @@ import java.util.concurrent.Executor;
 @RequiredArgsConstructor
 public class InboxSchedulerImpl implements InboxScheduler {
     private final InboxEventService inboxEventService;
-    private final EventProcessingService processingService;
-    private final Executor notificationProcessingExecutor;
+    private final EventProcessor processingService;
+    private final Executor notificationExecutor;
     @Value("${app.inbox.polling.processing.batch-size}")
     private Integer processingBatchSize;
     @Value("${app.inbox.polling.cleaning.batch-size}")
@@ -33,7 +33,7 @@ public class InboxSchedulerImpl implements InboxScheduler {
         log.debug("Found and reserved batch of events. Size [{}]", reservedBatch.size());
         if (!reservedBatch.isEmpty()) {
             for (UUID eventId : reservedBatch) {
-                notificationProcessingExecutor.execute(() ->
+                notificationExecutor.execute(() ->
                         processingService.processNotification(eventId));
             }
         }

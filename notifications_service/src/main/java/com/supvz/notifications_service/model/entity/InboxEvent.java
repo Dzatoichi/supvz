@@ -27,13 +27,16 @@ public class InboxEvent {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-//    todo: реализовать updated_at
-
     @PrePersist
     private void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (updatedAt == null) createdAt = LocalDateTime.now();
         if (processed == null) processed = false;
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
     @Override
