@@ -3,7 +3,7 @@ from fastapi_pagination import Page, Params, paginate
 from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.positionsDAO import PositionDAO
 from src.models import Positions
-from src.schemas.perm_positions_schemas import PositionCreateSchema, PositionReadSchema
+from src.schemas.perm_positions_schemas import PositionCreateSchema, PositionReadSchema, PositionUpdateSchema
 from src.utils.exceptions import (
     PositionAlreadyExistsException,
     PositionNotFoundException,
@@ -42,13 +42,13 @@ class PositionService:
         self,
         position_id: int,
         repo: PositionDAO,
-    ) -> Positions:
+    ) -> PositionReadSchema:
         position = await repo.get_by_id(id=position_id)
 
         if not position:
             raise PositionNotFoundException("Должность с таким id не найдена.")
 
-        return position
+        return PositionReadSchema.model_validate(position)
 
     async def create_position(
         self,
@@ -83,3 +83,41 @@ class PositionService:
                     position.permissions = None
 
                 return position
+
+    async def update_position(
+        self,
+        position_id: int,
+        data: PositionUpdateSchema,
+        position_repo: PositionDAO,
+        permission_repo: PermissionsDAO,
+    ) -> PositionReadSchema:
+        """Обновляет имя и права долджности"""
+
+        already_exists = await position_repo.get_by_id(id=position_id)
+
+        if not already_exists:
+            raise PositionNotFoundException("Должность с таким id не найдена.")
+
+        async with self.db_helper.async_session_maker() as session:
+            async with session.begin():
+                if data.title:
+                    await position_repo.update(
+                        position_id=position_id,
+                        title=data.title,
+                        session=session,
+                    )
+
+                if data.permissions_ids is not None:
+                    await permission_repo.set_permissions_for_position(
+                        position_id=position_id,
+                        new_permission_ids=data.permissions_ids,
+                        session=session,
+                    )
+
+                result = await position_repo.get_position(id=position_id)
+                return PositionReadSchema.model_validate(result)
+
+    async def delete_position(self, position_id: int, repo: PositionDAO):
+        """Метод удалаяет должность по id"""
+
+        return await repo.delete(id=position_id)

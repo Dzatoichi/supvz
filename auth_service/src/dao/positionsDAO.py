@@ -1,8 +1,10 @@
-from sqlalchemy import select
+from typing import Optional
+
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.dao.baseDAO import BaseDAO
+from src.dao.baseDAO import BaseDAO, T
 from src.models import Positions
 
 
@@ -51,3 +53,20 @@ class PositionDAO(BaseDAO[Positions]):
         session.add(user)
         await session.flush()
         return user
+
+    @BaseDAO.with_exception
+    async def update(
+        self,
+        position_id: int,
+        session: AsyncSession,
+        **kwargs,
+    ) -> Optional[T]:
+        """Метод обновления должности"""
+
+        stmt = update(self.model).where(self.model.id == position_id).values(**kwargs).returning(self.model)
+
+        result = await session.execute(stmt)
+
+        updated = result.scalar_one_or_none()
+
+        return updated

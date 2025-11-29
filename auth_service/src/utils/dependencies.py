@@ -6,6 +6,7 @@ from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.database.base import db_helper
 from src.schemas.users_schemas import UserAuthRequestSchema
+from src.services.permission_service import PermissionService
 from src.services.position_service import PositionService
 from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.services.user_service import UserService
@@ -71,6 +72,11 @@ def get_jwt_tokens_service(
 def get_position_service() -> "PositionService":
     """Создает сервис для работы с должностями."""
     return PositionService(db_helper=db_helper)
+
+
+def get_permissions_service() -> "PermissionService":
+    """Создает сервис для работы с правами доступа"""
+    return PermissionService()
 
 
 def get_access_token_from_cookie(request: Request) -> UserAuthRequestSchema:

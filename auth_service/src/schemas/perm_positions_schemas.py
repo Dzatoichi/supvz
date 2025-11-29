@@ -1,16 +1,16 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class PermissionBase(BaseModel):
+class PermissionBaseSchema(BaseModel):
     code_name: str
     description: str | None = None
 
 
-class PermissionCreate(PermissionBase):
+class PermissionCreateSchema(PermissionBaseSchema):
     pass
 
 
-class PermissionRead(PermissionBase):
+class PermissionReadSchema(PermissionBaseSchema):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
@@ -32,4 +32,11 @@ class PositionReadSchema(PositionBaseSchema):
 
 
 class PositionReadPermissionsSchema(PositionReadSchema):
-    permissions: list[PermissionRead] | None = []
+    permissions: list[PermissionReadSchema] | None = []
+
+
+class PositionUpdateSchema(BaseModel):
+    title: str | None = None
+    permissions_ids: list[int] | None = None
+
+    model_config = ConfigDict(from_attributes=True)

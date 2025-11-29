@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -75,31 +75,3 @@ class Users(Base):
         Метод возвращения пользователя в виде строки.
         """
         return f"<User(id={self.id}, email={self.email}>"
-
-
-class UserPermissions(Base):
-    __tablename__ = "user_permissions"
-
-    user_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-    permission_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("permissions.id", ondelete="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
-
-    user: Mapped["Users"] = relationship(
-        "Users",
-        back_populates="permission_links",
-        lazy="selectin",
-    )
-    permission: Mapped["Permissions"] = relationship(
-        "Permissions",
-        back_populates="user_links",
-        lazy="selectin",
-    )

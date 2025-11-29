@@ -6,8 +6,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.base import Base
 
 if TYPE_CHECKING:
-    from src.models.positions.positions import PositionPermissions
-    from src.models.users.users import UserPermissions
+    from src.models.position_permissions.position_permissions import PositionPermissions
+    from src.models.user_permissions.user_permissions import UserPermissions
 
 
 class Permissions(Base):

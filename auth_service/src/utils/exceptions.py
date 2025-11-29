@@ -48,3 +48,15 @@ class PositionAlreadyExistsException(Exception):
     """Должность уже существует."""
 
     pass
+
+
+class PermissionsNotFound(Exception):
+    """Должность не найдена."""
+
+    pass
+
+
+class PermissionsFilterException(Exception):
+    """Ошибка фильтрации при работе с permissions"""
+
+    pass

@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.dao.baseDAO import BaseDAO
-from src.models.users.users import UserPermissions, Users
+from src.models.user_permissions.user_permissions import UserPermissions
+from src.models.users.users import Users
 
 
 class UsersDAO(BaseDAO[Users]):

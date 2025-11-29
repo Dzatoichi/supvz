@@ -3,7 +3,7 @@ from fastapi_pagination import Page, Params
 
 from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.positionsDAO import PositionDAO
-from src.schemas.perm_positions_schemas import PositionCreateSchema, PositionReadSchema
+from src.schemas.perm_positions_schemas import PositionCreateSchema, PositionReadSchema, PositionUpdateSchema
 from src.services.position_service import PositionService
 from src.utils.dependencies import (
     get_permissions_dao,
@@ -33,6 +33,7 @@ async def get_position(
     repo: PositionDAO = Depends(get_position_dao),
 ) -> PositionReadSchema:
     """Ручка для получения одной должности"""
+
     return await position_service.get_position(
         position_id=position_id,
         repo=repo,
@@ -46,6 +47,8 @@ async def create_position(
     repo: PositionDAO = Depends(get_position_dao),
     permission_repo: PermissionsDAO = Depends(get_permissions_dao),
 ) -> PositionReadSchema:
+    """Ручка для создания должности"""
+
     position = await position_service.create_position(
         data=data,
         position_repo=repo,
@@ -53,3 +56,33 @@ async def create_position(
     )
 
     return PositionReadSchema.model_validate(position)
+
+
+@positions_router.patch("/{position_id}", response_model=PositionReadSchema)
+async def update_position(
+    position_id: int,
+    data: PositionUpdateSchema,
+    position_service: PositionService = Depends(get_position_service),
+    position_repo: PositionDAO = Depends(get_position_dao),
+    permission_repo: PermissionsDAO = Depends(get_permissions_dao),
+) -> PositionReadSchema:
+    """Ручка для обновления должности"""
+
+    return await position_service.update_position(
+        position_id=position_id,
+        data=data,
+        position_repo=position_repo,
+        permission_repo=permission_repo,
+    )
+
+
+@positions_router.delete("/{position_id}", status_code=204)
+async def delete_position(
+    position_id: int,
+    position_service: PositionService = Depends(get_position_service),
+    repo: PositionDAO = Depends(get_position_dao),
+) -> None:
+    return await position_service.delete_position(
+        position_id=position_id,
+        repo=repo,
+    )
