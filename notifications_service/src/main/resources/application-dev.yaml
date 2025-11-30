@@ -32,6 +32,14 @@ logging:
 # noinspection undefined
 app:
   notification:
+    thread:
+      core-pool-size: 20
+      max-pool-size: 50
+      queue-capacity: 50
+#     Capacity должна превышать batch-size. В два раза - дефолт.
+      name-prefix: notification
+      wait-tasks-shutdown: true
+      await-termination-sec: 60
     number-retry-attempts: 2
   websocket:
     base-topic: topic
