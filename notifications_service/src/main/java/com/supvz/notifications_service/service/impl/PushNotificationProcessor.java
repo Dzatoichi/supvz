@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PushNotificationProcessor implements NotificationProcessor {
     @Override
-    @Retryable(retryFor = RuntimeException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
+//    @Retryable(retryFor = RuntimeException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void send(NotificationDto notification) {
         log.debug("Sending push notification [{}].", notification.id());

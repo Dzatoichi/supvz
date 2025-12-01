@@ -15,7 +15,7 @@ public class CorsConfig {
     private String[] allowedOrigins;
     @Value("${app.cors.allow-credentials}")
     private Boolean allowCredentials;
-    @Value("${app.cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS}")
+    @Value("${app.cors.allowed-methods}")
     private String[] allowedMethods;
 
     @Bean

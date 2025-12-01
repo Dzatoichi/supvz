@@ -37,7 +37,7 @@ public class WebNotificationProcessor implements NotificationProcessor {
      * Реализация отправки уведомления подключенному клиенту через веб-сокет.
      */
     @Override
-    @Retryable(retryFor = MessagingException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
+//    @Retryable(retryFor = MessagingException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void send(NotificationDto notification) {
         String destination = getDestination(notification);

@@ -40,17 +40,11 @@ app:
     number-retry-attempts: ${NOTIFICATION_PROCESSING_NUMBER_RETRIES}
   websocket:
     base-topic: ${WEBSOCKET_BASE_TOPIC}
-    allowed-origins:
-      - "*"
+    allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS}
   cors:
-    allowed-origins:
-      - "*"
-    allowed-methods:
-      - "GET"
-      - "POST"
-      - "PUT"
-      - "DELETE"
-      - "OPTIONS"
+    allowed-origins: ${CORS-ALLOWED-ORIGINS}
+    allowed-methods: ${CORS-ALLOWED-METHODS}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS}
   messaging:
     inbox-queue: ${MESSAGING_INBOX_QUEUE}
   inbox:

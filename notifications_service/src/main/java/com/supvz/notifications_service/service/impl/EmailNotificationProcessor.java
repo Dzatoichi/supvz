@@ -27,7 +27,7 @@ public class EmailNotificationProcessor implements NotificationProcessor {
     private final MailMapper mapper;
 
     @Override
-    @Retryable(retryFor = MailException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
+//    @Retryable(retryFor = MailException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void send(NotificationDto notification) {
         log.debug("Sending email notification [{}] to [{}].", notification.id(), notification.recipientId());

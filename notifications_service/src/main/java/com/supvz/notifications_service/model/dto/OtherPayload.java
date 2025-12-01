@@ -4,7 +4,7 @@ import com.supvz.notifications_service.model.entity.NotificationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record NotificationPayload(
+public record OtherPayload(
         @NotNull
         NotificationType type,
         @NotBlank

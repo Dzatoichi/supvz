@@ -33,9 +33,9 @@ logging:
 app:
   notification:
     thread:
-      core-pool-size: 20
-      max-pool-size: 50
-      queue-capacity: 50
+      core-pool-size: 50
+      max-pool-size: 80
+      queue-capacity: 120
 #     Capacity должна превышать batch-size. В два раза - дефолт.
       name-prefix: notification
       wait-tasks-shutdown: true
@@ -43,26 +43,20 @@ app:
     number-retry-attempts: 2
   websocket:
     base-topic: topic
-    allowed-origins:
-      - "*"
+    allowed-origins: localhost:8003
   cors:
-    allowed-origins:
-      - "*"
-    allowed-methods:
-      - "GET"
-      - "POST"
-      - "PUT"
-      - "DELETE"
-      - "OPTIONS"
+    allowed-origins: localhost:8003
+    allowed-methods: GET, POST, PUT, DELETE, OPTIONS
+    allow-credentials: false
   messaging:
     inbox-queue: inbox-queue
   inbox:
     reservation-min: 1
-    cleaning-min: 1
+    cleaning-min: 3
     polling:
       cleaning:
-        batch-size: 10
-        delay-ms: 1000
+        batch-size: 30
+        delay-ms: 3000
       processing:
-        batch-size: 20
+        batch-size: 50
         delay-ms: 10000

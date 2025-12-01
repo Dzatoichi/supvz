@@ -17,7 +17,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    @Value("${app.websocket.allowed-origins:*}")
+    @Value("${app.websocket.allowed-origins}")
     private String[] origins;
     @Value("{app.websocket.base-topic}")
     private String baseTopic;
