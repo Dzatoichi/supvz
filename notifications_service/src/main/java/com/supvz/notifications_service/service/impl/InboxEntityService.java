@@ -1,11 +1,12 @@
-package com.supvz.notifications_service.inbox.impl;
+package com.supvz.notifications_service.service.impl;
 
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;
 import com.supvz.notifications_service.core.exception.InboxEventNotFoundException;
-import com.supvz.notifications_service.model.dto.InboxEventMessage;
+import com.supvz.notifications_service.model.dto.InboxMessage;
+import com.supvz.notifications_service.model.entity.EventIdTypeProjection;
 import com.supvz.notifications_service.model.entity.InboxEvent;
-import com.supvz.notifications_service.inbox.InboxEventService;
-import com.supvz.notifications_service.inbox.InboxEventMapper;
+import com.supvz.notifications_service.service.InboxService;
+import com.supvz.notifications_service.mapper.InboxMapper;
 import com.supvz.notifications_service.repo.InboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +21,8 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class InboxEventServiceImpl implements InboxEventService {
-    private final InboxEventMapper mapper;
+public class InboxEntityService implements InboxService {
+    private final InboxMapper mapper;
     private final InboxEventRepository repo;
     @Value("${app.inbox.reservation-min}")
     private int reservationInMinutes;
@@ -30,9 +31,9 @@ public class InboxEventServiceImpl implements InboxEventService {
 
     @Override
     @Transactional
-    public InboxEvent create(InboxEventMessage inboxEventMessage) {
-        log.debug("Create inbox event [{}].", inboxEventMessage.eventId());
-        InboxEvent mapped = mapper.create(inboxEventMessage);
+    public InboxEvent create(InboxMessage inboxMessage) {
+        log.debug("Create inbox event [{}].", inboxMessage.eventId());
+        InboxEvent mapped = mapper.create(inboxMessage);
         log.debug("mapped event type obj: {}. class: {}", mapped.getEventType(), mapped.getEventType().getClass());
         InboxEvent created = repo.saveIfNotExists(
                 mapped.getEventId(),
@@ -40,14 +41,14 @@ public class InboxEventServiceImpl implements InboxEventService {
                 mapped.getPayload());
         if (created == null) {
             throw new InboxEventConflictException
-                    ("Inbox event [%s] is already exists.".formatted(inboxEventMessage.eventId()));
+                    ("Inbox event [%s] is already exists.".formatted(inboxMessage.eventId()));
         }
-        log.info("Inbox event [{}] is created.", inboxEventMessage.eventId());
+        log.info("Inbox event [{}] is created.", inboxMessage.eventId());
         return created;
     }
 
     @Override
-    public List<UUID> readAndReserveUnprocessedBatch(int batchSize) {
+    public List<EventIdTypeProjection> readAndReserveUnprocessedBatch(int batchSize) {
         LocalDateTime reservedTo = LocalDateTime.now().plusMinutes(reservationInMinutes);
         return repo.findAndReserveUnprocessedInBatch(batchSize, reservedTo);
     }

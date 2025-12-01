@@ -1,12 +1,11 @@
-package com.supvz.notifications_service.inbox.impl;
+package com.supvz.notifications_service.mapper.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.core.exception.InboxEventNotSerializedException;
-import com.supvz.notifications_service.core.exception.NotificationNotSerializedException;
-import com.supvz.notifications_service.model.dto.InboxEventMessage;
+import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.entity.InboxEvent;
-import com.supvz.notifications_service.inbox.InboxEventMapper;
+import com.supvz.notifications_service.mapper.InboxMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,11 +15,11 @@ import java.time.LocalDateTime;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class InboxEventMapperImpl implements InboxEventMapper {
+public class InboxMapperImpl implements InboxMapper {
     private final ObjectMapper objectMapper;
 
     @Override
-    public InboxEvent create(InboxEventMessage event) {
+    public InboxEvent create(InboxMessage event) {
         try {
             return InboxEvent.builder()
                     .eventId(event.eventId())

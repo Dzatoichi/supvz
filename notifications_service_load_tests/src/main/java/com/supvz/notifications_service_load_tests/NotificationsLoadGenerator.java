@@ -1,11 +1,8 @@
 package com.supvz.notifications_service_load_tests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.MessageProperties;
-import com.supvz.notifications_service_load_tests.core.InboxEventPayload;
+import com.rabbitmq.client.*;
+import com.supvz.notifications_service_load_tests.core.InboxMessage;
 import com.supvz.notifications_service_load_tests.core.InboxEventType;
 import com.supvz.notifications_service_load_tests.core.NotificationPayload;
 import com.supvz.notifications_service_load_tests.core.NotificationType;
@@ -32,10 +29,16 @@ public class NotificationsLoadGenerator {
 
     public static void main(String[] args) {
         parseEnv();
-        int totalMessages = Integer.parseInt(System.getProperty("count", "100"));
+        int totalMessages = Integer.parseInt(System.getProperty("count", "1000"));
         int threads = Integer.parseInt(System.getProperty("threads", "1"));
-        int rate = Integer.parseInt(System.getProperty("rate", "10"));
+        int rate = Integer.parseInt(System.getProperty("rate", "1000"));
         int delayPerMessageMs = Math.max(1, 1000 / (rate / threads));
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf-8")
+                .deliveryMode(2)
+                .build();
+
         System.out.printf("""
                 Starting load generator:
                 totalMessages = %d
@@ -54,13 +57,13 @@ public class NotificationsLoadGenerator {
                 futures.add(executor.submit(() -> {
                     try (Channel channel = connection.createChannel()) {
                         for (int i = 0; i < perThread; i++) {
-                            InboxEventPayload event = randomEvent();
+                            InboxMessage event = randomEvent();
                             byte[] body = json.writeValueAsBytes(event);
                             long sendStart = System.nanoTime();
                             channel.basicPublish(
                                     exchange,
                                     routingKey,
-                                    MessageProperties.PERSISTENT_TEXT_PLAIN,
+                                    props,
                                     body
                             );
                             long elapsed = System.nanoTime() - sendStart;
@@ -159,26 +162,17 @@ public class NotificationsLoadGenerator {
 
     // ------------ RANDOM EVENT GENERATOR ------------
 
-    private static InboxEventPayload randomEvent() {
-
+    private static InboxMessage randomEvent() {
         NotificationPayload payload = new NotificationPayload(
                 randomEnum(NotificationType.class),
                 "user-" + ThreadLocalRandom.current().nextInt(1, 10000),
                 randomBody(),
                 randomSubject()
         );
-
-        String payloadJson;
-        try {
-            payloadJson = json.writeValueAsString(payload);
-        } catch (Exception e) {
-            payloadJson = "{}";
-        }
-
-        return new InboxEventPayload(
+        return new InboxMessage(
                 UUID.randomUUID(),
-                randomEnum(InboxEventType.class),
-                payloadJson
+                InboxEventType.notification,
+                payload
         );
     }
 

@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS inbox
 (
 	event_id UUID PRIMARY KEY,
-	event_type VARCHAR(16) NOT NULL CHECK (event_type IN ('notification', 'other')),
+	event_type VARCHAR(16) NOT NULL CHECK (event_type IN ('notification')),
 	payload TEXT NOT NULL,
 	reserved_to TIMESTAMP,
 	processed_at TIMESTAMP,

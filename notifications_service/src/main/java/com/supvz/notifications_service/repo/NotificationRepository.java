@@ -7,6 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,4 +19,18 @@ public interface NotificationRepository extends CrudRepository<Notification, Lon
             """)
     Optional<Notification> findByEventId(
             @Param("id") UUID id);
+
+    @Query(value = """
+            DELETE FROM notifications WHERE
+            (viewed = TRUE AND sent_at < now() - (:viewedTtl * INTERVAL '1 day')) OR
+            (viewed = FALSE AND sent_at < now() - (:notViewedTtl * INTERVAL '1 day')) OR
+            (notification_type = 'email' AND sent_at < now() - (:emailTtl * INTERVAL '1 day'))
+            RETURNING id;
+            """, nativeQuery = true)
+    List<Integer> deleteOldNotifications(
+            @Param("viewedTtl") int viewedTtlDays,
+            @Param("notViewedTtl") int notViewedTtlDays,
+            @Param("emailTtl") int emailTtlDays
+    );
+//    todo: жестко подумать посмотреть, добавить индекс возможно.
 }

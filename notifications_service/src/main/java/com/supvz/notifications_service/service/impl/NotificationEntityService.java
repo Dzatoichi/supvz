@@ -1,6 +1,8 @@
 package com.supvz.notifications_service.service.impl;
 
-import com.supvz.notifications_service.core.exception.*;
+import com.supvz.notifications_service.core.exception.NotificationConflictException;
+import com.supvz.notifications_service.core.exception.NotificationIsNotSentException;
+import com.supvz.notifications_service.core.exception.NotificationNotFoundException;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.dto.PageDto;
@@ -14,6 +16,7 @@ import com.supvz.notifications_service.util.NotificationSpecifications;
 import com.supvz.notifications_service.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,17 +32,24 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class NotificationServiceImpl implements NotificationService {
+public class NotificationEntityService implements NotificationService {
     private final NotificationMapper mapper;
     private final NotificationRepository repo;
     private final Map<NotificationType, NotificationProcessor> processors;
+    @Value("${app.notification.schedule.cleaning.ttl.email-days}")
+    private Integer emailTtlDays;
+    @Value("${app.notification.schedule.cleaning.ttl.viewed-days}")
+    private Integer viewedTtlDays;
+    @Value("${app.notification.schedule.cleaning.ttl.not-viewed-days}")
+    private Integer notViewedTtlDays;
+
 
     @Autowired
-    public NotificationServiceImpl(NotificationMapper mapper, NotificationRepository repo, List<NotificationProcessor> processorList) {
+    public NotificationEntityService(NotificationMapper mapper, NotificationRepository repo, List<NotificationProcessor> processorList) {
         this.mapper = mapper;
         this.repo = repo;
-        this.processors = processorList.stream().collect(
-                Collectors.toMap(NotificationProcessor::getType, Function.identity()));
+        this.processors = processorList.stream()
+                .collect(Collectors.toMap(NotificationProcessor::getType, Function.identity()));
     }
 
     @Override
@@ -92,5 +102,10 @@ public class NotificationServiceImpl implements NotificationService {
         mapper.markAsSent(notification);
         repo.save(notification);
         log.debug("Notification [{}] is sent.", notification.getId());
+    }
+
+    @Override
+    public List<Integer> deleteOldNotifications() {
+        return repo.deleteOldNotifications(viewedTtlDays, notViewedTtlDays, emailTtlDays);
     }
 }

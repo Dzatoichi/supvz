@@ -1,5 +1,6 @@
 package com.supvz.notifications_service.repo;
 
+import com.supvz.notifications_service.model.entity.EventIdTypeProjection;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,9 +25,9 @@ public interface InboxEventRepository extends JpaRepository<InboxEvent, UUID> {
             UPDATE inbox
             SET reserved_to = :reservedTo
             WHERE event_id IN (SELECT event_id FROM batch)
-            RETURNING event_id
+            RETURNING event_id as eventId, event_type as eventType
             """, nativeQuery = true)
-    List<UUID> findAndReserveUnprocessedInBatch(
+    List<EventIdTypeProjection> findAndReserveUnprocessedInBatch(
             @Param("batchSize") int batchSize,
             @Param("reservedTo") LocalDateTime reservedTo);
 

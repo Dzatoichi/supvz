@@ -20,18 +20,18 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN
 @EnableRetry
 @EnableAsync
 public class AppConfig {
-    @Value("${app.notification.thread.core-pool-size:20}")
-    private Integer notificationCorePoolSize;
-    @Value("${app.notification.thread.max-pool-size:50}")
-    private Integer notificationMaxPoolSize;
-    @Value("${app.notification.thread.queue-capacity:50}")
-    private Integer notificationQueueCapacity;
-    @Value("${app.notification.thread.name-prefix:notification}")
-    private String notificationThreadNamePrefix;
-    @Value("${app.notification.thread.wait-tasks-shutdown:true}")
-    private Boolean notificationWaitTasksShutdown;
-    @Value("${app.notification.await-termination-sec:60}")
-    private Integer notificationAwaitTerminationSeconds;
+    @Value("${app.inbox.thread.core-pool-size}")
+    private Integer inboxCorePoolSize;
+    @Value("${app.inbox.thread.max-pool-size}")
+    private Integer inboxMaxPoolSize;
+    @Value("${app.inbox.thread.queue-capacity}")
+    private Integer inboxQueueCapacity;
+    @Value("${app.inbox.thread.name-prefix:notification-}")
+    private String inboxThreadNamePrefix;
+    @Value("${app.inbox.thread.wait-tasks-shutdown:true}")
+    private Boolean inboxWaitTasksShutdown;
+    @Value("${app.inbox.thread.await-termination-sec:60}")
+    private Integer inboxAwaitTerminationSeconds;
 
 
     @Bean
@@ -42,14 +42,14 @@ public class AppConfig {
     }
 
     @Bean
-    public Executor notificationExecutor() {
+    public Executor eventExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(notificationCorePoolSize);
-        executor.setMaxPoolSize(notificationMaxPoolSize);
-        executor.setQueueCapacity(notificationQueueCapacity);
-        executor.setThreadNamePrefix(notificationThreadNamePrefix);
-        executor.setWaitForTasksToCompleteOnShutdown(notificationWaitTasksShutdown);
-        executor.setAwaitTerminationSeconds(notificationAwaitTerminationSeconds);
+        executor.setCorePoolSize(inboxCorePoolSize);
+        executor.setMaxPoolSize(inboxMaxPoolSize);
+        executor.setQueueCapacity(inboxQueueCapacity);
+        executor.setThreadNamePrefix(inboxThreadNamePrefix);
+        executor.setWaitForTasksToCompleteOnShutdown(inboxWaitTasksShutdown);
+        executor.setAwaitTerminationSeconds(inboxAwaitTerminationSeconds);
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;

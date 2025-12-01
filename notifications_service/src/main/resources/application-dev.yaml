@@ -32,14 +32,13 @@ logging:
 # noinspection undefined
 app:
   notification:
-    thread:
-      core-pool-size: 50
-      max-pool-size: 80
-      queue-capacity: 120
-#     Capacity должна превышать batch-size. В два раза - дефолт.
-      name-prefix: notification
-      wait-tasks-shutdown: true
-      await-termination-sec: 60
+    schedule:
+      cleaning:
+        delay-ms: 86400000
+        ttl:
+          email-days: 7
+          viewed-days: 7
+          not-viewed-days: 30
     number-retry-attempts: 2
   websocket:
     base-topic: topic
@@ -51,9 +50,17 @@ app:
   messaging:
     inbox-queue: inbox-queue
   inbox:
+    thread:
+      core-pool-size: 50
+      max-pool-size: 80
+      queue-capacity: 120
+      #     Capacity должна превышать batch-size. В два раза - дефолт.
+      name-prefix: inbox-
+      wait-tasks-shutdown: true
+      await-termination-sec: 60
     reservation-min: 1
     cleaning-min: 3
-    polling:
+    schedule:
       cleaning:
         batch-size: 30
         delay-ms: 3000
