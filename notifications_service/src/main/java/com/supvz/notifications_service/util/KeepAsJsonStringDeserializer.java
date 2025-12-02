@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import java.io.IOException;
 
+/**
+ * Вспомогательный класс для десериализации сообщений.
+ */
 public class KeepAsJsonStringDeserializer extends JsonDeserializer<String> {
 
     @Override

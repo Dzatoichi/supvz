@@ -18,6 +18,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * <h3>
+ * Реализация сервиса для обработки сущностей Inbox.
+ * </h3>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,6 +34,12 @@ public class InboxEntityService implements InboxService {
     @Value("${app.inbox.cleaning-min}")
     private int cleaningInMinutes;
 
+    /**
+     * Маппинг сообщения в сущность.
+     *
+     * @param inboxMessage полученное сообщение из очереди.
+     * @return InboxEvent - сущность inbox события.
+     */
     @Override
     @Transactional
     public InboxEvent create(InboxMessage inboxMessage) {
@@ -47,12 +58,21 @@ public class InboxEntityService implements InboxService {
         return created;
     }
 
+    /**
+     * Реализация получения и резервации батча событий в одной транзакции.
+     * @param batchSize задает размер батча.
+     * @return список зарезервированных необработанных событий.
+     */
     @Override
     public List<EventIdTypeProjection> readAndReserveUnprocessedBatch(int batchSize) {
         LocalDateTime reservedTo = LocalDateTime.now().plusMinutes(reservationInMinutes);
         return repo.findAndReserveUnprocessedInBatch(batchSize, reservedTo);
     }
 
+    /**
+     * Маркировка события как обработанного.
+     * @param eventId идентификатор события.
+     */
     @Override
     @Transactional
     public void setProcessed(UUID eventId) {
@@ -69,6 +89,10 @@ public class InboxEntityService implements InboxService {
         log.debug("Event [{}] is marked as processed.", event.getEventId());
     }
 
+    /**
+     * Установка таймера для удаления события в случае ошибки обработки.
+     * @param eventId идентификатор события.
+     */
     @Override
     @Transactional
     public void setCleanAfter(UUID eventId) {
@@ -86,6 +110,11 @@ public class InboxEntityService implements InboxService {
         log.debug("Event [{}] is marked as failed.", event.getEventId());
     }
 
+    /**
+     * Удаление батча событий, у которых прошел таймер удаления.
+     * @param batchSize размер батча для удаления событий.
+     * @return List - список удаленных событий.
+     */
     @Override
     public List<UUID> deleteFailedBatch(Integer batchSize) {
         return repo.deleteFailedInBatch(batchSize);

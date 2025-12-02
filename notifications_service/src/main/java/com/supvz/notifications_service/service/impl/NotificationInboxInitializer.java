@@ -14,6 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * <h3>
+ * Инициализатор - слой между слушателем и сервисами для создания сущностей Inbox и Notification.
+ * </h3>
+ * Следует паттерну Strategy.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -22,6 +28,11 @@ public class NotificationInboxInitializer implements InboxInitializer {
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Инициализация события и его сущности нотификации.
+     * @param inbox сообщение, полученное из очереди.
+     * @throws JsonProcessingException исключение при неправильной модели полезной нагрузки нотификации.
+     */
     @Override
     @Transactional
     public void initialize(InboxMessage inbox) throws JsonProcessingException {
@@ -32,6 +43,10 @@ public class NotificationInboxInitializer implements InboxInitializer {
         log.info("Notification message [{}] is initialized.", inbox.eventId());
     }
 
+    /**
+     * Метод для реализации паттерна Strategy.
+     * @return InboxEventType - тип события, с которым работает инициализатор.
+     */
     @Override
     public InboxEventType getType() {
         return InboxEventType.notification;

@@ -16,12 +16,23 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * <h3>
+ * Маппер для работы с сущностью Notification.
+ * </h3>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class NotificationMapperImpl implements NotificationMapper {
     private final ObjectMapper objectMapper;
 
+    /**
+     * Маппинг полезной нагрузки в сущность.
+     * @param event сущность события, по которому создается нотификация.
+     * @param payload полезная нагрузка.
+     * @return Notification - сущность нотификации для последующего сохранения в БД.
+     */
     @Override
     public Notification create(InboxEvent event, NotificationPayload payload) {
         NotificationType type = payload.type();
@@ -38,6 +49,11 @@ public class NotificationMapperImpl implements NotificationMapper {
         return build;
     }
 
+    /**
+     * Маппинг сущности нотификации в ДТО для передачи между слоями.
+     * @param notification сущность нотификаиии.
+     * @return NotificationDto - ДТО нотификации.
+     */
     @Override
     public NotificationDto read(Notification notification) {
         return NotificationDto.builder()
@@ -51,6 +67,13 @@ public class NotificationMapperImpl implements NotificationMapper {
                 .build();
     }
 
+    /**
+     * Маркировка нотификации как отправленной.
+     * <br/>
+     * <br/>
+     * В случае, если сообщение уже отправлено, метод ничего не делает.
+     * @param notification сущность нотификации.
+     */
     @Override
     public void markAsSent(Notification notification) {
         if (notification.getSent())
@@ -59,6 +82,11 @@ public class NotificationMapperImpl implements NotificationMapper {
         notification.setSent(true);
     }
 
+    /**
+     *  Метод для маппинга страницы нотификаций в страницу ДТО.
+     * @param page страница с сущностями.
+     * @return PageDto - страница с сущностями ДТО
+     */
     @Override
     public PageDto<NotificationDto> readPage(Page<Notification> page) {
         List<NotificationDto> content = page.getContent().stream().map(this::read).toList();

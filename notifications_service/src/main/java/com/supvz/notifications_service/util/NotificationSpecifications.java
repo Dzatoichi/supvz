@@ -7,6 +7,9 @@ import org.springframework.data.jpa.domain.Specification;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Вспомогательный класс для создания динамических запросов с фильтрацией.
+ */
 public class NotificationSpecifications {
     public static Specification<Notification> hasEventId(UUID eventId) {
         return (root, query, cb) -> {

@@ -9,6 +9,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * <h3>
+ * Конфигурация CORS.
+ * </h3>
+ */
 @Configuration
 public class CorsConfig {
     @Value("${app.cors.allowed-origins}")
@@ -18,6 +23,10 @@ public class CorsConfig {
     @Value("${app.cors.allowed-methods}")
     private String[] allowedMethods;
 
+    /**
+     * Настройка CORS.
+     * @return CorsConfigurationSource - бин, что и отвечает за обработку запросов с браузера.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

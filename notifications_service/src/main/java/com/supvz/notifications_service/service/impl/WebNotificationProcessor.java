@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +20,12 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * <h3>
- * Реализация сервиса для отправки веб-сокет уведомлений.
+ * Реализация процессора для обработки нотификаций типа web.
  * </h3>
+ * Следует паттерну Strategy.
+ * <br/>
+ * <br/>
+ * Данный тип нотификаций предназначен для отправки по веб-сокету.
  */
 @Slf4j
 @Service
@@ -34,10 +37,11 @@ public class WebNotificationProcessor implements NotificationProcessor {
     private String baseTopic;
 
     /**
-     * Реализация отправки уведомления подключенному клиенту через веб-сокет.
+     * Метод отправки нотификации подключенному клиенту через веб-сокет.
+     *
+     * @param notification ДТО нотификации.
      */
     @Override
-//    @Retryable(retryFor = MessagingException.class, maxAttemptsExpression = "${app.notification.number-retry-attempts}")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void send(NotificationDto notification) {
         String destination = getDestination(notification);
@@ -54,6 +58,11 @@ public class WebNotificationProcessor implements NotificationProcessor {
         }
     }
 
+    /**
+     * Метод для реализации паттерна Strategy.
+     *
+     * @return NotificationType - тип нотификации, с которым работает процессор.
+     */
     @Override
     public NotificationType getType() {
         return NotificationType.web;

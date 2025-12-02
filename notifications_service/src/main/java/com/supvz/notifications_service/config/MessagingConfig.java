@@ -6,6 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.amqp.support.converter.MessageConverter;
 
+/**
+ * <h3>
+ * Конфигурация для брокера сообщений.
+ * </h3>
+ */
 @Configuration
 public class MessagingConfig {
 

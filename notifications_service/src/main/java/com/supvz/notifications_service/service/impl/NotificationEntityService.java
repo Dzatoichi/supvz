@@ -30,6 +30,11 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * <h3>
+ * Реализация сервиса для обработки сущностей Notification.
+ * </h3>
+ */
 @Slf4j
 @Service
 public class NotificationEntityService implements NotificationService {
@@ -43,7 +48,9 @@ public class NotificationEntityService implements NotificationService {
     @Value("${app.notification.schedule.cleaning.ttl.not-viewed-days}")
     private Integer notViewedTtlDays;
 
-
+    /**
+     * Конструктор.
+     */
     @Autowired
     public NotificationEntityService(NotificationMapper mapper, NotificationRepository repo, List<NotificationProcessor> processorList) {
         this.mapper = mapper;
@@ -52,6 +59,11 @@ public class NotificationEntityService implements NotificationService {
                 .collect(Collectors.toMap(NotificationProcessor::getType, Function.identity()));
     }
 
+    /**
+     * Создание сущности нотификации на основе inbox события.
+     * @param event событие, на основе которого создается нотификация.
+     * @param notificationPayload полезная нагрузка нотификации из события.
+     */
     @Override
     @Transactional
     public void create(InboxEvent event, NotificationPayload notificationPayload) {
@@ -61,6 +73,13 @@ public class NotificationEntityService implements NotificationService {
         log.info("Notification [{}] by event [{}] is created.", saved.getId(), event.getEventId());
     }
 
+    /**
+     * Получение страницы нотификаций с фильтрацией.
+     * @param page номер страницы.
+     * @param size кол-во нотификаций на странице.
+     * @param filter класс, содержащий параметры фильтрации.
+     * @return PageDto - страница с ДТО нотификациями.
+     */
     @Override
     public PageDto<NotificationDto> findAll(int page, int size, NotificationFilter filter) {
         log.debug("Read all. Page {}, size {}.", page, size);
@@ -70,6 +89,11 @@ public class NotificationEntityService implements NotificationService {
         return mapper.readPage(notificationPage);
     }
 
+    /**
+     * Настройка спецификаций для создания динамического запроса с фильтрацией.
+     * @param filter параметры фильтрации.
+     * @return Specification - спецификация, настройка запроса.
+     */
     private Specification<Notification> configureSpecification(NotificationFilter filter) {
         Specification<Notification> spec = NotificationSpecifications.hasRecipientId(filter.recipientId());
         spec = spec
@@ -83,6 +107,10 @@ public class NotificationEntityService implements NotificationService {
         return spec;
     }
 
+    /**
+     * Обработка нотификации по событию.
+     * @param eventId идентификатор события.
+     */
     @Override
     @Transactional
     public void processByEventId(UUID eventId) {
@@ -104,6 +132,10 @@ public class NotificationEntityService implements NotificationService {
         log.debug("Notification [{}] is sent.", notification.getId());
     }
 
+    /**
+     * Удаление старых нотификаций по настроенным параметрам TTL.
+     * @return List - список удаленных нотификаций.
+     */
     @Override
     public List<Integer> deleteOldNotifications() {
         return repo.deleteOldNotifications(viewedTtlDays, notViewedTtlDays, emailTtlDays);

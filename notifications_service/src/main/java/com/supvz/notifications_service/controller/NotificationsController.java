@@ -9,12 +9,24 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * <h3>
+ * Контроллер для работы с нотификациями.
+ * </h3>
+ */
 @RestController
 @RequestMapping(name = "/api/v1/notifications")
 @RequiredArgsConstructor
 public class NotificationsController {
     private final NotificationService service;
 
+    /**
+     * Ручка для получения страницы с нотификациями с фильтрацией.
+     * @param page номер страницы.
+     * @param size кол-во нотификаций в странице.
+     * @param filter ДТО фильтра.
+     * @return ResponseEntity - ответ от сервера со страницей нотификаций.
+     */
     @GetMapping
     public ResponseEntity<PageDto<NotificationDto>> readAll(
             @RequestParam(name = "page", defaultValue = "0", required = false) int page,

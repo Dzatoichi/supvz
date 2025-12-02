@@ -12,6 +12,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+/**
+ * <h3>
+ * Реализация процессора для обработки inbox событий типа notification
+ * </h3>
+ * Следует паттерну Strategy.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -19,6 +25,11 @@ public class InboxNotificationProcessor implements InboxProcessor {
     private final InboxService inboxService;
     private final NotificationService notificationService;
 
+    /**
+     * Обработка inbox событий типа notification.
+     *
+     * @param eventId идентификатор события.
+     */
     @Override
     public void process(UUID eventId) {
         log.debug("Process notification event [{}].", eventId);
@@ -38,6 +49,11 @@ public class InboxNotificationProcessor implements InboxProcessor {
         }
     }
 
+    /**
+     * Метод для реализации паттерна Strategy.
+     *
+     * @return InboxEventType - тип события, с которым работает процессор.
+     */
     @Override
     public InboxEventType getType() {
         return InboxEventType.notification;

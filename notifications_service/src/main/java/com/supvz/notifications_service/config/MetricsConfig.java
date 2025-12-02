@@ -6,11 +6,19 @@ import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCusto
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * <h3>
+ * Конфигурация для метрик, вывода логов.
+ * </h3>
+ */
 @Configuration
 public class MetricsConfig {
     @Value("${spring.application.name}")
     private String applicationName;
 
+    /**
+     * Настройка для правильного парсинга логов.
+     */
     @Bean
     MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
         return registry -> registry.config().commonTags("application", applicationName);

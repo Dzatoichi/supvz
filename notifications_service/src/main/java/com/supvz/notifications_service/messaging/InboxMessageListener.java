@@ -18,12 +18,20 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * <h3>
+ * Слушатель очереди брокера сообщений для inbox событий.
+ * </h3>
+ */
 @Slf4j
 @Component
 public class InboxMessageListener {
     private final ObjectMapper objectMapper;
     private final Map<InboxEventType, InboxInitializer> initializers;
 
+    /**
+     * Конструктор.
+     */
     @Autowired
     public InboxMessageListener(
             ObjectMapper objectMapper,
@@ -34,6 +42,10 @@ public class InboxMessageListener {
                 .collect(Collectors.toMap(InboxInitializer::getType, Function.identity()));
     }
 
+    /**
+     * Получение события и его обработка.
+     * @param message сообщение из очереди.
+     */
     @RabbitListener(queues = "${app.messaging.inbox-queue}")
     public void listen(Message message) {
         try {

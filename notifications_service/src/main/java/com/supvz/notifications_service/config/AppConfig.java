@@ -15,6 +15,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL;
 
+/**
+ * <h3>
+ * Конфигурация приложения.
+ * </h3>
+ */
 @Configuration
 @EnableScheduling
 @EnableRetry
@@ -33,7 +38,10 @@ public class AppConfig {
     @Value("${app.inbox.thread.await-termination-sec:60}")
     private Integer inboxAwaitTerminationSeconds;
 
-
+    /**
+     * Инициализация маппера для сериализации.
+     * @return ObjectMapper - бин маппера
+     */
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
@@ -41,6 +49,9 @@ public class AppConfig {
                 .registerModule(new JavaTimeModule());
     }
 
+    /**
+     * Бин executor для управления потоками обработки inbox событий.
+     */
     @Bean
     public Executor eventExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

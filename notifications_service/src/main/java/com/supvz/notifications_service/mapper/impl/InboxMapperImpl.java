@@ -12,12 +12,22 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+/**
+ * <h3>
+ * Маппер для обработки inbox событий.
+ * </h3>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class InboxMapperImpl implements InboxMapper {
     private final ObjectMapper objectMapper;
 
+    /**
+     * Маппинг сообщения в сущность.
+     * @param event - сообщение, полученное из очереди.
+     * @return InboxEvent - сущность для последующего сохранения в БД.
+     */
     @Override
     public InboxEvent create(InboxMessage event) {
         try {
@@ -32,19 +42,35 @@ public class InboxMapperImpl implements InboxMapper {
         }
     }
 
+    /**
+     * <h4>
+     * Маркировка события как обработанного.
+     * </h4>
+     * Также очищает поля clean_after и reserved_to.
+     *
+     * @param event сущность события.
+     */
     @Override
     public void markAsProcessed(InboxEvent event) {
         event.setProcessedAt(LocalDateTime.now());
         event.setProcessed(true);
-        event.setUpdatedAt(LocalDateTime.now());
         event.setReservedTo(null);
         event.setCleanAfter(null);
     }
 
+    /**
+     * <h4>
+     * Установка "таймера" для очистки в случае ошибки обработки события.
+     * </h4>
+     * <br/>
+     * Но вплоть до конца этого таймера событие продолжает обрабатываться в случае ошибки со стороны клиентов-сервисов или вообще сервера.
+     *
+     * @param event сущность события.
+     * @param cleanAfter время, после которого событие можно удалять.
+     */
     @Override
     public void setCleanAfter(InboxEvent event, LocalDateTime cleanAfter) {
         event.setCleanAfter(cleanAfter);
-        event.setUpdatedAt(LocalDateTime.now());
         event.setReservedTo(null);
     }
 }
