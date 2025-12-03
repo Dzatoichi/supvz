@@ -163,9 +163,9 @@ class AuthService:
         token_service: JWTTokensService,
         repo: UsersDAO,
     ) -> dict:
-        owner = repo.get_by_id(employee_data.owner_id)
+        owner = await repo.get_by_id(employee_data.owner_id)
         if not owner:
-            raise UserNotFoundException("Referenced owner_id not found")
+            raise UserNotFoundException("Пользователь не найден")
 
         register_token = await token_service.create_register_token(
             token_type=TokenTypesEnum.register,

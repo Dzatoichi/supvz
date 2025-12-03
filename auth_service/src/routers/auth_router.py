@@ -194,7 +194,7 @@ async def generate_register_token(
     auth_service: AuthService = Depends(get_auth_service),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
     repo: UsersDAO = Depends(get_users_dao),
-):
+) -> dict:
     """
     Создание токена регистрации сотрудника
     """

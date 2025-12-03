@@ -174,6 +174,10 @@ class UserForgotPasswordSchema(BaseModel):
 
 
 class UserRegisterEmployeeSchema(BaseModel):
+    """
+    Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
+    """
+
     pvz_id: int
     owner_id: int
     role: UserRoleEnum
