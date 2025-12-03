@@ -5,7 +5,7 @@ import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.entity.InboxEventType;
 
 public interface InboxInitializer {
-    void initialize(InboxMessage payload) throws JsonProcessingException;
+    void initialize(InboxMessage inboxMessage) throws JsonProcessingException;
 
     InboxEventType getType();
 }

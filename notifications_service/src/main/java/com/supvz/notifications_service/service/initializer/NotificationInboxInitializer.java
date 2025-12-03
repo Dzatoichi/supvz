@@ -30,17 +30,17 @@ public class NotificationInboxInitializer implements InboxInitializer {
     /**
      * Инициализация события и его сущности нотификации.
      *
-     * @param inbox сообщение, полученное из очереди.
+     * @param inboxMessage сообщение, полученное из очереди.
      * @throws JsonProcessingException исключение при неправильной модели полезной нагрузки нотификации.
      */
     @Override
     @Transactional
-    public void initialize(InboxMessage inbox) throws JsonProcessingException {
-        log.debug("Инициализация события нотификации: [{}].", inbox.eventId());
-        NotificationPayload payload = objectMapper.readValue(inbox.payload(), NotificationPayload.class);
-        InboxEvent inboxEvent = inboxService.create(inbox);
+    public void initialize(InboxMessage inboxMessage) throws JsonProcessingException {
+        log.debug("Инициализация события нотификации: [{}].", inboxMessage.eventId());
+        NotificationPayload payload = objectMapper.readValue(inboxMessage.payload(), NotificationPayload.class);
+        InboxEvent inboxEvent = inboxService.create(inboxMessage);
         notificationService.create(inboxEvent, payload);
-        log.info("Событие нотификации [{}] инициализировано.", inbox.eventId());
+        log.info("Событие нотификации [{}] инициализировано.", inboxMessage.eventId());
     }
 
     /**

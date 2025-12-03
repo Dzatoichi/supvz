@@ -44,6 +44,7 @@ public class InboxMessageListener {
 
     /**
      * Получение события и его обработка.
+     *
      * @param message сообщение из очереди.
      */
     @RabbitListener(queues = "${app.messaging.inbox-queue}")
