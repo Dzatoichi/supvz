@@ -1,7 +1,7 @@
 package com.supvz.notifications_service.schedule;
 
-import com.supvz.notifications_service.service.InboxProcessor;
-import com.supvz.notifications_service.service.InboxService;
+import com.supvz.notifications_service.service.processor.InboxProcessor;
+import com.supvz.notifications_service.service.entity.InboxService;
 import com.supvz.notifications_service.model.entity.EventIdTypeProjection;
 import com.supvz.notifications_service.model.entity.InboxEventType;
 import lombok.extern.slf4j.Slf4j;

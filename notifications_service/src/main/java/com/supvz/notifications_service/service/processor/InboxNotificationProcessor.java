@@ -1,11 +1,10 @@
-package com.supvz.notifications_service.service.impl;
+package com.supvz.notifications_service.service.processor;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
 import com.supvz.notifications_service.core.exception.NotificationIsNotSentException;
-import com.supvz.notifications_service.service.InboxProcessor;
-import com.supvz.notifications_service.service.InboxService;
 import com.supvz.notifications_service.model.entity.InboxEventType;
-import com.supvz.notifications_service.service.NotificationService;
+import com.supvz.notifications_service.service.entity.InboxService;
+import com.supvz.notifications_service.service.entity.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,19 +31,19 @@ public class InboxNotificationProcessor implements InboxProcessor {
      */
     @Override
     public void process(UUID eventId) {
-        log.debug("Process notification event [{}].", eventId);
+        log.debug("Обработка inbox 'notification' события [{}].", eventId);
         try {
             notificationService.processByEventId(eventId);
             inboxService.setProcessed(eventId);
-            log.info("Notification event [{}] is processed.", eventId);
+            log.info("Inbox 'notification' событие [{}] успешно обработано.", eventId);
         } catch (NotificationConflictException ex) {
-            log.warn("Conflict: {}", ex.getMessage());
+            log.warn("Конфликт с нотификацией по событию [{}]: {}", eventId, ex.getMessage());
             inboxService.setProcessed(eventId);
         } catch (NotificationIsNotSentException ex) {
-            log.warn("Couldn't successfully process notification by event [{}].", eventId, ex);
+            log.warn("Не получилось обработать нотификацию по событию [{}].", eventId, ex);
             inboxService.setCleanAfter(eventId);
         } catch (RuntimeException ex) {
-            log.error("Unexpected runtime exception while processing notification by event [{}].", eventId, ex);
+            log.error("Неожиданное runtime исключение при обработке inbox 'notification' события [{}].", eventId, ex);
             inboxService.setCleanAfter(eventId);
         }
     }

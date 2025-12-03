@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.service;
+package com.supvz.notifications_service.service.initializer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.supvz.notifications_service.model.dto.InboxMessage;

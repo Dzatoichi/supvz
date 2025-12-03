@@ -1,11 +1,10 @@
-package com.supvz.notifications_service.service.impl;
+package com.supvz.notifications_service.service.entity;
 
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;
 import com.supvz.notifications_service.core.exception.InboxEventNotFoundException;
 import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.entity.EventIdTypeProjection;
 import com.supvz.notifications_service.model.entity.InboxEvent;
-import com.supvz.notifications_service.service.InboxService;
 import com.supvz.notifications_service.mapper.InboxMapper;
 import com.supvz.notifications_service.repo.InboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,23 +42,23 @@ public class InboxEntityService implements InboxService {
     @Override
     @Transactional
     public InboxEvent create(InboxMessage inboxMessage) {
-        log.debug("Create inbox event [{}].", inboxMessage.eventId());
+        log.debug("Создание сущности inbox события [{}].", inboxMessage.eventId());
         InboxEvent mapped = mapper.create(inboxMessage);
-        log.debug("mapped event type obj: {}. class: {}", mapped.getEventType(), mapped.getEventType().getClass());
         InboxEvent created = repo.saveIfNotExists(
                 mapped.getEventId(),
                 mapped.getEventType().name(),
                 mapped.getPayload());
         if (created == null) {
             throw new InboxEventConflictException
-                    ("Inbox event [%s] is already exists.".formatted(inboxMessage.eventId()));
+                    ("Inbox событие [%s] уже существует.".formatted(inboxMessage.eventId()));
         }
-        log.info("Inbox event [{}] is created.", inboxMessage.eventId());
+        log.info("Сущность inbox события [{}] создана.", inboxMessage.eventId());
         return created;
     }
 
     /**
      * Реализация получения и резервации батча событий в одной транзакции.
+     *
      * @param batchSize задает размер батча.
      * @return список зарезервированных необработанных событий.
      */
@@ -71,47 +70,50 @@ public class InboxEntityService implements InboxService {
 
     /**
      * Маркировка события как обработанного.
+     *
      * @param eventId идентификатор события.
      */
     @Override
     @Transactional
     public void setProcessed(UUID eventId) {
-        log.debug("Marking event [{}] as processed.", eventId);
+        log.debug("Отметка inbox события [{}] как обработанного.", eventId);
         InboxEvent event = repo.findById(eventId)
-                .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
+                .orElseThrow(() -> new InboxEventNotFoundException("Inbox событие [%s] не найдено."
                         .formatted(eventId)));
         if (event.getProcessed()) {
-            log.debug("Event [{}] already marked as processed.", event.getEventId());
+            log.debug("Inbox событие [{}] уже отмечено как обработанное.", event.getEventId());
             return;
         }
         mapper.markAsProcessed(event);
         repo.save(event);
-        log.debug("Event [{}] is marked as processed.", event.getEventId());
+        log.debug("Inbox событие [{}] успешно отмечено как обработанное..", event.getEventId());
     }
 
     /**
      * Установка таймера для удаления события в случае ошибки обработки.
+     *
      * @param eventId идентификатор события.
      */
     @Override
     @Transactional
     public void setCleanAfter(UUID eventId) {
-        log.debug("Marking event [{}] as failed.", eventId);
+        log.debug("Установка таймера удаления для inbox события [{}].", eventId);
         InboxEvent event = repo.findById(eventId)
-                .orElseThrow(() -> new InboxEventNotFoundException("Inbox event [%s] was not found."
+                .orElseThrow(() -> new InboxEventNotFoundException("Inbox событие [%s] не найдено."
                         .formatted(eventId)));
         if (event.getCleanAfter() != null) {
-            log.debug("Event [{}] already marked as failed.", event.getEventId());
+            log.debug("Inbox событие [{}] уже имеет установленный таймер для удаления.", event.getEventId());
             return;
         }
         LocalDateTime cleanAfter = LocalDateTime.now().plusMinutes(cleaningInMinutes);
         mapper.setCleanAfter(event, cleanAfter);
         repo.save(event);
-        log.debug("Event [{}] is marked as failed.", event.getEventId());
+        log.debug("Установка таймера удаления успешно выполнена для inbox события [{}].", event.getEventId());
     }
 
     /**
      * Удаление батча событий, у которых прошел таймер удаления.
+     *
      * @param batchSize размер батча для удаления событий.
      * @return List - список удаленных событий.
      */

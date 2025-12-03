@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.service.impl;
+package com.supvz.notifications_service.service.entity;
 
 import com.supvz.notifications_service.core.exception.NotificationConflictException;
 import com.supvz.notifications_service.core.exception.NotificationIsNotSentException;
@@ -12,8 +12,8 @@ import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.mapper.NotificationMapper;
 import com.supvz.notifications_service.model.entity.NotificationType;
 import com.supvz.notifications_service.repo.NotificationRepository;
+import com.supvz.notifications_service.service.sender.NotificationSender;
 import com.supvz.notifications_service.util.NotificationSpecifications;
-import com.supvz.notifications_service.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 public class NotificationEntityService implements NotificationService {
     private final NotificationMapper mapper;
     private final NotificationRepository repo;
-    private final Map<NotificationType, NotificationProcessor> processors;
+    private final Map<NotificationType, NotificationSender> senders;
     @Value("${app.notification.schedule.cleaning.ttl.email-days}")
     private Integer emailTtlDays;
     @Value("${app.notification.schedule.cleaning.ttl.viewed-days}")
@@ -52,37 +52,43 @@ public class NotificationEntityService implements NotificationService {
      * Конструктор.
      */
     @Autowired
-    public NotificationEntityService(NotificationMapper mapper, NotificationRepository repo, List<NotificationProcessor> processorList) {
+    public NotificationEntityService(
+            NotificationMapper mapper,
+            NotificationRepository repo,
+            List<NotificationSender> senderList
+    ) {
         this.mapper = mapper;
         this.repo = repo;
-        this.processors = processorList.stream()
-                .collect(Collectors.toMap(NotificationProcessor::getType, Function.identity()));
+        this.senders = senderList.stream()
+                .collect(Collectors.toMap(NotificationSender::getType, Function.identity()));
     }
 
     /**
      * Создание сущности нотификации на основе inbox события.
-     * @param event событие, на основе которого создается нотификация.
+     *
+     * @param event               событие, на основе которого создается нотификация.
      * @param notificationPayload полезная нагрузка нотификации из события.
      */
     @Override
     @Transactional
     public void create(InboxEvent event, NotificationPayload notificationPayload) {
-        log.debug("Create notification by type [{}], by event [{}].", event.getEventType(), event.getEventId());
+        log.debug("Создание сущности нотификации [{}] по событию [{}].", event.getEventType(), event.getEventId());
         Notification mapped = mapper.create(event, notificationPayload);
         Notification saved = repo.save(mapped);
-        log.info("Notification [{}] by event [{}] is created.", saved.getId(), event.getEventId());
+        log.info("Сущность нотификации [{}] по событию [{}] успешно создано.", saved.getId(), event.getEventId());
     }
 
     /**
      * Получение страницы нотификаций с фильтрацией.
-     * @param page номер страницы.
-     * @param size кол-во нотификаций на странице.
+     *
+     * @param page   номер страницы.
+     * @param size   кол-во нотификаций на странице.
      * @param filter класс, содержащий параметры фильтрации.
      * @return PageDto - страница с ДТО нотификациями.
      */
     @Override
     public PageDto<NotificationDto> findAll(int page, int size, NotificationFilter filter) {
-        log.debug("Read all. Page {}, size {}.", page, size);
+        log.debug("Получение страницы. Номер: [{}], размер: [{}].", page, size);
         Pageable pageable = PageRequest.of(page, size);
         Specification<Notification> spec = configureSpecification(filter);
         Page<Notification> notificationPage = repo.findAll(spec, pageable);
@@ -91,6 +97,7 @@ public class NotificationEntityService implements NotificationService {
 
     /**
      * Настройка спецификаций для создания динамического запроса с фильтрацией.
+     *
      * @param filter параметры фильтрации.
      * @return Specification - спецификация, настройка запроса.
      */
@@ -109,31 +116,33 @@ public class NotificationEntityService implements NotificationService {
 
     /**
      * Обработка нотификации по событию.
+     *
      * @param eventId идентификатор события.
      */
     @Override
     @Transactional
     public void processByEventId(UUID eventId) {
         Notification notification = repo.findByEventId(eventId)
-                .orElseThrow(() -> new NotificationNotFoundException("Notification by event [%s] was not found."
+                .orElseThrow(() -> new NotificationNotFoundException("Нотификация по событию [%s] не найдена."
                         .formatted(eventId)));
         NotificationDto dto = mapper.read(notification);
-        log.debug("Processing notification [{}].", notification.getId());
+        log.debug("Обработка нотификации [{}].", notification.getId());
         if (notification.getSent()) throw new NotificationConflictException(
-                "Notification [%s] already sent.".formatted(notification.getId()));
+                "Нотификация [%s] уже отправлена.".formatted(notification.getId()));
         try {
-            processors.get(dto.notificationType()).send(dto);
+            senders.get(dto.notificationType()).send(dto);
         } catch (RuntimeException ex) {
-            log.warn("Exception sending notification [{}].", notification.getId());
+            log.warn("Исключение в процессе обработки нотификации [{}].", notification.getId());
             throw new NotificationIsNotSentException(ex.getMessage());
         }
         mapper.markAsSent(notification);
         repo.save(notification);
-        log.debug("Notification [{}] is sent.", notification.getId());
+        log.debug("Нотификация [{}] успешно обработана.", notification.getId());
     }
 
     /**
      * Удаление старых нотификаций по настроенным параметрам TTL.
+     *
      * @return List - список удаленных нотификаций.
      */
     @Override

@@ -1,7 +1,6 @@
-package com.supvz.notifications_service.mapper.impl;
+package com.supvz.notifications_service.mapper;
 
 import com.supvz.notifications_service.model.dto.NotificationDto;
-import com.supvz.notifications_service.mapper.MailMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
  * </h3>
  */
 @Component
-public class MailMapperImpl implements MailMapper {
+public class SimpleMailMapper implements MailMapper {
     @Value("${spring.mail.username}")
     private String from;
 

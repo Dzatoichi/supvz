@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
-public class ControllerAdvice extends ResponseEntityExceptionHandler {
+public class NotificationsExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleOtherExceptions(RuntimeException ex) {
         log.error("Unexpected error: [{}].", ex.getMessage());

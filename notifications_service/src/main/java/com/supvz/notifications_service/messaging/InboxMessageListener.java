@@ -3,7 +3,7 @@ package com.supvz.notifications_service.messaging;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.core.exception.InboxEventConflictException;
 import com.supvz.notifications_service.core.exception.InboxEventNotSerializedException;
-import com.supvz.notifications_service.service.InboxInitializer;
+import com.supvz.notifications_service.service.initializer.InboxInitializer;
 import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.entity.InboxEventType;
 import lombok.extern.slf4j.Slf4j;
@@ -50,20 +50,20 @@ public class InboxMessageListener {
     public void listen(Message message) {
         try {
             InboxMessage inboxEvent = objectMapper.readValue(message.getBody(), InboxMessage.class);
-            log.debug("Listened inbox event [{}].", inboxEvent.eventId());
+            log.debug("Получено из очереди inbox событие [{}].", inboxEvent.eventId());
             try {
                 initializers.get(inboxEvent.eventType()).initialize(inboxEvent);
             } catch (NullPointerException ex) {
-                log.warn("Unhandled event type [{}], ignoring event [{}].",
+                log.warn("Необрабатываемый тип события [{}], игнорируется событие [{}].",
                         inboxEvent.eventType(), inboxEvent.eventId());
                 return;
             }
-            log.info("Event [{}] is successfully listened.", inboxEvent.eventId());
+            log.info("Событие [{}] успешно прослушано.", inboxEvent.eventId());
         } catch (IOException ex) {
-            log.error("Couldn't serialize inbox event.", ex);
+            log.error("Не удалось сериализовать событие.", ex);
             throw new InboxEventNotSerializedException(ex.getMessage());
         } catch (InboxEventConflictException ex) {
-            log.warn("Inbox event conflict: [{}]", ex.getMessage());
+            log.warn("Конфликт с inbox событием: [{}]", ex.getMessage());
         }
     }
 }

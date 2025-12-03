@@ -3,7 +3,7 @@ package com.supvz.notifications_service.controller;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.PageDto;
 import com.supvz.notifications_service.core.filter.NotificationFilter;
-import com.supvz.notifications_service.service.NotificationService;
+import com.supvz.notifications_service.service.entity.NotificationService;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

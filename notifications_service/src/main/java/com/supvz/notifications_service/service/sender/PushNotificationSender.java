@@ -1,8 +1,7 @@
-package com.supvz.notifications_service.service.impl;
+package com.supvz.notifications_service.service.sender;
 
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.entity.NotificationType;
-import com.supvz.notifications_service.service.NotificationProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -19,11 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-public class PushNotificationProcessor implements NotificationProcessor {
+public class PushNotificationSender implements NotificationSender {
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void send(NotificationDto notification) {
-        log.debug("Sending push notification [{}].", notification.id());
+        log.debug("Отправка 'push' нотификации [{}].", notification.id());
     }
 
     /**

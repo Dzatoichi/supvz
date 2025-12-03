@@ -1,6 +1,6 @@
 package com.supvz.notifications_service.schedule;
 
-import com.supvz.notifications_service.service.NotificationService;
+import com.supvz.notifications_service.service.entity.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

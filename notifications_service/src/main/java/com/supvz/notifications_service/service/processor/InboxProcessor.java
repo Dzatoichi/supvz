@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.service;
+package com.supvz.notifications_service.service.processor;
 
 import com.supvz.notifications_service.model.entity.InboxEventType;
 

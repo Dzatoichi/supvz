@@ -1,11 +1,10 @@
-package com.supvz.notifications_service.mapper.impl;
+package com.supvz.notifications_service.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.core.exception.InboxEventNotSerializedException;
 import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.entity.InboxEvent;
-import com.supvz.notifications_service.mapper.InboxMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class InboxMapperImpl implements InboxMapper {
+public class InboxEntityMapper implements InboxMapper {
     private final ObjectMapper objectMapper;
 
     /**

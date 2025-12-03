@@ -1,4 +1,4 @@
-package com.supvz.notifications_service.service;
+package com.supvz.notifications_service.service.entity;
 
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
