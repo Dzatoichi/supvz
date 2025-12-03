@@ -82,6 +82,8 @@ async def delete_position(
     position_service: PositionService = Depends(get_position_service),
     repo: PositionDAO = Depends(get_position_dao),
 ) -> None:
+    """Ручка для удаления должности"""
+
     return await position_service.delete_position(
         position_id=position_id,
         repo=repo,

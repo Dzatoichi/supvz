@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: cb90054f067a
+Revision ID: ba3fc2cd3cc2
 Revises: 
-Create Date: 2025-11-29 11:26:27.352912
+Create Date: 2025-12-03 13:18:26.053759
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'cb90054f067a'
+revision: str = 'ba3fc2cd3cc2'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,12 +37,12 @@ def upgrade() -> None:
     sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('subscription', sa.Enum('paid', 'test', 'expired', name='subscription', native_enum=False), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email')
     )
-    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_table('positions',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('title', sa.String(length=255), nullable=True),
+    sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('owner_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -106,7 +106,6 @@ def downgrade() -> None:
     op.drop_table('refresh_tokens')
     op.drop_index(op.f('ix_positions_owner_id'), table_name='positions')
     op.drop_table('positions')
-    op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     op.drop_table('permissions')
     # ### end Alembic commands ###

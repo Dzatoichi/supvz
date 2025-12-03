@@ -40,9 +40,6 @@ class AuthService:
         """
         Метод регистрации пользователя.
         """
-        user = await user_repo.get_user_by_email(email=data.email)
-        if user:
-            raise UserAlreadyExistsException("User already exists")
 
         hashed_password = hash_helper.hash(plain_str=data.password)
         payload = {
@@ -50,21 +47,29 @@ class AuthService:
             "hashed_password": hashed_password,
         }
 
-        permissions = await perm_repo.get_permissions_by_position(position_id=data.position_id)
+        perm_ids = await perm_repo.get_permissions_by_position(position_id=data.position_id)
 
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
+                existing_user = await user_repo.get_user_by_email(email=data.email)
+                if existing_user:
+                    raise UserAlreadyExistsException("User already exists")
+
                 user = await user_repo.create_user(
                     payload=payload,
                     session=session,
                 )
-                await user_repo.assign_permissions(
-                    user_id=user.id,
-                    permissions=permissions,
-                    session=session,
-                )
 
-        return UserReadSchema.model_validate(user)
+                if perm_ids:
+                    await user_repo.assign_permissions(
+                        user_id=user.id,
+                        permissions=perm_ids,
+                        session=session,
+                    )
+
+                result = UserReadSchema.model_validate(user)
+
+        return result
 
     async def login_user(
         self,

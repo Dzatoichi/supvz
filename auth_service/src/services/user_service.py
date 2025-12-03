@@ -1,6 +1,7 @@
 from fastapi_pagination import Page, Params, paginate
 
 from src.dao.usersDAO import UsersDAO
+from src.schemas.perm_positions_schemas import PermissionReadSchema
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
     SubscriptionEnum,
@@ -17,6 +18,9 @@ class UserService:
     """
     Класс сервиса для работы с пользователями.
     """
+
+    def __init__(self, db_helper):
+        self.db_helper = db_helper
 
     async def set_paid_owner(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
         """
@@ -110,3 +114,23 @@ class UserService:
         )
 
         await repo.delete(user.id)
+
+    async def set_user_permissions(
+        self,
+        user_id: int,
+        permission_ids: list[int],
+        user_repo: UsersDAO,
+    ) -> list[PermissionReadSchema]:
+        """Обновляет список прав пользователя"""
+
+        async with self.db_helper.async_session_maker() as session:
+            async with session.begin():
+                await user_repo.update_user_permissions(
+                    session=session,
+                    user_id=user_id,
+                    new_permission_ids=permission_ids,
+                )
+
+                permissions = await user_repo.get_user_permissions(session=session, user_id=user_id)
+
+                return [PermissionReadSchema.model_validate(p) for p in permissions]

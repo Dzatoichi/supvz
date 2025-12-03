@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, Params
 
 from src.dao.usersDAO import UsersDAO
+from src.schemas.perm_positions_schemas import PermissionReadSchema
 from src.schemas.users_schemas import (
+    UpdateUserPermissionsSchema,
     UserAuthRequestSchema,
     UserReadSchema,
     UserUpdateSchema,
@@ -82,6 +84,24 @@ async def update_user(
         repo=repo,
     )
     return result
+
+
+@users_router.put("/{user_id}/permissions", status_code=200)
+async def update_permissions(
+    user_id: int,
+    data: UpdateUserPermissionsSchema,
+    user_service: UserService = Depends(get_user_service),
+    user_repo: UsersDAO = Depends(get_users_dao),
+) -> list[PermissionReadSchema]:
+    """
+    Полностью перезаписывает права пользователя.
+    """
+
+    return await user_service.set_user_permissions(
+        user_id=user_id,
+        permission_ids=data.permission_ids,
+        user_repo=user_repo,
+    )
 
 
 @users_router.delete("/{user_id}", status_code=204)

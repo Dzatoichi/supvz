@@ -156,3 +156,7 @@ class UserForgotPasswordSchema(BaseModel):
         return v.lower()
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
+class UpdateUserPermissionsSchema(BaseModel):
+    permission_ids: list[int]

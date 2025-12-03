@@ -24,11 +24,9 @@ class Permissions(Base):
         "PositionPermissions",
         back_populates="permission",
         cascade="all, delete-orphan",
-        lazy="selectin",
     )
     user_links: Mapped[List["UserPermissions"]] = relationship(
         "UserPermissions",
         back_populates="permission",
         cascade="all, delete-orphan",
-        lazy="selectin",
     )

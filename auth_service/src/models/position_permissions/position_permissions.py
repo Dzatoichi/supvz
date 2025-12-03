@@ -22,10 +22,8 @@ class PositionPermissions(Base):
     position: Mapped["Positions"] = relationship(
         "Positions",
         back_populates="permission_links",
-        lazy="selectin",
     )
     permission: Mapped["Permissions"] = relationship(
         "Permissions",
         back_populates="position_links",
-        lazy="selectin",
     )

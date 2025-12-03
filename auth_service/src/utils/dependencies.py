@@ -58,7 +58,7 @@ def get_auth_service() -> "AuthService":  # type: ignore
 
 def get_user_service() -> "UserService":
     """Создает сервис для работы с пользователями."""
-    return UserService()
+    return UserService(db_helper=db_helper)
 
 
 def get_jwt_tokens_service(

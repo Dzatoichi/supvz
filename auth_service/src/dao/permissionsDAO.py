@@ -17,37 +17,15 @@ class PermissionsDAO(BaseDAO[Permissions]):
         super().__init__(model=Permissions)
 
     @BaseDAO.with_exception
-    async def get_permissions_by_position(self, position_id: int) -> list[Permissions]:
+    async def get_permissions_by_position(self, position_id: int) -> list[int]:
         """
-        Получение всех permissions, связанных с конкретной должностью (position_id).
+        Возвращает список ID прав (permission_id) для указанной должности.
         """
         async with self._get_session() as session:
-            stmt = (
-                select(self.model)
-                .join(
-                    PositionPermissions,
-                    self.model.id == PositionPermissions.permission_id,
-                )
-                .where(PositionPermissions.position_id == position_id)
-            )
-            res = await session.execute(stmt)
-            return res.scalars().all()
+            stmt = select(PositionPermissions.permission_id).where(PositionPermissions.position_id == position_id)
 
-    @BaseDAO.with_exception
-    async def get_permissions_filtered(
-        self,
-        position_id: int | None = None,
-        user_id: int | None = None,
-    ) -> list[PositionPermissions]:
-        query = select(PositionPermissions).options(selectinload(PositionPermissions.permission))
-
-        if position_id is not None:
-            query = query.where(PositionPermissions.position_id == position_id)
-        if user_id is not None:
-            query = query.where(PositionPermissions.user_id == user_id)  # если есть связь user_id
-
-        result = await self.session.execute(query)
-        return result.scalars().all()
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
 
     @BaseDAO.with_exception
     async def add_permissions_to_position(

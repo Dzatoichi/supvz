@@ -27,10 +27,8 @@ class UserPermissions(Base):
     user: Mapped["Users"] = relationship(
         "Users",
         back_populates="permission_links",
-        lazy="selectin",
     )
     permission: Mapped["Permissions"] = relationship(
         "Permissions",
         back_populates="user_links",
-        lazy="selectin",
     )

@@ -2,7 +2,6 @@ from typing import Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from src.dao.baseDAO import BaseDAO, T
 from src.models import Positions
@@ -20,13 +19,6 @@ class PositionDAO(BaseDAO[Positions]):
     async def get_positions(self, owner_id: int):
         async with self._get_session() as session:
             stmt = select(self.model).filter_by(owner_id=owner_id)
-            result = await session.execute(stmt)
-            return result.scalars().all()
-
-    @BaseDAO.with_exception
-    async def get_all(self):
-        async with self._get_session() as session:
-            stmt = select(self.model).options(selectinload(self.model.permissions))
             result = await session.execute(stmt)
             return result.scalars().all()
 

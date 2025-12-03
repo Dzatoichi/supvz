@@ -6,10 +6,10 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
+from src.models.user_permissions.user_permissions import UserPermissions
 from src.schemas.users_schemas import SubscriptionEnum
 
 if TYPE_CHECKING:
-    from src.models.permissions.permissions import Permissions
     from src.models.tokens.refresh_tokens import RefreshTokens
 
 
@@ -25,7 +25,6 @@ class Users(Base):
         String(255),
         unique=True,
         nullable=False,
-        index=True,
     )
 
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -62,13 +61,7 @@ class Users(Base):
         "UserPermissions",
         back_populates="user",
         cascade="all, delete-orphan",
-        lazy="selectin",
     )
-
-    @property
-    def permissions(self) -> List["Permissions"]:
-        """Получить только личные permissions пользователя"""
-        return [link.permission for link in self.permission_links]
 
     def __repr__(self) -> str:
         """

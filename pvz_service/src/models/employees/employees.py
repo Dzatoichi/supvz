@@ -28,17 +28,17 @@ class Employees(Base):
 
     __tablename__ = "employees"
 
-    user_id: Mapped[int] = mapped_column(index=True, nullable=False, primary_key=True)
+    user_id: Mapped[int] = mapped_column(primary_key=True)
 
     name: Mapped[str] = mapped_column(nullable=False)
     phone_number: Mapped[str] = mapped_column(
         String(32),
         unique=True,
         nullable=False,
-        index=True,
     )
 
     owner_id: Mapped[int] = mapped_column(index=True, nullable=False)
+    position_id: Mapped[int] = mapped_column(nullable=False)
 
     pvzs: Mapped[List["PVZs"]] = relationship(
         "PVZs",

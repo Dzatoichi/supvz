@@ -11,6 +11,7 @@ class EmployeeCreateRequestSchema(BaseModel):
 
     user_id: int
     owner_id: int
+    position_id: int
 
     name: str
     phone_number: str
@@ -33,6 +34,7 @@ class EmployeeResponseSchema(BaseModel):
 
     user_id: int
     owner_id: int
+    position_id: int
 
     name: str
     phone_number: str
