@@ -89,10 +89,7 @@ class UserUpdateSchema(UserBaseSchema):
     Схема изменения пользователя.
     """
 
-    user_id: int
-    email: EmailStr
-
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+    pass
 
 
 class UserUpdateMeSchema(UserBaseSchema):

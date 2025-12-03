@@ -20,7 +20,7 @@ class TokenHandler:
         self.token_type = token_type
         self.algorithm, self.key, self.expire_time = settings.get_jwt_params(token_type=token_type).values()
 
-    def sign_jwt(self, user_id: int, **additional_payload: Any) -> tuple[Any, datetime | int | None]:
+    def sign_jwt(self, user_id: int) -> tuple[Any, datetime | int | None]:
         """
         Метод шифрования jwt токена.
         """

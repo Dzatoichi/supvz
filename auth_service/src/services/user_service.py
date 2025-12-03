@@ -68,12 +68,13 @@ class UserService:
 
     async def update_user(
         self,
+        user_id: int,
         user: UserUpdateSchema,
         repo: UsersDAO,
     ) -> UserReadSchema:
         """Обновляет данные пользователя"""
 
-        update_user = await repo.get_by_id(user.id)
+        update_user = await repo.get_by_id(id=user_id)
         if not update_user:
             raise UserNotFoundException("User not found")
 
@@ -84,7 +85,7 @@ class UserService:
 
         logger.info(
             "Информация о пользователе id={user_id} успешно обновлена!",
-            user_id=user.id,
+            user_id=user_id,
         )
         return updated_user
 
@@ -112,20 +113,20 @@ class UserService:
         Получает данные о пользователе по access token
         """
 
-        token_payload = token_service.validate_token(token=token.access_token, token_type=TokenTypesEnum.access)
+        token_payload = await token_service.validate_token(token=token.access_token, token_type=TokenTypesEnum.access)
         user_id = token_payload.get("user_id")
-        user = repo.get_by_id(user_id)
+        user = await repo.get_by_id(user_id)
         return UserReadSchema.model_validate(user)
 
     async def update_me(
         self,
         token: UserAuthRequestSchema,
         token_service: JWTTokensService,
-        user_email: UserUpdateMeSchema,
+        user_data: UserUpdateMeSchema,
         repo: UsersDAO,
     ) -> UserReadSchema:
         """
-        Обновление собственных данных пользователя
+        Обновление собственных данных пользователя с помощью access token
         """
 
         token_payload = await token_service.validate_token(
@@ -138,7 +139,8 @@ class UserService:
             raise UserNotFoundException("User not found")
 
         updated_user = await repo.update(
-            email=user_email.email,
+            id=user.id,
+            email=user_data.email,
         )
 
         logger.info(
