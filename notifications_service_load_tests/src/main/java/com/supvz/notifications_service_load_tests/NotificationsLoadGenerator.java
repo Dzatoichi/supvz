@@ -29,9 +29,9 @@ public class NotificationsLoadGenerator {
 
     public static void main(String[] args) {
         parseEnv();
-        int totalMessages = Integer.parseInt(System.getProperty("count", "1000"));
+        int totalMessages = Integer.parseInt(System.getProperty("count", "100"));
         int threads = Integer.parseInt(System.getProperty("threads", "1"));
-        int rate = Integer.parseInt(System.getProperty("rate", "1000"));
+        int rate = Integer.parseInt(System.getProperty("rate", "100"));
         int delayPerMessageMs = Math.max(1, 1000 / (rate / threads));
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")

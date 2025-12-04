@@ -14,7 +14,7 @@ import java.util.List;
 public class NotificationScheduler {
     private final NotificationService service;
 
-    @Scheduled(fixedDelayString = "${app.notification.schedule.cleaning.delay-day}")
+    @Scheduled(fixedDelayString = "${app.notification.schedule.cleaning.delay-ms}")
     public void cleanOldNotifications() {
         log.debug("SCHEDULE [CLEAN] old notifications.");
         List<Integer> deleted = service.deleteOldNotifications();
