@@ -12,13 +12,13 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class NotificationScheduler {
-    private final NotificationService service;
+    private final NotificationService notificationService;
 
     @Scheduled(fixedDelayString = "${app.notification.schedule.cleaning.delay-ms}")
-    public void cleanOldNotifications() {
-        log.debug("SCHEDULE [CLEAN] old notifications.");
-        List<Integer> deleted = service.deleteOldNotifications();
-        if (!deleted.isEmpty())
-            log.debug("Count of deleted old notifications: [{}].", deleted.size());
+    public void pollingForCleaningOldNotifications() {
+        log.debug("По расписанию метод [CLEAN] старых нотификаций.");
+        List<Integer> deletedBatch = notificationService.deleteOldNotifications();
+        if (!deletedBatch.isEmpty())
+            log.debug("Старые нотификации успешно удалены. Размер удаленного батча: [{}].", deletedBatch.size());
     }
 }

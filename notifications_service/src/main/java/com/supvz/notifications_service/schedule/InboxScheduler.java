@@ -40,11 +40,10 @@ public class InboxScheduler {
 
     @Scheduled(fixedDelayString = "${app.inbox.schedule.processing.delay-ms}")
     public void pollForProcessing() {
-        log.debug("SCHEDULE [PROCESS] inbox events.");
+        log.debug("По расписанию метод [PROCESS] inbox событий.");
         List<EventIdTypeProjection> reservedBatch = inboxService.readAndReserveUnprocessedBatch(processingBatchSize);
-        if (!reservedBatch.isEmpty())
-            log.debug("Found and reserved batch of events. Size [{}]", reservedBatch.size());
         if (!reservedBatch.isEmpty()) {
+            log.debug("Найдены и зарезервированы события. Размер резервированного батча: [{}]", reservedBatch.size());
             for (EventIdTypeProjection event : reservedBatch) {
                 eventExecutor.execute(() ->
                         processors.get(event.getEventType()).process(event.getEventId()));
@@ -54,9 +53,9 @@ public class InboxScheduler {
 
     @Scheduled(fixedDelayString = "${app.inbox.schedule.cleaning.delay-ms}")
     public void pollForCleaning() {
-        log.debug("SCHEDULE [CLEAN] inbox events.");
+        log.debug("По расписанию метод [CLEAN] inbox событий.");
         List<UUID> batch = inboxService.deleteFailedBatch(cleaningBatchSize);
         if (!batch.isEmpty())
-            log.debug("Failed inbox events are deleted, size: [{}].", batch.size());
+            log.debug("Отмеченные для очистки inbox события успешно удалены. Размер удаленного батча: [{}].", batch.size());
     }
 }
