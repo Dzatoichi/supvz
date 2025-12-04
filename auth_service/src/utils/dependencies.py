@@ -69,14 +69,23 @@ def get_jwt_tokens_service(
     return JWTTokensService(repo=repo)
 
 
-def get_position_service() -> "PositionService":
+def get_position_service(
+    position_dao: PositionDAO = Depends(get_position_dao),
+    permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
+) -> "PositionService":
     """Создает сервис для работы с должностями."""
-    return PositionService(db_helper=db_helper)
+    return PositionService(
+        db_helper=db_helper,
+        position_dao=position_dao,
+        permissions_dao=permissions_dao,
+    )
 
 
-def get_permissions_service() -> "PermissionService":
+def get_permissions_service(
+    permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
+) -> "PermissionService":
     """Создает сервис для работы с правами доступа"""
-    return PermissionService()
+    return PermissionService(permissions_dao=permissions_dao)
 
 
 def get_access_token_from_cookie(request: Request) -> UserAuthRequestSchema:

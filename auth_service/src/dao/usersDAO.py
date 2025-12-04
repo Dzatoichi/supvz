@@ -1,3 +1,5 @@
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 from pydantic import EmailStr
 from sqlalchemy import delete, insert, select
 from sqlalchemy.exc import NoResultFound
@@ -105,3 +107,18 @@ class UsersDAO(BaseDAO[Users]):
             await session.execute(
                 insert(UserPermissions).values([{"user_id": user_id, "permission_id": p_id} for p_id in to_add])
             )
+
+    @BaseDAO.with_exception
+    async def get_users(
+        self,
+        params: Params,
+    ) -> Page[Users]:
+        """
+        Получает список пользователей с пагинацией.
+        """
+        async with self._get_session() as session:
+            stmt = select(self.model)
+
+            stmt = stmt.order_by(self.model.id.desc())
+
+            return await paginate(session, stmt, params)

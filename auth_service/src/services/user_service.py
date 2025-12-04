@@ -1,6 +1,7 @@
-from fastapi_pagination import Page, Params, paginate
+from fastapi_pagination import Page, Params
 
 from src.dao.usersDAO import UsersDAO
+from src.models.users.users import Users
 from src.schemas.perm_positions_schemas import PermissionReadSchema
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
@@ -57,16 +58,15 @@ class UserService:
 
         return UserReadSchema.model_validate(user)
 
-    async def get_users(self, repo: UsersDAO, params: Params) -> Page[UserReadSchema]:
+    async def get_users(self, repo: UsersDAO, params: Params) -> Page[Users]:
         """Получает всех юзеров"""
 
-        users = await repo.get_all()
+        users = await repo.get_users(params=params)
 
-        users_page = paginate(users, params)
+        if users.total == 0:
+            raise UserNotFoundException("Users not found")
 
-        users_page.items = [UserReadSchema.model_validate(user) for user in users_page.items]
-
-        return users_page
+        return users
 
     async def update_user(
         self,

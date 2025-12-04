@@ -1,6 +1,7 @@
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from src.dao.baseDAO import BaseDAO
 from src.models.permissions.permissions import Permissions
@@ -17,7 +18,22 @@ class PermissionsDAO(BaseDAO[Permissions]):
         super().__init__(model=Permissions)
 
     @BaseDAO.with_exception
-    async def get_permissions_by_position(self, position_id: int) -> list[int]:
+    async def get_permissions(
+        self,
+        params: Params,
+    ) -> Page[Permissions]:
+        """
+        Получает список прав с пагинацией.
+        """
+        async with self._get_session() as session:
+            stmt = select(self.model)
+
+            stmt = stmt.order_by(self.model.id.desc())
+
+            return await paginate(session, stmt, params)
+
+    @BaseDAO.with_exception
+    async def get_permissions_ids_by_position(self, position_id: int) -> list[int]:
         """
         Возвращает список ID прав (permission_id) для указанной должности.
         """
@@ -26,6 +42,16 @@ class PermissionsDAO(BaseDAO[Permissions]):
 
             result = await session.execute(stmt)
             return list(result.scalars().all())
+
+    @BaseDAO.with_exception
+    async def get_permissions_by_position(self, position_id: int, params: Params) -> Page[Permissions]:
+        async with self._get_session() as session:
+            stmt = (
+                select(self.model)
+                .join(PositionPermissions, Permissions.id == PositionPermissions.permission_id)
+                .where(PositionPermissions.position_id == position_id)
+            )
+            return await paginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def add_permissions_to_position(
@@ -46,19 +72,6 @@ class PermissionsDAO(BaseDAO[Permissions]):
         )
 
         await session.execute(stmt)
-
-    @BaseDAO.with_exception
-    async def get_by_ids(
-        self,
-        permission_ids: list[int],
-        session: AsyncSession,
-    ) -> list[Permissions]:
-        if not permission_ids:
-            return []
-
-        query = select(self.model).where(self.model.id.in_(permission_ids))
-        result = await session.execute(query)
-        return result.scalars().all()
 
     @BaseDAO.with_exception
     async def set_permissions_for_position(
@@ -98,14 +111,9 @@ class PermissionsDAO(BaseDAO[Permissions]):
             )
             await session.execute(stmt)
 
-    async def get_permissions_by_user(self, user_id: int):
+    async def get_permissions_by_user(self, user_id: int, params: Params) -> Page[Permissions]:
         """Метод получения прав пользователя"""
 
         async with self._get_session() as session:
-            result = await session.execute(
-                select(UserPermissions)
-                .options(selectinload(UserPermissions.permission))
-                .where(UserPermissions.user_id == user_id)
-            )
-            user_perms = result.scalars().all()
-            return [up.permission for up in user_perms]
+            stmt = select(Permissions).join(UserPermissions).where(UserPermissions.user_id == user_id)
+            return await paginate(session, stmt, params)

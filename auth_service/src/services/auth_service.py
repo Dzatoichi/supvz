@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import Response
+from sqlalchemy.exc import IntegrityError
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.permissions import PermissionEnum, has_permission
@@ -47,7 +48,7 @@ class AuthService:
             "hashed_password": hashed_password,
         }
 
-        perm_ids = await perm_repo.get_permissions_by_position(position_id=data.position_id)
+        perm_ids = await perm_repo.get_permissions_ids_by_position(position_id=data.position_id)
 
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
@@ -55,10 +56,14 @@ class AuthService:
                 if existing_user:
                     raise UserAlreadyExistsException("User already exists")
 
-                user = await user_repo.create_user(
-                    payload=payload,
-                    session=session,
-                )
+                try:
+                    user = await user_repo.create_user(
+                        payload=payload,
+                        session=session,
+                    )
+
+                except IntegrityError as e:
+                    raise UserAlreadyExistsException("User already exists") from e
 
                 if perm_ids:
                     await user_repo.assign_permissions(

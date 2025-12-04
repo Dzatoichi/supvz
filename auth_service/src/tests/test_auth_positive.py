@@ -9,6 +9,7 @@ async def test_register_user(client):
             "email": "test@example.com",
             "password": "12345678",
             "confirm_password": "12345678",
+            "position_id": 0,
         },
     )
     assert response.status_code == 201
