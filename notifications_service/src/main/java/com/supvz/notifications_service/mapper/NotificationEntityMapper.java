@@ -1,13 +1,11 @@
 package com.supvz.notifications_service.mapper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import com.supvz.notifications_service.model.dto.PageDto;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
 import com.supvz.notifications_service.model.entity.InboxEvent;
 import com.supvz.notifications_service.model.entity.Notification;
 import com.supvz.notifications_service.model.entity.NotificationType;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -22,9 +20,7 @@ import java.util.List;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class NotificationEntityMapper implements NotificationMapper {
-    private final ObjectMapper objectMapper;
 
     /**
      * Маппинг полезной нагрузки в сущность.

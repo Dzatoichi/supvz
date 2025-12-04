@@ -97,18 +97,18 @@ public class InboxEntityService implements InboxService {
     @Override
     @Transactional
     public void setCleanAfter(UUID eventId) {
-        log.debug("Установка таймера удаления для inbox события [{}].", eventId);
+        log.debug("Отметка inbox события [{}] для очистки.", eventId);
         InboxEvent event = repo.findById(eventId)
                 .orElseThrow(() -> new InboxEventNotFoundException("Inbox событие [%s] не найдено."
                         .formatted(eventId)));
         if (event.getCleanAfter() != null) {
-            log.debug("Inbox событие [{}] уже имеет установленный таймер для удаления.", event.getEventId());
+            log.debug("Inbox событие [{}] уже отмечено для очистки.", eventId);
             return;
         }
         LocalDateTime cleanAfter = LocalDateTime.now().plusMinutes(cleaningInMinutes);
         mapper.setCleanAfter(event, cleanAfter);
         repo.save(event);
-        log.debug("Установка таймера удаления успешно выполнена для inbox события [{}].", event.getEventId());
+        log.debug("Отметка inbox события [{}] выполнена.", event.getEventId());
     }
 
     /**

@@ -1,11 +1,7 @@
 package com.supvz.notifications_service.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.supvz.notifications_service.core.exception.InboxEventNotSerializedException;
 import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.entity.InboxEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -18,27 +14,20 @@ import java.time.LocalDateTime;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class InboxEntityMapper implements InboxMapper {
-    private final ObjectMapper objectMapper;
 
     /**
      * Маппинг сообщения в сущность.
-     * @param event - сообщение, полученное из очереди.
+     * @param message - сообщение, полученное из очереди.
      * @return InboxEvent - сущность для последующего сохранения в БД.
      */
     @Override
-    public InboxEvent create(InboxMessage event) {
-        try {
+    public InboxEvent create(InboxMessage message) {
             return InboxEvent.builder()
-                    .eventId(event.eventId())
-                    .eventType(event.eventType())
-                    .payload(objectMapper.writeValueAsString(event.payload()))
+                    .eventId(message.eventId())
+                    .eventType(message.eventType())
+                    .payload(message.payload())
                     .build();
-        } catch (JsonProcessingException ex) {
-            log.error("Couldn't serialize payload of event [{}].", event.eventId());
-            throw new InboxEventNotSerializedException(ex.getMessage());
-        }
     }
 
     /**

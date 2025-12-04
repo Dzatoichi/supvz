@@ -42,7 +42,6 @@ class InboxMessageListenerTests {
         lenient().when(initializer.getType()).thenReturn(eventType);
 
         List<InboxInitializer> initializerList = List.of(initializer);
-
         target = new InboxMessageListener(objectMapper, initializerList);
     }
 

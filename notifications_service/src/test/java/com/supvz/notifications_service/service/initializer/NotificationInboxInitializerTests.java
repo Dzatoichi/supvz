@@ -1,5 +1,6 @@
 package com.supvz.notifications_service.service.initializer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.dto.NotificationPayload;
@@ -49,4 +50,22 @@ class NotificationInboxInitializerTests {
         verify(notificationService, times(1)).create(eventMock, payloadMock);
     }
 
+    @Test
+    @SneakyThrows
+    void initializeFailed__NotSerialized() {
+        InboxMessage messageMock = new InboxMessage(null, InboxEventType.notification, "dummy");
+
+        when(objectMapper.readValue("dummy", NotificationPayload.class)).thenThrow(JsonProcessingException.class);
+
+        assertThrows(JsonProcessingException.class, () -> target.initialize(messageMock));
+
+        verify(objectMapper, times(1)).readValue("dummy", NotificationPayload.class);
+        verify(inboxService, never()).create(messageMock);
+        verify(notificationService, never()).create(eventMock, payloadMock);
+    }
+
+    @Test
+    void testGetType() {
+        assertEquals(InboxEventType.notification, target.getType());
+    }
 }
