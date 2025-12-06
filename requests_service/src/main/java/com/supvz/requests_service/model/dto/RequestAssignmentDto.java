@@ -1,22 +1,23 @@
 package com.supvz.requests_service.model.dto;
 
-import com.supvz.requests_service.core.enums.Status;
+import com.supvz.requests_service.core.enums.AssignmentAction;
+import com.supvz.requests_service.core.enums.RequestStatus;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Builder
-/*
-ДТО ответа мастера для запроса.
+/**
+ * ДТО-рекорд ответа мастера на запрос.
  */
 public record RequestAssignmentDto(
         long id,
         long requestId,
-        UUID handymanId,
-        Status status,
-        LocalDateTime assignedAt,
-        LocalDateTime completedAt,
-        String description
+        long handymanId,
+        AssignmentAction action,
+        LocalDateTime processedAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String comment
 ) {
 }

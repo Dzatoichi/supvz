@@ -4,11 +4,11 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-/*
-Схема (Payload) для создания ответа на запрос.
+/**
+* Схема для создания ответа на запрос.
  */
 public record RequestAssignmentPayload(
-        @NotNull UUID handymanId,
-        String description
+        @NotNull long handymanId,
+        String comment
         ) {
 }

@@ -25,46 +25,38 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = RequestsController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class RequestsControllerTest {
+class RequestsControllerTests {
     @Autowired
     private MockMvc mvc;
-
     @Autowired
     private ObjectMapper objectMapper;
-
     @MockitoBean
     private RequestService service;
-
     private static final String URI = "/api/v1/requests";
 
     @Test
     void create__ValidPayload__ReturnsOk() throws Exception {
-        UUID appellantId = UUID.randomUUID();
-        RequestPayload payload = new RequestPayload(1, appellantId, null);
-        RequestDto body = RequestDto.builder()
-                .pvzId(1)
-                .appellantId(appellantId)
-                .description(null)
-                .build();
+        RequestPayload payloadMock = mock(RequestPayload.class);
+        RequestDto dtoMock = mock(RequestDto.class);
 
-        when(service.create(payload)).thenReturn(body);
+        when(service.create(payloadMock)).thenReturn(dtoMock);
 
         mvc.perform(post(URI)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(payload)))
+                        .content(objectMapper.writeValueAsString(payloadMock)))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(body)));
+                .andExpect(content().json(objectMapper.writeValueAsString(dtoMock)));
 
-        verify(service, times(1)).create(payload);
+        verify(service, times(1)).create(payloadMock);
     }
 
     @Test
     void create__InvalidPayload__ReturnsBadRequest() throws Exception {
-        RequestPayload payload = new RequestPayload(1, null, null);
+        RequestPayload payloadMock = mock(RequestPayload.class);
 
         mvc.perform(post(URI)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(payload)))
+                        .content(objectMapper.writeValueAsString(payloadMock)))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(service);

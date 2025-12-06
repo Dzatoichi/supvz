@@ -1,19 +1,17 @@
 package com.supvz.requests_service.model.dto;
 
-import lombok.Builder;
-
 import java.util.List;
-import java.util.UUID;
 
-@Builder
-/*
-ДТО запроса мастеру.
+
+/**
+ * ДТО-рекорд заявки для перемещения между слоями, приложениями.
  */
 public record RequestDto(
         long id,
         int pvzId,
-        UUID appellantId,
+        long appellantId,
         String description,
         List<RequestAssignmentDto> assignments
+//        todo: ошибка передавать просто молча все ответы на эту заявку
 ) {
 }

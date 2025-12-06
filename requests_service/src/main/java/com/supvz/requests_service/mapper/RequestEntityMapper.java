@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class RequestMapperImpl implements RequestMapper {
+public class RequestEntityMapper implements RequestMapper {
     private final RequestAssignmentMapper assignmentMapper;
 
 
@@ -40,14 +40,13 @@ public class RequestMapperImpl implements RequestMapper {
     @Override
     public RequestDto read(Request request) {
         List<RequestAssignment> assignments = request.getAssignments();
-
-        return RequestDto.builder()
-                .id(request.getId())
-                .appellantId(request.getAppellantId())
-                .pvzId(request.getPvzId())
-                .description(request.getDescription())
-                .assignments(assignments == null ? List.of() : assignments.stream().map(assignmentMapper::read).toList())
-                .build();
+        return new RequestDto(
+                request.getId(),
+                request.getPvzId(),
+                request.getAppellantId(),
+                request.getDescription(),
+                assignments == null ? List.of() : assignments.stream().map(assignmentMapper::read).toList()
+                );
     }
 
     /**

@@ -1,9 +1,7 @@
 package com.supvz.requests_service.core.filter;
 
-import com.supvz.requests_service.core.enums.Status;
+import com.supvz.requests_service.core.enums.RequestStatus;
 import lombok.Builder;
-
-import java.util.UUID;
 
 
 /**
@@ -13,7 +11,7 @@ import java.util.UUID;
 public record RequestFilter(
         Integer pvzId,
         Long appellantId,
-        Status status
+        RequestStatus requestStatus
 ) {
 }
 // TODO: подумать еще о параметрах фильтрации.

@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS requests
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
--- TODO: статус заявки.
 
 --changeset re1kur:2
 CREATE TABLE IF NOT EXISTS request_assignments
@@ -19,13 +18,15 @@ CREATE TABLE IF NOT EXISTS request_assignments
     id BIGSERIAL PRIMARY KEY,
     request_id BIGINT NOT NULL,
     handyman_id BIGINT NOT NULL,
-    type VARCHAR(16) NOT NULL DEFAULT 'assign' CHECK (status IN ('cancel', 'assign', 'reject', 'complete')),
+    action VARCHAR(16) NOT NULL DEFAULT 'assign' CHECK (type IN ('cancel', 'assign', 'reject', 'complete')),
     processed_at TIMESTAMP,
     comment TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP NOT NULL DEFAULT now()
-    FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
-    UNIQUE (request_id, handyman_id)
+    FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE
 );
 
--- TODO: индексы
+--changeset re1kur:3
+CREATE INDEX IF NOT EXISTS idx_assignments_request_id ON request_assignments (request_id);
+CREATE INDEX IF NOT EXISTS idx_requests_pvz_id_status ON requests (pvz_id, status);
+CREATE INDEX IF NOT EXISTS idx_assignments_handyman_id ON request_assignments (handyman_id);

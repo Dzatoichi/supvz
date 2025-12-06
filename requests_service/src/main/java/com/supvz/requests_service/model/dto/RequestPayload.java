@@ -4,12 +4,12 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-/*
-Схема (Payload) для создания запроса мастеру.
+/**
+ * Схема для создания заявки.
  */
-public record RequestPayload (
-        @NotNull Integer pvzId,
-        @NotNull UUID appellantId,
+public record RequestPayload(
+        @NotNull int pvzId,
+        @NotNull long appellantId,
         String description
 ) {
 }

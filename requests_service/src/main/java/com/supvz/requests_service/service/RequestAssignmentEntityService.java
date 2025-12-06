@@ -1,6 +1,8 @@
 package com.supvz.requests_service.service;
 
+import com.supvz.requests_service.core.enums.AssignmentAction;
 import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
+import com.supvz.requests_service.mapper.ActionMapper;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 /**
  * Реализация сервиса для обработки ответов на заявки.
  */
@@ -27,6 +31,7 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
     private final RequestAssignmentMapper mapper;
     private final RequestAssignmentRepository repo;
     private final RequestService requestService;
+    private final Map<AssignmentAction, ActionMapper> mappers;
 
 
     /**
@@ -58,7 +63,7 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
 //    todo: фильтрация
 
     /**
-     * Метод для чтения определенного ответа на заявку по ID.
+     * Метод для чтения ответа на заявку по идентификатору.
      */
     @Override
     public RequestAssignmentDto read(long id) {
@@ -71,14 +76,17 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
 
 
     /**
-     * Метод для обновления определенного ответа на заявку по ID с полезной нагрузкой.
+     * Метод для обновления ответа на заявку по идентификатору. В качестве обновляемых данных - полезная нагрузка.
      */
     @Override
+    @Transactional
     public RequestAssignmentDto update(long id, RequestAssignmentUpdatePayload payload) {
         log.debug("Обновление ответа [{}] на заявку.", id);
         RequestAssignment found = repo.findById(id)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
                         ("Ответ [%s] на заявку не найден.".formatted(id)));
+        if (payload.action() != null)
+            found = mappers.get(payload.action()).map(found);
         RequestAssignment mapped = mapper.update(found, payload);
         RequestAssignment saved = repo.save(mapped);
         log.info("Ответ [{}] на заявку успешно обновлен.", saved.getId());
@@ -87,7 +95,7 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
 
 
     /**
-     * Метод для удаления определенного ответа на заявку по ID.
+     * Метод для удаления ответа на заявку по идентификатору.
      */
     @Override
     @Transactional
@@ -102,4 +110,3 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
 //    todo: какой смысл вообще делать две строки, если можно удалить за одно обращение к бд?
 //     без поиска и прочей чепухи? взял и удалил. если не удалил, значит, не нашел, тогда выкинул ошибку
 }
-// TODO: логи исправить и перевести

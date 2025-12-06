@@ -1,11 +1,12 @@
 package com.supvz.requests_service.model.entity;
 
+import com.supvz.requests_service.core.enums.RequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "requests")
@@ -21,9 +22,28 @@ public class Request {
 
     private int pvzId;
 
-    private Long appellantId;
+    private long appellantId;
 
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    private RequestStatus status;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    private void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
+        if (status == null) status = RequestStatus.assigned;
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RequestAssignment> assignments = new ArrayList<>();
@@ -31,13 +51,10 @@ public class Request {
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
-
         if (!(obj instanceof Request request)) return false;
-
         if (id == null || request.id == null) {
             return false;
         }
-
         return id.equals(request.id);
     }
 
