@@ -8,14 +8,22 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Планировщик уведомлений.
+ * Удаляет уведомления, срок хранения которых истёк
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class NotificationScheduler {
     private final NotificationService notificationService;
 
+    /**
+     * Запускает удаление устаревших уведомлений по расписанию.
+     * Использует настройки TTL из конфигурации приложения.
+     */
     @Scheduled(fixedDelayString = "${app.notification.schedule.cleaning.delay-ms}")
-    public void pollingForCleaningOldNotifications() {
+    public void cleanOldNotifications() {
         log.debug("По расписанию метод [CLEAN] старых нотификаций.");
         List<Integer> deletedBatch = notificationService.deleteOldNotifications();
         if (!deletedBatch.isEmpty())

@@ -46,7 +46,7 @@ class InboxSchedulerTests {
     }
 
     @Test
-    void pollForProcessingSuccess() {
+    void processSuccess() {
         EventIdTypeProjection projectionMock = mock(EventIdTypeProjection.class);
         UUID eventIdMock = UUID.randomUUID();
         List<EventIdTypeProjection> batchMock = List.of(projectionMock);
@@ -62,31 +62,31 @@ class InboxSchedulerTests {
         }).when(eventExecutor).execute(any(Runnable.class));
         doNothing().when(processor).process(eventIdMock);
 
-        assertDoesNotThrow(() -> target.pollForProcessing());
+        assertDoesNotThrow(() -> target.process());
 
         verify(inboxService, times(1)).readAndReserveUnprocessedBatch(anyInt());
         verify(processor, times(1)).process(eventIdMock);
     }
 
     @Test
-    void pollForProcessingSuccess__BatchIsEmpty() {
+    void processSuccess__BatchIsEmpty() {
         List<EventIdTypeProjection> batchMock = List.of();
 
         when(inboxService.readAndReserveUnprocessedBatch(anyInt())).thenReturn(batchMock);
 
-        assertDoesNotThrow(() -> target.pollForProcessing());
+        assertDoesNotThrow(() -> target.process());
 
         verify(inboxService, times(1)).readAndReserveUnprocessedBatch(anyInt());
         verify(processor, never()).process(any());
     }
 
     @Test
-    void pollForCleaningSuccess() {
+    void cleanSuccess() {
         List<UUID> batchMock = List.of(UUID.randomUUID());
 
         when(inboxService.deleteFailedBatch(anyInt())).thenReturn(batchMock);
 
-        assertDoesNotThrow(() -> target.pollForCleaning());
+        assertDoesNotThrow(() -> target.clean());
 
         verify(inboxService, times(1)).deleteFailedBatch(anyInt());
     }

@@ -32,5 +32,4 @@ public interface NotificationRepository extends CrudRepository<Notification, Lon
             @Param("notViewedTtl") int notViewedTtlDays,
             @Param("emailTtl") int emailTtlDays
     );
-//    todo: жестко подумать посмотреть, добавить индекс возможно.
 }

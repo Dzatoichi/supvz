@@ -16,6 +16,23 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Планировщик обработки и очистки событий во входящем ящике (Inbox).
+ * <p>
+ * Регулярно выполняет две задачи:
+ * <ul>
+ *   <li><b>Обработка</b>: получает резервированный батч непроцессированных событий из таблицы {@code inbox},
+ *       делегирует их обработку соответствующим {@link InboxProcessor} в отдельных потоках.</li>
+ *   <li><b>Очистка</b>: удаляет события, помеченные для удаления (поле {@code clean_after} уже в прошлом),
+ *       чтобы предотвратить накопление "мертвых" записей.</li>
+ * </ul>
+ * <p>
+ * Использует паттерн <b>Strategy</b> через {@code Map<InboxEventType, InboxProcessor>} для маршрутизации
+ * событий разных типов к соответствующим обработчикам.
+ * <p>
+ * Обработка событий выполняется асинхронно с помощью настроенного {@link Executor},
+ * что обеспечивает параллельную обработку и высокую пропускную способность.
+ */
 @Slf4j
 @Component
 public class InboxScheduler {
@@ -27,6 +44,9 @@ public class InboxScheduler {
     @Value("${app.inbox.schedule.cleaning.batch-size}")
     private Integer cleaningBatchSize;
 
+    /**
+     * Конструктор, инициализирующий зависимости.
+     */
     public InboxScheduler(
             InboxService inboxService,
             Executor eventExecutor,
@@ -38,8 +58,13 @@ public class InboxScheduler {
                 .collect(Collectors.toMap(InboxProcessor::getType, Function.identity()));
     }
 
+    /**
+     * Запускает обработку непроцессированных событий из входящего ящика.
+     * Каждое событие резервируется и передаётся в пул потоков для асинхронной обработки
+     * соответствующим {@link InboxProcessor}.
+     */
     @Scheduled(fixedDelayString = "${app.inbox.schedule.processing.delay-ms}")
-    public void pollForProcessing() {
+    public void process() {
         log.debug("По расписанию метод [PROCESS] inbox событий.");
         List<EventIdTypeProjection> reservedBatch = inboxService.readAndReserveUnprocessedBatch(processingBatchSize);
         if (!reservedBatch.isEmpty()) {
@@ -51,8 +76,12 @@ public class InboxScheduler {
         }
     }
 
+    /**
+     * Запускает очистку проваленных событий из входящего ящика.
+     * Это предотвращает накопление "зависших" событий, которые не могут быть успешно обработаны.
+     */
     @Scheduled(fixedDelayString = "${app.inbox.schedule.cleaning.delay-ms}")
-    public void pollForCleaning() {
+    public void clean() {
         log.debug("По расписанию метод [CLEAN] inbox событий.");
         List<UUID> batch = inboxService.deleteFailedBatch(cleaningBatchSize);
         if (!batch.isEmpty())

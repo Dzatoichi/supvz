@@ -20,11 +20,11 @@ class NotificationSchedulerTests {
     NotificationService notificationService;
 
     @Test
-    void pollingForCleaningOldNotificationsSuccess() {
+    void cleanOldNotificationsSuccess() {
         List<Integer> batchMock = List.of(1);
 
         when(notificationService.deleteOldNotifications()).thenReturn(batchMock);
 
-        assertDoesNotThrow(() -> target.pollingForCleaningOldNotifications());
+        assertDoesNotThrow(() -> target.cleanOldNotifications());
     }
 }
