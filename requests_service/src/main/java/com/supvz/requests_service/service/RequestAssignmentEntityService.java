@@ -42,6 +42,8 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         log.info("Ответ [{}] на заявку успешно создан мастером [{}].", saved.getRequest().getId(), saved.getHandymanId());
         return mapper.read(saved);
     }
+//    todo: конфликт
+
 
 
     /**

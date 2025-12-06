@@ -40,6 +40,7 @@ public class RequestEntityService implements RequestService {
         log.info("Заявка [{}] по ПВЗ [{}] успешно создана. Подал: [{}].", saved.getId(), saved.getPvzId(), saved.getAppellantId());
         return mapper.read(saved);
     }
+//    todo: конфликт
 
     /**
      * Метод для чтения страницы заявок с пагинацией и фильтрацией.
