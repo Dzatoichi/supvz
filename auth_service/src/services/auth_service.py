@@ -52,10 +52,10 @@ class AuthService:
                 token=data.register_token,
                 token_type=TokenTypesEnum.register,
             )
-
-            owner = repo.get_by_id(register_token_payload.get("owner_id"))
+            owner_id = register_token_payload.get("owner_id")
+            owner = await repo.get_by_id(id=owner_id)
             if not owner:
-                raise UserNotFoundException("Referenced owner_id not found")
+                raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
 
             payload["role"] = register_token_payload.get("role")
 
@@ -163,9 +163,10 @@ class AuthService:
         token_service: JWTTokensService,
         repo: UsersDAO,
     ) -> dict:
-        owner = await repo.get_by_id(employee_data.owner_id)
+        owner_id = employee_data.owner_id
+        owner = await repo.get_by_id(id=owner_id)
         if not owner:
-            raise UserNotFoundException("Пользователь не найден")
+            raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
 
         register_token = await token_service.create_register_token(
             token_type=TokenTypesEnum.register,
