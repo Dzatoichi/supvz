@@ -62,7 +62,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
         session: AsyncSession,
     ) -> None:
         """
-        Массовая вставка связей в таблицу ассоциации.
+        Массовая вставка связей в таблицу ассоциации
         """
 
         # Формируем список словарей для вставки
@@ -78,18 +78,17 @@ class PermissionsDAO(BaseDAO[Permissions]):
         position_id: int,
         new_permission_ids: list[int],
         session: AsyncSession,
-    ) -> None:
+    ) -> list[int]:
         """Полностью обновляет права должности: удаляет все старые и вставляет новые."""
 
         await session.execute(delete(PositionPermissions).where(PositionPermissions.position_id == position_id))
-
-        if not new_permission_ids:
-            return
 
         stmt = insert(PositionPermissions).values(
             [{"position_id": position_id, "permission_id": p} for p in new_permission_ids]
         )
         await session.execute(stmt)
+
+        return new_permission_ids
 
     async def get_permissions_by_user(self, user_id: int, params: Params) -> Page[Permissions]:
         """Метод получения прав пользователя"""

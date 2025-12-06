@@ -29,3 +29,12 @@ class PositionUpdateSchema(BaseModel):
     permissions_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PositionWithPermissionsReadSchema(PositionBaseSchema):
+    """Схема для чтения должности."""
+
+    id: int
+    permissions_ids: list[int] | None = None
+
+    model_config = ConfigDict(from_attributes=True)

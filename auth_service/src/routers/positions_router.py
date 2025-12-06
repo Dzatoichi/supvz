@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, Params
 
-from src.schemas.positions_schemas import PositionCreateSchema, PositionReadSchema, PositionUpdateSchema
+from src.schemas.positions_schemas import (
+    PositionCreateSchema,
+    PositionReadSchema,
+    PositionUpdateSchema,
+    PositionWithPermissionsReadSchema,
+)
 from src.services.position_service import PositionService
 from src.utils.dependencies import (
     get_position_service,
@@ -46,12 +51,12 @@ async def create_position(
     return PositionReadSchema.model_validate(position)
 
 
-@positions_router.patch("/{position_id}", response_model=PositionReadSchema)
+@positions_router.patch("/{position_id}", response_model=PositionWithPermissionsReadSchema)
 async def update_position(
     position_id: int,
     data: PositionUpdateSchema,
     position_service: PositionService = Depends(get_position_service),
-) -> PositionReadSchema:
+) -> PositionWithPermissionsReadSchema:
     """Ручка для обновления должности"""
 
     return await position_service.update_position(
