@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
-import java.util.UUID;
-
 /**
  * Репозиторий заявок.
  */
@@ -20,6 +18,6 @@ public interface RequestRepository extends CrudRepository<Request, Long> {
             """)
     Page<Request> findAll(
             @Param("pvzId") Integer pvzId,
-            @Param("appellantId") UUID appellantId,
+            @Param("appellantId") Long appellantId,
             Pageable pageable);
 }

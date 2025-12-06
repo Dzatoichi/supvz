@@ -34,10 +34,10 @@ public class RequestEntityService implements RequestService {
      */
     @Override
     public RequestDto create(RequestPayload payload) {
-        log.info("CREATE REQUEST FOR PVZ [{}]. APPELLANT [{}].", payload.pvzId(), payload.appellantId());
+        log.debug("Создание заявки по ПВЗ [{}]. Подал: [{}].", payload.pvzId(), payload.appellantId());
         Request mapped = mapper.create(payload);
         Request saved = repo.save(mapped);
-        log.info("REQUEST [{}] FOR PVZ [{}] IS CREATED. APPELLANT [{}].", saved.getId(), saved.getPvzId(), saved.getAppellantId());
+        log.info("Заявка [{}] по ПВЗ [{}] успешно создана. Подал: [{}].", saved.getId(), saved.getPvzId(), saved.getAppellantId());
         return mapper.read(saved);
     }
 
@@ -47,8 +47,7 @@ public class RequestEntityService implements RequestService {
     @Override
     public PageDto<RequestDto> readAll(int pageNumber, int size, RequestFilter filter) {
         Integer pvzId = filter.pvzId();
-        UUID appellantId = filter.appellantId();
-        log.info("READ REQUEST PAGE. PVZ [{}], APPELLANT [{}], PAGE [{}], SIZE [{}].", pvzId == null ? "ANY" : pvzId, appellantId == null ? "ANY" : appellantId, pageNumber, size);
+        Long appellantId = filter.appellantId();
         Pageable pageable = PageRequest.of(pageNumber, size);
         Page<Request> page = repo.findAll(pvzId, appellantId, pageable);
         return mapper.readPage(page);
@@ -60,10 +59,10 @@ public class RequestEntityService implements RequestService {
      */
     @Override
     public RequestDto read(long id) {
-        log.info("READ REQUEST [{}].", id);
+        log.debug("Получение заявки [{}].", id);
         return repo.findById(id)
                 .map(mapper::read)
-                .orElseThrow(() -> new RequestNotFoundException("REQUEST [%S] WAS NOT FOUND.".formatted(id)));
+                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
     }
 
     /**
@@ -71,12 +70,12 @@ public class RequestEntityService implements RequestService {
      */
     @Override
     public RequestDto update(long id, RequestUpdatePayload payload) {
-        log.info("UPDATE REQUEST [{}].", id);
+        log.debug("Обновление заявки [{}].", id);
         Request found = repo.findById(id)
-                .orElseThrow(() -> new RequestNotFoundException("REQUEST [%S] WAS NOT FOUND.".formatted(id)));
+                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
         Request mapped = mapper.update(found, payload);
         Request saved = repo.save(mapped);
-        log.info("REQUEST [{}] IS UPDATED.", saved.getId());
+        log.info("Заявка [{}] успешно обновлена.", saved.getId());
         return mapper.read(saved);
     }
 
@@ -86,11 +85,11 @@ public class RequestEntityService implements RequestService {
     @Override
     @Transactional
     public void delete(long id) {
-        log.info("DELETE REQUEST [{}].", id);
+        log.debug("Удаление заявки [{}].", id);
         Request found = repo.findById(id)
-                .orElseThrow(() -> new RequestNotFoundException("REQUEST [%S] WAS NOT FOUND.".formatted(id)));
+                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
         repo.delete(found);
-        log.info("REQUEST [{}] IS DELETED.", id);
+        log.info("Заявка [{}] успешно удалена.", id);
     }
 
     /**
@@ -98,9 +97,9 @@ public class RequestEntityService implements RequestService {
      */
     @Override
     public Request get(long id) {
-        log.info("GET REQUEST [{}].", id);
+        log.debug("Получение сущности заявки [{}].", id);
         return repo.findById(id)
-                .orElseThrow(() -> new RequestNotFoundException("REQUEST [%S] WAS NOT FOUND.".formatted(id)));
+                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
     }
 }
 // TODO: логи исправить и перевести

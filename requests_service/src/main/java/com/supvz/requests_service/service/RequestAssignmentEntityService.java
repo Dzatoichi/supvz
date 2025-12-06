@@ -35,14 +35,11 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
     @Override
     @Transactional
     public RequestAssignmentDto create(long requestId, RequestAssignmentPayload payload) {
-        log.info("CREATE REQUEST [{}] ASSIGNMENT BY HANDYMAN [{}].", requestId, payload.handymanId());
-
+        log.info("Создание ответа на заявку [{}]. Мастер: [{}].", requestId, payload.handymanId());
         Request request = requestService.get(requestId);
         RequestAssignment mapped = mapper.create(request, payload);
-
         RequestAssignment saved = repo.save(mapped);
-
-        log.info("REQUEST ASSIGNMENT [{}] IS CREATED BY HANDYMAN [{}].", saved.getRequest().getId(), saved.getHandymanId());
+        log.info("Ответ [{}] на заявку успешно создан мастером [{}].", saved.getRequest().getId(), saved.getHandymanId());
         return mapper.read(saved);
     }
 
@@ -52,7 +49,6 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
      */
     @Override
     public PageDto<RequestAssignmentDto> readAll(long requestId, int pageNumber, int size) {
-        log.info("READ REQUEST [{}] ASSIGNMENTS PAGE. PAGE [{}], SIZE [{}].", requestId, pageNumber, size);
         Pageable pageable = PageRequest.of(pageNumber, size);
         Page<RequestAssignment> page = repo.findAll(requestId, pageable);
         return mapper.readPage(page);
@@ -64,12 +60,11 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
      */
     @Override
     public RequestAssignmentDto read(long id) {
-        log.info("READ REQUEST ASSIGNMENT [{}].", id);
-
+        log.debug("Получение ответа [{}] на заявку.", id);
         return repo.findById(id)
                 .map(mapper::read)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
-                        ("REQUEST ASSIGNMENT [%s] WAS NOT FOUND.".formatted(id)));
+                        ("Ответ [%s] на заявку не найден.".formatted(id)));
     }
 
 
@@ -78,16 +73,13 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
      */
     @Override
     public RequestAssignmentDto update(long id, RequestAssignmentUpdatePayload payload) {
-        log.info("UPDATE REQUEST ASSIGNMENT [{}]. Payload [{}].", id, payload);
-
+        log.debug("Обновление ответа [{}] на заявку.", id);
         RequestAssignment found = repo.findById(id)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
-                        ("REQUEST ASSIGNMENT [%s] WAS NOT FOUND.".formatted(id)));
-
+                        ("Ответ [%s] на заявку не найден.".formatted(id)));
         RequestAssignment mapped = mapper.update(found, payload);
         RequestAssignment saved = repo.save(mapped);
-
-        log.info("REQUEST ASSIGNMENT [{}] IS UPDATED.", saved.getId());
+        log.info("Ответ [{}] на заявку успешно обновлен.", saved.getId());
         return mapper.read(saved);
     }
 
@@ -98,14 +90,12 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
     @Override
     @Transactional
     public void delete(long id) {
-        log.info("DELETE REQUEST ASSIGNMENT [{}].", id);
-
+        log.debug("Удаление ответа [{}] на заявку.", id);
         RequestAssignment found = repo.findById(id)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
-                        ("REQUEST ASSIGNMENT [%s] WAS NOT FOUND.".formatted(id)));
+                        ("Ответ [%s] на заявку не найден.".formatted(id)));
         repo.delete(found);
-
-        log.info("REQUEST ASSIGNMENT [{}] IS DELETED.", id);
+        log.info("Ответ [{}] на заявку успешно удалён.", id);
     }
 //    todo: какой смысл вообще делать две строки, если можно удалить за одно обращение к бд?
 //     без поиска и прочей чепухи? взял и удалил. если не удалил, значит, не нашел, тогда выкинул ошибку
