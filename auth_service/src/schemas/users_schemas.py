@@ -14,6 +14,13 @@ from pydantic import (
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
+class PositionSourceEnum(str, Enum):
+    """Перечисление таблиц с должностями"""
+
+    system = "system"
+    custom = "custom"
+
+
 class SubscriptionEnum(Enum):
     """
     Перечисление статусов подписки.
@@ -56,7 +63,10 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
-    position_id: int
+
+    position_id: int | None = None
+    position_source: PositionSourceEnum | None = None
+    invite_token: str | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -65,6 +75,23 @@ class UserRegisterSchema(UserLoginSchema):
         """
         if self.password != self.confirm_password:
             raise ValueError("Passwords do not match")
+        return self
+
+    @model_validator(mode="after")
+    def validate_registration_fields(self) -> "UserRegisterSchema":
+        """
+        Проверка:
+        1) Если position_id указан, то обязательно position_source и наоборот.
+        2) Должен быть хотя бы один способ регистрации:
+           - invite_token или
+           - position_id + position_source
+        """
+        if (self.position_id is None) != (self.position_source is None):
+            raise ValueError("Необходимо указать и position_id, и position_source.")
+
+        if not self.invite_token and self.position_id is None:
+            raise ValueError("Необходимо указать либо 'invite_token', либо 'position_id' + 'position_source'.")
+
         return self
 
 

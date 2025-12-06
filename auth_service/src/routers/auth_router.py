@@ -27,7 +27,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Authorization"])
 
 @auth_router.post("/register", response_model=UserReadSchema, status_code=201)
 async def register_user(
-    user_in: UserRegisterSchema,
+    data: UserRegisterSchema,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     perm_repo: PermissionsDAO = Depends(get_permissions_dao),
@@ -37,7 +37,7 @@ async def register_user(
     POST [/auth/register]
     """
     user = await auth_service.register_user(
-        data=user_in,
+        data=data,
         user_repo=repo,
         perm_repo=perm_repo,
     )

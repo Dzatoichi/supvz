@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -6,8 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.base import Base
 
 if TYPE_CHECKING:
-    from src.models.position_permissions.position_permissions import PositionPermissions
-    from src.models.user_permissions.user_permissions import UserPermissions
+    pass
 
 
 class Permissions(Base):
@@ -22,13 +21,10 @@ class Permissions(Base):
     )
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    position_links: Mapped[List["PositionPermissions"]] = relationship(
-        "PositionPermissions",
-        back_populates="permission",
-        cascade="all, delete-orphan",
+    system_position_links = relationship(
+        "SystemPositionPermissions", back_populates="permission", cascade="all, delete-orphan"
     )
-    user_links: Mapped[List["UserPermissions"]] = relationship(
-        "UserPermissions",
-        back_populates="permission",
-        cascade="all, delete-orphan",
+
+    custom_position_links = relationship(
+        "CustomPositionPermissions", back_populates="permission", cascade="all, delete-orphan"
     )
