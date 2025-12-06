@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, Params
 
+from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
-from src.schemas.perm_positions_schemas import PermissionReadSchema
+from src.schemas.permissions_schemas import PermissionReadSchema
 from src.schemas.users_schemas import (
     UpdateUserPermissionsSchema,
     UserAuthRequestSchema,
@@ -14,6 +15,7 @@ from src.services.user_service import UserService
 from src.utils.dependencies import (
     get_access_token_from_cookie,
     get_jwt_tokens_service,
+    get_permissions_dao,
     get_user_service,
     get_users_dao,
 )
@@ -92,6 +94,7 @@ async def update_permissions(
     data: UpdateUserPermissionsSchema,
     user_service: UserService = Depends(get_user_service),
     user_repo: UsersDAO = Depends(get_users_dao),
+    perm_repo: PermissionsDAO = Depends(get_permissions_dao),
 ) -> list[PermissionReadSchema]:
     """
     Полностью перезаписывает права пользователя.
@@ -101,6 +104,7 @@ async def update_permissions(
         user_id=user_id,
         permission_ids=data.permission_ids,
         user_repo=user_repo,
+        perm_repo=perm_repo,
     )
 
 

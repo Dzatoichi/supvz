@@ -1,41 +1,30 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class PermissionBaseSchema(BaseModel):
-    code_name: str
-    description: str | None = None
-
-
-class PermissionCreateSchema(PermissionBaseSchema):
-    pass
-
-
-class PermissionReadSchema(PermissionBaseSchema):
-    id: int
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 class PositionBaseSchema(BaseModel):
+    """Базовая схема для должности."""
+
     title: str
     owner_id: int
 
 
 class PositionCreateSchema(PositionBaseSchema):
+    """Схема для создания должности."""
+
     permissions: list[int] | None = None
 
 
 class PositionReadSchema(PositionBaseSchema):
+    """Схема для чтения должности."""
+
     id: int
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class PositionReadPermissionsSchema(PositionReadSchema):
-    permissions: list[PermissionReadSchema] | None = []
-
-
 class PositionUpdateSchema(BaseModel):
+    """Схема для обновления должности."""
+
     title: str | None = None
     permissions_ids: list[int] | None = None
 

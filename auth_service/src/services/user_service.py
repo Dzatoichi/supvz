@@ -1,8 +1,9 @@
 from fastapi_pagination import Page, Params
 
+from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
 from src.models.users.users import Users
-from src.schemas.perm_positions_schemas import PermissionReadSchema
+from src.schemas.permissions_schemas import PermissionReadSchema
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
     SubscriptionEnum,
@@ -120,6 +121,7 @@ class UserService:
         user_id: int,
         permission_ids: list[int],
         user_repo: UsersDAO,
+        perm_repo: PermissionsDAO,
     ) -> list[PermissionReadSchema]:
         """Обновляет список прав пользователя"""
 
@@ -131,6 +133,9 @@ class UserService:
                     new_permission_ids=permission_ids,
                 )
 
-                permissions = await user_repo.get_user_permissions(session=session, user_id=user_id)
+                permissions = await perm_repo.get_user_permissions_without_pagination(
+                    session=session,
+                    user_id=user_id,
+                )
 
                 return [PermissionReadSchema.model_validate(p) for p in permissions]

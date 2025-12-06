@@ -262,7 +262,7 @@ def setup_exception_handlers(app: FastAPI):
         )
 
         return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_400_BAD_REQUEST,
             content={"error": "permissions_filter_exception", "detail": str(exc)},
         )
 

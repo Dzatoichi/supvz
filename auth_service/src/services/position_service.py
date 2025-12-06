@@ -2,8 +2,7 @@ from fastapi_pagination import Page, Params
 
 from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.positionsDAO import PositionDAO
-from src.models import Positions
-from src.schemas.perm_positions_schemas import PositionCreateSchema, PositionReadSchema, PositionUpdateSchema
+from src.schemas.positions_schemas import PositionCreateSchema, PositionReadSchema, PositionUpdateSchema
 from src.utils.exceptions import (
     PositionAlreadyExistsException,
     PositionNotFoundException,
@@ -22,7 +21,7 @@ class PositionService:
         self,
         params: Params,
         owner_id: int | None = None,
-    ) -> Page[Positions]:
+    ) -> Page[PositionReadSchema]:
         """Возвращает список всех должностей с возможностью отфильтровать по owner_id"""
 
         positions = await self.position_dao.get_positions(owner_id=owner_id, params=params)
@@ -30,12 +29,14 @@ class PositionService:
         if positions.total == 0:
             raise PositionNotFoundException("Не найдено ни одной должности.")
 
+        positions.items = [PositionReadSchema.model_validate(pos) for pos in positions.items]
         return positions
 
     async def get_position(
         self,
         position_id: int,
     ) -> PositionReadSchema:
+        """Возвращает одну должность по id"""
         position = await self.position_dao.get_by_id(id=position_id)
 
         if not position:
@@ -46,7 +47,7 @@ class PositionService:
     async def create_position(
         self,
         data: PositionCreateSchema,
-    ) -> Positions:
+    ) -> PositionReadSchema:
         """Создает новую должность"""
 
         payload = {
@@ -66,7 +67,7 @@ class PositionService:
                     raise PositionAlreadyExistsException("Должность с таким именем уже существует.")
 
                 position = await self.position_dao.create(
-                    payload,
+                    payload=payload,
                     session=session,
                 )
                 if data.permissions:
@@ -79,7 +80,7 @@ class PositionService:
                 else:
                     position.permissions = None
 
-                return position
+                return PositionReadSchema.model_validate(position)
 
     async def update_position(
         self,
@@ -98,7 +99,7 @@ class PositionService:
                     raise PositionNotFoundException("Должность с таким id не найдена.")
 
                 if data.title:
-                    await self.position_dao.update(
+                    updated = await self.position_dao.update(
                         position_id=position_id,
                         title=data.title,
                         session=session,
@@ -110,11 +111,13 @@ class PositionService:
                         new_permission_ids=data.permissions_ids,
                         session=session,
                     )
-
-                result = await self.position_dao.get_position(id=position_id, session=session)
+                if updated:
+                    result = updated
+                else:
+                    result = await self.position_dao.get_position(id=position_id, session=session)
                 return PositionReadSchema.model_validate(result)
 
-    async def delete_position(self, position_id: int):
+    async def delete_position(self, position_id: int) -> None:
         """Метод удалаяет должность по id"""
 
-        return await self.position_dao.delete(id=position_id)
+        await self.position_dao.delete(id=position_id)

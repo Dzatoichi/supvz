@@ -11,8 +11,6 @@ from pydantic import (
     model_validator,
 )
 
-from src.schemas.perm_positions_schemas import PermissionReadSchema
-
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
@@ -91,12 +89,6 @@ class UserReadSchema(UserBaseSchema):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-
-class UserReadPermissionsSchema(UserReadSchema):
-    """Схема получения пользователя с правами."""
-
-    permissions: list[PermissionReadSchema] = []
 
 
 class UserAuthRequestSchema(BaseModel):

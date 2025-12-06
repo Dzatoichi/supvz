@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class Permissions(Base):
+    """Модель сущности права доступа."""
+
     __tablename__ = "permissions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

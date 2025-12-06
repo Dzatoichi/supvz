@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class UserPermissions(Base):
+    """Ассоциация пользователя и права доступа."""
+
     __tablename__ = "user_permissions"
 
     user_id: Mapped[int] = mapped_column(

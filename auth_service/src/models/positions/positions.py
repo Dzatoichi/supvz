@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 class Positions(Base):
+    """Модель сущности должности."""
+
     __tablename__ = "positions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

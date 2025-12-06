@@ -54,7 +54,7 @@ class PositionDAO(BaseDAO[Positions]):
     @BaseDAO.with_exception
     async def create(self, payload: dict, session: AsyncSession) -> Positions:
         """Метод создания пользователя"""
-        user = Positions(**payload)
+        user = self.model(**payload)
         session.add(user)
         await session.flush()
         return user
@@ -72,6 +72,4 @@ class PositionDAO(BaseDAO[Positions]):
 
         result = await session.execute(stmt)
 
-        updated = result.scalar_one_or_none()
-
-        return updated
+        return result.scalar_one_or_none()

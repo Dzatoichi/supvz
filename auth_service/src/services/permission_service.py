@@ -1,7 +1,7 @@
 from fastapi_pagination import Page, Params
 
 from src.dao.permissionsDAO import PermissionsDAO
-from src.models import Permissions
+from src.schemas.permissions_schemas import PermissionReadSchema
 from src.utils.exceptions import PermissionsFilterException, PermissionsNotFound
 
 
@@ -16,8 +16,8 @@ class PermissionService:
         position_id: int | None,
         user_id: int | None,
         params: Params,
-    ) -> Page[Permissions]:
-        """Получение прав доступа. Проверяет, что передан ровно один фильтр."""
+    ) -> Page[PermissionReadSchema]:
+        """Получение прав доступа с пагинацией и фильтрацией."""
 
         if position_id is None and user_id is None:
             perms = await self.perm_dao.get_permissions(params=params)
@@ -34,4 +34,5 @@ class PermissionService:
         if perms.total == 0:
             raise PermissionsNotFound("Никаких прав доступа не найдено.")
 
+        perms.items = [PermissionReadSchema.model_validate(perm) for perm in perms.items]
         return perms

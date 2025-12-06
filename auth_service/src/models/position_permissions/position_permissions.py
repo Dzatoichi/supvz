@@ -5,6 +5,8 @@ from src.database.base import Base
 
 
 class PositionPermissions(Base):
+    """Ассоциация должности и права доступа."""
+
     __tablename__ = "positions_permissions"
 
     position_id: Mapped[int] = mapped_column(

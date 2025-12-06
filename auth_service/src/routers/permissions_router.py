@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.params import Depends, Query
 from fastapi_pagination import Page, Params
 
-from src.schemas.perm_positions_schemas import PermissionReadSchema
+from src.schemas.permissions_schemas import PermissionReadSchema
 from src.services.permission_service import PermissionService
 from src.utils.dependencies import get_permissions_service
 

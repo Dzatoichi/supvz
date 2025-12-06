@@ -18,6 +18,7 @@ from src.utils.exceptions import (
     IncorrectPasswordException,
     InvalidTokenException,
     PermissionDeniedException,
+    PermissionsNotFound,
     TokenExpiredException,
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -42,6 +43,10 @@ class AuthService:
         Метод регистрации пользователя.
         """
 
+        existing_user = await user_repo.get_user_by_email(email=data.email)
+        if existing_user:
+            raise UserAlreadyExistsException("Данный пользователь уже существует.")
+
         hashed_password = hash_helper.hash(plain_str=data.password)
         payload = {
             "email": data.email,
@@ -50,12 +55,11 @@ class AuthService:
 
         perm_ids = await perm_repo.get_permissions_ids_by_position(position_id=data.position_id)
 
+        if not perm_ids:
+            raise PermissionsNotFound("Никаких прав доступа для этой должности не найдено.")
+
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
-                existing_user = await user_repo.get_user_by_email(email=data.email)
-                if existing_user:
-                    raise UserAlreadyExistsException("User already exists")
-
                 try:
                     user = await user_repo.create_user(
                         payload=payload,
