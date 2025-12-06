@@ -63,9 +63,6 @@ class UsersDAO(BaseDAO[Users]):
 
         await session.execute(delete(UserPermissions).where(UserPermissions.user_id == user_id))
 
-        if not new_permission_ids:
-            return
-
         await session.execute(
             insert(UserPermissions).values([{"user_id": user_id, "permission_id": p_id} for p_id in new_permission_ids])
         )

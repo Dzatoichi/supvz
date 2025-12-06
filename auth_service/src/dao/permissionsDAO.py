@@ -62,7 +62,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
         session: AsyncSession,
     ) -> None:
         """
-        Массовая вставка связей в таблицу ассоциации.
+        Массовая вставка связей в таблицу ассоциации
         """
 
         # Формируем список словарей для вставки
@@ -82,9 +82,6 @@ class PermissionsDAO(BaseDAO[Permissions]):
         """Полностью обновляет права должности: удаляет все старые и вставляет новые."""
 
         await session.execute(delete(PositionPermissions).where(PositionPermissions.position_id == position_id))
-
-        if not new_permission_ids:
-            return
 
         stmt = insert(PositionPermissions).values(
             [{"position_id": position_id, "permission_id": p} for p in new_permission_ids]
