@@ -35,7 +35,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
     @BaseDAO.with_exception
     async def get_permissions_ids_by_position(self, position_id: int) -> list[int]:
         """
-        Возвращает список ID прав (permission_id) для указанной должности.
+        Возвращает список ID прав (permission_id) для указанной должности
         """
         async with self._get_session() as session:
             stmt = select(PositionPermissions.permission_id).where(PositionPermissions.position_id == position_id)
