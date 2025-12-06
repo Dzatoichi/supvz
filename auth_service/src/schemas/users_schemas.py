@@ -84,15 +84,20 @@ class UserRegisterSchema(UserLoginSchema):
         return self
 
 
-class UserUpdateSchema(BaseModel):
+class UserUpdateSchema(UserBaseSchema):
     """
     Схема изменения пользователя.
     """
 
-    id: int
-    email: EmailStr | None = None
+    pass
 
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+class UserUpdateMeSchema(UserBaseSchema):
+    """
+    Схема для изменения собственных данных пользователя
+    """
+
+    pass
 
 
 class UserReadSchema(UserBaseSchema):
