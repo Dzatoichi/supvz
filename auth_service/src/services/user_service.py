@@ -1,6 +1,5 @@
 from fastapi_pagination import Page, Params, paginate
 
-from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
@@ -8,6 +7,7 @@ from src.schemas.users_schemas import (
     UserAuthRequestSchema,
     UserReadSchema,
     UserRoleEnum,
+    UserUpdateMeSchema,
     UserUpdateSchema,
 )
 from src.services.token_service import JWTTokensService
@@ -68,35 +68,24 @@ class UserService:
 
     async def update_user(
         self,
-        token: UserAuthRequestSchema,
-        token_service: JWTTokensService,
+        user_id: int,
         user: UserUpdateSchema,
         repo: UsersDAO,
-        refresh_repo: RefreshTokensDAO,
     ) -> UserReadSchema:
         """Обновляет данные пользователя"""
 
-        token_payload = await token_service.validate_token(
-            token.access_token,
-            TokenTypesEnum.access,
-        )
-
-        prev_user = await repo.get_by_id(user.id)
-        if not prev_user:
+        update_user = await repo.get_by_id(id=user_id)
+        if not update_user:
             raise UserNotFoundException("User not found")
 
-        current_user_id = token_payload.get("user_id")
-        if current_user_id != user.id:
-            raise PermissionDeniedException("You can update just yours data")
-
         updated_user = await repo.update(
-            prev_user.id,
+            update_user.id,
             email=user.email,
         )
 
         logger.info(
             "Информация о пользователе id={user_id} успешно обновлена!",
-            user_id=user.id,
+            user_id=user_id,
         )
         return updated_user
 
@@ -113,3 +102,49 @@ class UserService:
         )
 
         await repo.delete(user.id)
+
+    async def get_me(
+        self,
+        token: UserAuthRequestSchema,
+        repo: UsersDAO,
+        token_service: JWTTokensService,
+    ) -> UserReadSchema:
+        """
+        Получает данные о пользователе по access token
+        """
+
+        token_payload = await token_service.validate_token(token=token.access_token, token_type=TokenTypesEnum.access)
+        user_id = token_payload.get("user_id")
+        user = await repo.get_by_id(user_id)
+        return UserReadSchema.model_validate(user)
+
+    async def update_me(
+        self,
+        token: UserAuthRequestSchema,
+        token_service: JWTTokensService,
+        user_data: UserUpdateMeSchema,
+        repo: UsersDAO,
+    ) -> UserReadSchema:
+        """
+        Обновление собственных данных пользователя с помощью access token
+        """
+
+        token_payload = await token_service.validate_token(
+            token.access_token,
+            TokenTypesEnum.access,
+        )
+
+        user = await repo.get_by_id(token_payload.get("user_id"))
+        if not user:
+            raise UserNotFoundException("User not found")
+
+        updated_user = await repo.update(
+            id=user.id,
+            email=user_data.email,
+        )
+
+        logger.info(
+            "Информация о пользователе id={user_id} успешно обновлена!",
+            user_id=updated_user.id,
+        )
+        return updated_user
