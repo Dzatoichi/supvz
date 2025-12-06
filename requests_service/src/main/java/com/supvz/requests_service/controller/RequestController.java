@@ -1,24 +1,24 @@
 package com.supvz.requests_service.controller;
 
-import com.supvz.requests_service.core.RequestDto;
-import com.supvz.requests_service.core.RequestUpdatePayload;
+import com.supvz.requests_service.model.dto.RequestDto;
+import com.supvz.requests_service.model.dto.RequestUpdatePayload;
 import com.supvz.requests_service.service.RequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST-контроллер для обработки заявки.
+ */
 @RestController
 @RequestMapping("/api/v1/requests/{id}")
 @RequiredArgsConstructor
-/*
-Контроллер для работы с запросом для мастера.
- */
 public class RequestController {
     private final RequestService service;
 
-    /*
-    Ручка для получения запроса.
+    /**
+     * Ручка для получения заявки.
      */
     @GetMapping
     public ResponseEntity<?> read(
@@ -28,8 +28,8 @@ public class RequestController {
         return ResponseEntity.ok(body);
     }
 
-    /*
-    Ручка для обновления запроса.
+    /**
+     * Ручка для обновления заявки.
      */
     @PatchMapping
     public ResponseEntity<?> update(
@@ -40,8 +40,8 @@ public class RequestController {
         return ResponseEntity.ok(body);
     }
 
-    /*
-    Ручка для удаления запроса.
+    /**
+     * Ручка для удаления заявки.
      */
     @DeleteMapping
     public ResponseEntity<?> delete(

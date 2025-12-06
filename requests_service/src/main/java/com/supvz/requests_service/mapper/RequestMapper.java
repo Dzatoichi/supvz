@@ -1,10 +1,10 @@
 package com.supvz.requests_service.mapper;
 
-import com.supvz.requests_service.core.PageDto;
-import com.supvz.requests_service.core.RequestDto;
-import com.supvz.requests_service.core.RequestPayload;
-import com.supvz.requests_service.core.RequestUpdatePayload;
-import com.supvz.requests_service.entity.Request;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestDto;
+import com.supvz.requests_service.model.dto.RequestPayload;
+import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.entity.Request;
 import org.springframework.data.domain.Page;
 
 /*

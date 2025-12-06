@@ -1,10 +1,10 @@
 package com.supvz.requests_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.supvz.requests_service.core.PageDto;
-import com.supvz.requests_service.core.RequestDto;
-import com.supvz.requests_service.core.RequestFilter;
-import com.supvz.requests_service.core.RequestPayload;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestDto;
+import com.supvz.requests_service.core.filter.RequestFilter;
+import com.supvz.requests_service.model.dto.RequestPayload;
 import com.supvz.requests_service.service.RequestService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.UUID;

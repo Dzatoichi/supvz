@@ -1,7 +1,11 @@
 package com.supvz.requests_service.service;
 
-import com.supvz.requests_service.core.*;
-import com.supvz.requests_service.entity.Request;
+import com.supvz.requests_service.core.filter.RequestFilter;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestDto;
+import com.supvz.requests_service.model.dto.RequestPayload;
+import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.entity.Request;
 
 /*
 Интерфейс сервиса для работы с запросами.

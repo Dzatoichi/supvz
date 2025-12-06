@@ -1,4 +1,4 @@
-package com.supvz.requests_service.core;
+package com.supvz.requests_service.core.enums;
 
 /*
 Перечисление статусов запросов.

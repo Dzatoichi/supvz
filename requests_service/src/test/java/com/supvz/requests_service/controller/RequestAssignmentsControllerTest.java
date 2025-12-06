@@ -1,9 +1,9 @@
 package com.supvz.requests_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.supvz.requests_service.core.PageDto;
-import com.supvz.requests_service.core.RequestAssignmentDto;
-import com.supvz.requests_service.core.RequestAssignmentPayload;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
 import com.supvz.requests_service.service.RequestAssignmentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
-package com.supvz.requests_service.entity;
+package com.supvz.requests_service.model.entity;
 
-import com.supvz.requests_service.core.Status;
+import com.supvz.requests_service.core.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,9 +15,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-/*
-Сущность ответа на запрос.
- */
 public class RequestAssignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +24,7 @@ public class RequestAssignment {
     @JoinColumn(name = "request_id", nullable = false)
     private Request request;
 
-    private UUID handymanId;
+    private Long handymanId;
 
     @Enumerated(EnumType.STRING)
     private Status status;

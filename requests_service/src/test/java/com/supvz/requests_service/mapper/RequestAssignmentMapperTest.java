@@ -1,9 +1,10 @@
 package com.supvz.requests_service.mapper;
 
-import com.supvz.requests_service.core.*;
-import com.supvz.requests_service.entity.Request;
-import com.supvz.requests_service.entity.RequestAssignment;
-import com.supvz.requests_service.mapper.impl.RequestAssignmentMapperImpl;
+import com.supvz.requests_service.core.enums.Status;
+import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
+import com.supvz.requests_service.model.dto.RequestAssignmentUpdatePayload;
+import com.supvz.requests_service.model.entity.Request;
+import com.supvz.requests_service.model.entity.RequestAssignment;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

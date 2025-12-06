@@ -1,6 +1,7 @@
-package com.supvz.requests_service.core;
+package com.supvz.requests_service.model.dto;
 
 
+import com.supvz.requests_service.core.enums.Status;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;

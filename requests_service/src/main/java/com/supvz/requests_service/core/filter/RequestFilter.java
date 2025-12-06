@@ -1,15 +1,19 @@
-package com.supvz.requests_service.core;
+package com.supvz.requests_service.core.filter;
 
+import com.supvz.requests_service.core.enums.Status;
 import lombok.Builder;
 
 import java.util.UUID;
 
-@Builder
-/*
-Схема (Payload) для фильтрации запросов.
+
+/**
+ * Схема (Payload) для фильтрации заявок.
  */
+@Builder
 public record RequestFilter(
         Integer pvzId,
-        UUID appellantId
+        Long appellantId,
+        Status status
 ) {
 }
+// TODO: подумать еще о параметрах фильтрации.

@@ -1,4 +1,4 @@
-package com.supvz.requests_service.entity;
+package com.supvz.requests_service.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,9 +14,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-/*
-Сущность запроса мастеру.
- */
 public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +21,7 @@ public class Request {
 
     private int pvzId;
 
-    private UUID appellantId;
+    private Long appellantId;
 
     private String description;
 

@@ -1,25 +1,25 @@
 package com.supvz.requests_service.controller;
 
-import com.supvz.requests_service.core.PageDto;
-import com.supvz.requests_service.core.RequestAssignmentDto;
-import com.supvz.requests_service.core.RequestAssignmentPayload;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
 import com.supvz.requests_service.service.RequestAssignmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST-контроллер для обработки ответов мастера на заявки.
+ */
 @RestController
 @RequestMapping("/api/v1/requests/{id}/assignments")
 @RequiredArgsConstructor
-/*
-Контроллер для работы с ответами мастеров на запросы.
- */
 public class RequestAssignmentsController {
     private final RequestAssignmentService service;
 
-    /*
-    Ручка создания ответа мастера на запрос.
+    /**
+     * Ручка создания ответа мастера на запрос.
      */
     @PostMapping
     public ResponseEntity<?> create(
@@ -30,11 +30,11 @@ public class RequestAssignmentsController {
         return ResponseEntity.ok(body);
     }
 
-    /*
-    Ручка получения ответов мастеров по запросу.
+    /**
+     * Ручка получения ответов мастеров по запросу.
      */
     @GetMapping
-    public ResponseEntity<?> readAll (
+    public ResponseEntity<?> readAll(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "5") int size,
             @PathVariable(name = "id") long requestId
@@ -42,4 +42,5 @@ public class RequestAssignmentsController {
         PageDto<RequestAssignmentDto> body = service.readAll(requestId, page, size);
         return ResponseEntity.ok(body);
     }
+//    todo: а где фильтрация?
 }

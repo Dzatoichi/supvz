@@ -1,4 +1,4 @@
-package com.supvz.requests_service.core;
+package com.supvz.requests_service.core.exception;
 
 /*
 Исключение отсутствия ответа на запрос.

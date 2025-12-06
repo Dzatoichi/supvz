@@ -1,11 +1,16 @@
 package com.supvz.requests_service.service;
 
-import com.supvz.requests_service.core.*;
-import com.supvz.requests_service.entity.Request;
-import com.supvz.requests_service.entity.RequestAssignment;
+import com.supvz.requests_service.core.enums.Status;
+import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
+import com.supvz.requests_service.core.exception.RequestNotFoundException;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
+import com.supvz.requests_service.model.dto.RequestAssignmentUpdatePayload;
+import com.supvz.requests_service.model.entity.Request;
+import com.supvz.requests_service.model.entity.RequestAssignment;
 import com.supvz.requests_service.mapper.RequestAssignmentMapper;
 import com.supvz.requests_service.repo.RequestAssignmentRepository;
-import com.supvz.requests_service.service.impl.RequestAssignmentServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +30,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RequestAssignmentServiceTest {
     @InjectMocks
-    private RequestAssignmentServiceImpl service;
+    private RequestAssignmentEntityService service;
 
     @Mock
     private RequestAssignmentMapper mapper;

@@ -1,9 +1,9 @@
 package com.supvz.requests_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.supvz.requests_service.core.RequestDto;
-import com.supvz.requests_service.core.RequestNotFoundException;
-import com.supvz.requests_service.core.RequestUpdatePayload;
+import com.supvz.requests_service.model.dto.RequestDto;
+import com.supvz.requests_service.core.exception.RequestNotFoundException;
+import com.supvz.requests_service.model.dto.RequestUpdatePayload;
 import com.supvz.requests_service.service.RequestService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;

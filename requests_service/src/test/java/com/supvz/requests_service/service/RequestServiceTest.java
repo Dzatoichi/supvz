@@ -1,10 +1,14 @@
 package com.supvz.requests_service.service;
 
-import com.supvz.requests_service.core.*;
-import com.supvz.requests_service.entity.Request;
+import com.supvz.requests_service.core.exception.RequestNotFoundException;
+import com.supvz.requests_service.core.filter.RequestFilter;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestDto;
+import com.supvz.requests_service.model.dto.RequestPayload;
+import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.mapper.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
-import com.supvz.requests_service.service.impl.RequestServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +27,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RequestServiceTest {
     @InjectMocks
-    private RequestServiceImpl service;
+    private RequestEntityService service;
 
     @Mock
     private RequestMapper mapper;
