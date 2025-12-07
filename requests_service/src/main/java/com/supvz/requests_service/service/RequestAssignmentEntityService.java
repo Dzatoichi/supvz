@@ -1,29 +1,25 @@
 package com.supvz.requests_service.service;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
 import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
 import com.supvz.requests_service.core.filter.RequestAssignmentFilter;
-import com.supvz.requests_service.mapper.ActionMapper;
-import com.supvz.requests_service.model.dto.PageDto;
-import com.supvz.requests_service.model.dto.RequestAssignmentDto;
-import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
-import com.supvz.requests_service.model.dto.RequestAssignmentUpdatePayload;
+import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
-import com.supvz.requests_service.mapper.RequestAssignmentMapper;
+import com.supvz.requests_service.mapper.entity.RequestAssignmentMapper;
 import com.supvz.requests_service.repo.RequestAssignmentRepository;
+import com.supvz.requests_service.util.specification.RequestAssignmentSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-
 /**
  * Реализация сервиса для обработки ответов на заявки.
+ * Отвечает за бизнес-логику ответов на заявки. Слой, что работает с сущностями напрямую.
  */
 @Slf4j
 @Service
@@ -32,11 +28,12 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
     private final RequestAssignmentMapper mapper;
     private final RequestAssignmentRepository repo;
     private final RequestService requestService;
-    private final Map<AssignmentAction, ActionMapper> mappers;
-
 
     /**
-     * Метод для создания ответа-сущности по полученной нагрузке.
+     * Создание сущности ответа на заявку.
+     *
+     * @param payload полезная нагрузка для создания ответа на заявку.
+     * @return {@link RequestAssignmentDto} - представление ответа на заявку для перемещения между слоями, приложениями.
      */
     @Override
     @Transactional
@@ -45,27 +42,47 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         Request request = requestService.get(payload.requestId());
         RequestAssignment mapped = mapper.create(request, payload);
         RequestAssignment saved = repo.save(mapped);
-        log.info("Ответ [{}] на заявку успешно создан мастером [{}].", saved.getRequest().getId(), saved.getHandymanId());
+        log.info("Ответ [{}] на заявку [{}] успешно создан мастером [{}].", saved.getId(), payload.requestId(), payload.handymanId());
         return mapper.read(saved);
     }
-//    todo: конфликт
-
 
 
     /**
-     * Метод для чтения страницы ответов на заявку с пагинацией.
+     * Получение страницы ответов на заявки с фильтрацией.
+     *
+     * @param page   номер страницы.
+     * @param size   размер выборки.
+     * @param filter фильтр ответов на заявки.
+     * @return {@link PageDto} с {@link RequestAssignmentDto} - представление страницы и ответов на заявки для передачи между слоями, приложениями.
      */
     @Override
-    public PageDto<RequestAssignmentDto> readAll(int pageNumber, int size, RequestAssignmentFilter filter) {
-        Pageable pageable = PageRequest.of(pageNumber, size);
-        Page<RequestAssignment> page = repo.findAll(1, pageable);
-//        todo: filter
-        return mapper.readPage(page);
+    public PageDto<RequestAssignmentDto> readAll(int page, int size, RequestAssignmentFilter filter) {
+        Pageable pageable = PageRequest.of(page, size);
+        Specification<RequestAssignment> spec = configureSpecifications(filter);
+        Page<RequestAssignment> assignmentPage = repo.findAll(spec, pageable);
+        return mapper.readPage(assignmentPage);
     }
-//    todo: фильтрация
+
 
     /**
-     * Метод для чтения ответа на заявку по идентификатору.
+     * Настройка спецификаций для фильтрации ответов на заявки.
+     *
+     * @param filter фильтр, параметры которого и используются для настройки спецификаций.
+     * @return {@link Specification} - спецификация, используемая для фильтрации заявок.
+     */
+    private Specification<RequestAssignment> configureSpecifications(RequestAssignmentFilter filter) {
+        Specification<RequestAssignment> spec = RequestAssignmentSpecifications.hasRequestId(filter.requestId());
+        spec = spec
+                .and(RequestAssignmentSpecifications.hasHandymanId(filter.handymanId()))
+                .and(RequestAssignmentSpecifications.hasAction(filter.action()));
+        return spec;
+    }
+
+    /**
+     * Получение определенного ответа на заявку по его идентификатору.
+     *
+     * @param id идентификатор ответа на заявку.
+     * @return {@link RequestAssignmentDto} - представление ответа на заявку для перемещения между слоями, приложениями.
      */
     @Override
     public RequestAssignmentDto read(long id) {
@@ -78,7 +95,11 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
 
 
     /**
-     * Метод для обновления ответа на заявку по идентификатору. В качестве обновляемых данных - полезная нагрузка.
+     * Обновление определенного ответа на заявку по его идентификатору.
+     *
+     * @param id      идентификатор ответа на заявку.
+     * @param payload полезная нагрузка для обновления ответа на заявку.
+     * @return {@link RequestAssignmentDto} - представление ответа на заявку для перемещения между слоями, приложениями.
      */
     @Override
     @Transactional
@@ -87,8 +108,6 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         RequestAssignment found = repo.findById(id)
                 .orElseThrow(() -> new RequestAssignmentNotFoundException
                         ("Ответ [%s] на заявку не найден.".formatted(id)));
-        if (payload.action() != null)
-            found = mappers.get(payload.action()).map(found);
         RequestAssignment mapped = mapper.update(found, payload);
         RequestAssignment saved = repo.save(mapped);
         log.info("Ответ [{}] на заявку успешно обновлен.", saved.getId());
@@ -97,7 +116,9 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
 
 
     /**
-     * Метод для удаления ответа на заявку по идентификатору.
+     * Удаление определенного ответа на заявку по его идентификатору.
+     *
+     * @param id идентификатор ответа на заявку.
      */
     @Override
     @Transactional
@@ -109,6 +130,4 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         repo.delete(found);
         log.info("Ответ [{}] на заявку успешно удалён.", id);
     }
-//    todo: какой смысл вообще делать две строки, если можно удалить за одно обращение к бд?
-//     без поиска и прочей чепухи? взял и удалил. если не удалил, значит, не нашел, тогда выкинул ошибку
 }

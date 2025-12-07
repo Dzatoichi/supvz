@@ -1,6 +1,7 @@
-package com.supvz.requests_service.mapper;
+package com.supvz.requests_service.mapper.entity;
 
 import com.supvz.requests_service.core.enums.AssignmentAction;
+import com.supvz.requests_service.mapper.action.ActionMapper;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
@@ -10,11 +11,22 @@ import com.supvz.requests_service.model.entity.RequestAssignment;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 /**
  * Реализация маппера для работы с ответами на заявки.
  */
 @Component
 public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
+    private final Map<AssignmentAction, ActionMapper> actionMappers;
+
+    public RequestAssignmentEntityMapper(List<ActionMapper> mapperList) {
+        this.actionMappers = mapperList.stream()
+                .collect(Collectors.toMap(ActionMapper::getType, Function.identity()));
+    }
 
     /**
      * Метод для преобразования полезной нагрузки в сущность.
@@ -65,12 +77,12 @@ public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
      */
     @Override
     public RequestAssignment update(RequestAssignment assignment, RequestAssignmentUpdatePayload payload) {
-        Long handymanId = payload.handymanId();
-        String comment = payload.comment();
-        if (handymanId != null)
-            assignment.setHandymanId(handymanId);
-        if (comment != null)
-            assignment.setComment(comment);
+        if (payload.action() != null)
+            assignment = actionMappers.get(payload.action()).map(assignment);
+        if (payload.handymanId() != null)
+            assignment.setHandymanId(payload.handymanId());
+        if (payload.comment() != null)
+            assignment.setComment(payload.comment());
         return assignment;
     }
 }

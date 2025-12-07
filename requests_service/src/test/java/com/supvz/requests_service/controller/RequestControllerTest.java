@@ -53,7 +53,7 @@ class RequestControllerTest {
     @Test
     void update__ReturnsOk() throws Exception {
         RequestUpdatePayload payloadMock = new RequestUpdatePayload(null, null, null);
-        RequestDto dtoMock = new RequestDto(1, 1, 1, null, null);
+        RequestDto dtoMock = new RequestDto(1, 1, 1, null, null, null);
 
         when(service.update(1, payloadMock)).thenReturn(dtoMock);
 

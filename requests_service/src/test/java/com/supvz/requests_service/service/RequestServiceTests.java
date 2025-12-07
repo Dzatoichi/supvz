@@ -7,7 +7,7 @@ import com.supvz.requests_service.model.dto.RequestDto;
 import com.supvz.requests_service.model.dto.RequestPayload;
 import com.supvz.requests_service.model.dto.RequestUpdatePayload;
 import com.supvz.requests_service.model.entity.Request;
-import com.supvz.requests_service.mapper.RequestMapper;
+import com.supvz.requests_service.mapper.entity.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -37,7 +37,7 @@ class RequestsControllerTests {
     @Test
     void create__ValidPayload__ReturnsOk() throws Exception {
         RequestPayload payloadMock = new RequestPayload(1, 1, null, null);
-        RequestDto dtoMock = new RequestDto(1, 1, 1, null, null);
+        RequestDto dtoMock = new RequestDto(1, 1, 1, null, null, null);
 
         when(service.create(payloadMock)).thenReturn(dtoMock);
 

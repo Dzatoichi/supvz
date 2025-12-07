@@ -7,7 +7,7 @@ import com.supvz.requests_service.model.dto.RequestDto;
 import com.supvz.requests_service.model.dto.RequestPayload;
 import com.supvz.requests_service.model.dto.RequestUpdatePayload;
 import com.supvz.requests_service.model.entity.Request;
-import com.supvz.requests_service.mapper.RequestMapper;
+import com.supvz.requests_service.mapper.entity.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
 import com.supvz.requests_service.util.specification.RequestSpecifications;
 import jakarta.transaction.Transactional;
@@ -18,8 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 /**
  * Реализация сервиса для обработки заявок.
@@ -50,8 +48,8 @@ public class RequestEntityService implements RequestService {
     /**
      * Получение страницы заявок с фильтрацией.
      *
-     * @param page номер страницы.
-     * @param size размер выборки.
+     * @param page   номер страницы.
+     * @param size   размер выборки.
      * @param filter фильтр заявок.
      * @return {@link PageDto} с {@link RequestDto} - представление страницы и заявок для передачи между слоями, приложениями.
      */
@@ -92,7 +90,10 @@ public class RequestEntityService implements RequestService {
     }
 
     /**
-     * Метод для обновления определенной заявки по ID с полезной нагрузкой.
+     * Обновление определенной заявки по ее идентификатору.
+     *
+     * @param id      идентификатор заявки.
+     * @param payload полезная нагрузка для обновления заявки.
      * @return {@link RequestDto} - представление заявки для перемещения между слоями, приложениями.
      */
     @Override
@@ -107,7 +108,9 @@ public class RequestEntityService implements RequestService {
     }
 
     /**
-     * Метод для удаления определенной заявки по ID.
+     * Удаление определенной заявки по ее идентификатору.
+     *
+     * @param id идентификатор заявки.
      */
     @Override
     @Transactional
@@ -120,7 +123,10 @@ public class RequestEntityService implements RequestService {
     }
 
     /**
-     * Метод для получения определенной заявки по ID.
+     * Получение сущности определенной заявки по ее идентификатору.
+     *
+     * @param id идентификатор заявки.
+     * @return {@link Request} - сущность заявки.
      */
     @Override
     public Request get(long id) {
@@ -129,4 +135,3 @@ public class RequestEntityService implements RequestService {
                 .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
     }
 }
-// TODO: логи исправить и перевести
