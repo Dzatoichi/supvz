@@ -1,5 +1,6 @@
 package com.supvz.requests_service.model.dto;
 
+import com.supvz.requests_service.core.annotation.NullOrNotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
@@ -9,6 +10,7 @@ import java.util.UUID;
  */
 public record RequestAssignmentPayload(
         @NotNull long handymanId,
+        @NullOrNotBlank
         String comment
         ) {
 }

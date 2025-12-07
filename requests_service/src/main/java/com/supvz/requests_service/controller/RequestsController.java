@@ -23,10 +23,13 @@ public class RequestsController {
 
 
     /**
-     * Ручка для создания заявки.
+     * Ручка создания заявки.
+     *
+     * @param payload полезная нагрузка для создания заявки.
+     * @return {@link RequestDto} - Представление заявки для передачи между слоями, приложениями.
      */
     @PostMapping
-    public ResponseEntity<?> create(
+    public ResponseEntity<RequestDto> create(
             @RequestBody @Valid RequestPayload payload
     ) {
         RequestDto body = service.create(payload);
@@ -39,9 +42,10 @@ public class RequestsController {
      *
      * @param page номер страницы.
      * @param size размер получаемой выборки.
+     * @return {@link PageDto} с {@link RequestDto} - Представление страницы и заявок для передачи между слоями, приложениями.
      */
     @GetMapping
-    public ResponseEntity<?> readAll(
+    public ResponseEntity<PageDto<RequestDto>> readAll(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "5") int size,
             @ModelAttribute @Nullable RequestFilter filter

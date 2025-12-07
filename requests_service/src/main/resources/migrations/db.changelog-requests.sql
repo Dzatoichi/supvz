@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS requests
     id BIGSERIAL PRIMARY KEY,
     pvz_id INT NOT NULL,
     appellant_id BIGINT NOT NULL,
+    subject VARCHAR(64),
     description TEXT NOT NULL,
     status VARCHAR(16) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'assigned', 'rejected', 'completed')),
     created_at TIMESTAMP NOT NULL DEFAULT now(),

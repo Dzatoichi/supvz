@@ -24,6 +24,8 @@ public class Request {
 
     private long appellantId;
 
+    private String subject;
+
     private String description;
 
     @Enumerated(EnumType.STRING)

@@ -36,8 +36,8 @@ class RequestsControllerTests {
 
     @Test
     void create__ValidPayload__ReturnsOk() throws Exception {
-        RequestPayload payloadMock = mock(RequestPayload.class);
-        RequestDto dtoMock = mock(RequestDto.class);
+        RequestPayload payloadMock = new RequestPayload(1, 1, null, null);
+        RequestDto dtoMock = new RequestDto(1, 1, 1, null, null);
 
         when(service.create(payloadMock)).thenReturn(dtoMock);
 
@@ -51,9 +51,19 @@ class RequestsControllerTests {
     }
 
     @Test
-    void create__InvalidPayload__ReturnsBadRequest() throws Exception {
-        RequestPayload payloadMock = mock(RequestPayload.class);
+    void create__InvalidPayloadSubject__ReturnsBadRequest() throws Exception {
+        RequestPayload payloadMock = new RequestPayload(1, 1, "  ", null);
+        mvc.perform(post(URI)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payloadMock)))
+                .andExpect(status().isBadRequest());
 
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void create__InvalidPayloadDescription__ReturnsBadRequest() throws Exception {
+        RequestPayload payloadMock = new RequestPayload(1, 1, null, "   ");
         mvc.perform(post(URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payloadMock)))
@@ -66,7 +76,7 @@ class RequestsControllerTests {
     void readAll__ReturnsOk() throws Exception {
         int page = 0;
         int size = 5;
-        RequestFilter filter = RequestFilter.builder().build();
+        RequestFilter filter = new RequestFilter(null, null, null, null);
 
         PageDto<RequestDto> body = new PageDto<>(List.of(), page, size, 1, false, false);
 

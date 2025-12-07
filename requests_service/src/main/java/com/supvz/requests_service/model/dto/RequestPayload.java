@@ -1,8 +1,8 @@
 package com.supvz.requests_service.model.dto;
 
+import com.supvz.requests_service.core.annotation.NullOrNotBlank;
+import com.supvz.requests_service.core.annotation.EmptyOrSize;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.UUID;
 
 /**
  * Схема для создания заявки.
@@ -10,6 +10,10 @@ import java.util.UUID;
 public record RequestPayload(
         @NotNull int pvzId,
         @NotNull long appellantId,
+        @EmptyOrSize(min = 5, max = 64)
+        @NullOrNotBlank
+        String subject,
+        @NullOrNotBlank
         String description
 ) {
 }

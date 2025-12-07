@@ -9,7 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST-контроллер для обработки заявки.
+ * REST-контроллер для обработки заявок.
+ * Данный класс предназначен для работы с конкретными заявками по их идентификатору.
  */
 @RestController
 @RequestMapping("/api/v1/requests/{id}")
@@ -18,10 +19,13 @@ public class RequestController {
     private final RequestService service;
 
     /**
-     * Ручка для получения заявки.
+     * Ручка для получения заявки по идентификатору.
+     *
+     * @param id идентификатор заявки.
+     * @return {@link RequestDto} представление заявки для передачи между слоями, приложениями.
      */
     @GetMapping
-    public ResponseEntity<?> read(
+    public ResponseEntity<RequestDto> read(
             @PathVariable(name = "id") long id
     ) {
         RequestDto body = service.read(id);
@@ -30,9 +34,13 @@ public class RequestController {
 
     /**
      * Ручка для обновления заявки.
+     *
+     * @param id      идентификатор заявки
+     * @param payload полезная нагрузка заявки
+     * @return {@link RequestDto} представление заявки для передачи между слоями, приложениями.
      */
     @PatchMapping
-    public ResponseEntity<?> update(
+    public ResponseEntity<RequestDto> update(
             @PathVariable(name = "id") long id,
             @RequestBody @Valid RequestUpdatePayload payload
     ) {
@@ -42,6 +50,9 @@ public class RequestController {
 
     /**
      * Ручка для удаления заявки.
+     *
+     * @param id идентификатор заявки
+     * @return {@link ResponseEntity} response ответ
      */
     @DeleteMapping
     public ResponseEntity<?> delete(

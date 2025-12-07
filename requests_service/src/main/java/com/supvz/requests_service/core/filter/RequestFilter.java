@@ -5,12 +5,12 @@ import lombok.Builder;
 
 
 /**
- * Схема (Payload) для фильтрации заявок.
+ * Схема фильтра для заявок.
  */
-@Builder
 public record RequestFilter(
         Integer pvzId,
         Long appellantId,
+        String subject,
         RequestStatus requestStatus
 ) {
 }
