@@ -2,6 +2,7 @@ package com.supvz.requests_service.service;
 
 import com.supvz.requests_service.core.enums.AssignmentAction;
 import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
+import com.supvz.requests_service.core.filter.RequestAssignmentFilter;
 import com.supvz.requests_service.mapper.ActionMapper;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
@@ -39,9 +40,9 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
      */
     @Override
     @Transactional
-    public RequestAssignmentDto create(long requestId, RequestAssignmentPayload payload) {
-        log.info("Создание ответа на заявку [{}]. Мастер: [{}].", requestId, payload.handymanId());
-        Request request = requestService.get(requestId);
+    public RequestAssignmentDto create(RequestAssignmentPayload payload) {
+        log.info("Создание ответа на заявку [{}]. Мастер: [{}].", payload.requestId(), payload.handymanId());
+        Request request = requestService.get(payload.requestId());
         RequestAssignment mapped = mapper.create(request, payload);
         RequestAssignment saved = repo.save(mapped);
         log.info("Ответ [{}] на заявку успешно создан мастером [{}].", saved.getRequest().getId(), saved.getHandymanId());
@@ -55,9 +56,10 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
      * Метод для чтения страницы ответов на заявку с пагинацией.
      */
     @Override
-    public PageDto<RequestAssignmentDto> readAll(long requestId, int pageNumber, int size) {
+    public PageDto<RequestAssignmentDto> readAll(int pageNumber, int size, RequestAssignmentFilter filter) {
         Pageable pageable = PageRequest.of(pageNumber, size);
-        Page<RequestAssignment> page = repo.findAll(requestId, pageable);
+        Page<RequestAssignment> page = repo.findAll(1, pageable);
+//        todo: filter
         return mapper.readPage(page);
     }
 //    todo: фильтрация

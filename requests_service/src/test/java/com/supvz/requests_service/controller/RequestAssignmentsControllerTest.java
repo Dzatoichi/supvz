@@ -1,6 +1,7 @@
 package com.supvz.requests_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.supvz.requests_service.core.filter.RequestAssignmentFilter;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
@@ -28,30 +29,29 @@ class RequestAssignmentsControllerTest {
     private ObjectMapper objectMapper;
     @MockitoBean
     private RequestAssignmentService service;
-    private static final String URI = "/api/v1/requests/%s/assignments";
+    private static final String URI = "/api/v1/requests/assignments";
 
     @Test
     void create__ValidPayload__ReturnsOk() throws Exception {
-        RequestAssignmentPayload payloadMock = new RequestAssignmentPayload(1, null);
+        RequestAssignmentPayload payloadMock = new RequestAssignmentPayload(1, 1, null);
         RequestAssignmentDto dtoMock = new RequestAssignmentDto(1, 1, 1, null, null, null, null, null);
 
-        when(service.create(1, payloadMock)).thenReturn(dtoMock);
+        when(service.create(payloadMock)).thenReturn(dtoMock);
 
-        mvc.perform(post(URI.formatted(1))
+        mvc.perform(post(URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payloadMock)))
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(dtoMock)));
 
-        verify(service, times(1)).create(1, payloadMock);
+        verify(service, times(1)).create(payloadMock);
     }
 
     @Test
     void create__InvalidPayload__ReturnsBadRequest() throws Exception {
-        int requestId = 1;
-        RequestAssignmentPayload payload = new RequestAssignmentPayload(1, null);
+        RequestAssignmentPayload payload = new RequestAssignmentPayload(1, 1, "  ");
 
-        mvc.perform(post(URI.formatted(requestId))
+        mvc.perform(post(URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());
@@ -61,9 +61,9 @@ class RequestAssignmentsControllerTest {
 
     @Test
     void readAll__ReturnsOk() throws Exception {
-        int requestId = 1;
         int page = 0;
         int size = 5;
+        RequestAssignmentFilter filterMock = new RequestAssignmentFilter(null, null, null);
 
         PageDto<RequestAssignmentDto> body = PageDto.<RequestAssignmentDto>builder()
                 .content(List.of())
@@ -74,7 +74,7 @@ class RequestAssignmentsControllerTest {
                 .hasPrev(false)
                 .build();
 
-        when(service.readAll(requestId, page, size)).thenReturn(PageDto.<RequestAssignmentDto>builder()
+        when(service.readAll(page, size, filterMock)).thenReturn(PageDto.<RequestAssignmentDto>builder()
                 .content(List.of())
                 .page(page)
                 .size(size)
@@ -83,13 +83,13 @@ class RequestAssignmentsControllerTest {
                 .hasPrev(false)
                 .build());
 
-        mvc.perform(get(URI.formatted(requestId))
+        mvc.perform(get(URI)
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size)))
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(body)));
 
-        verify(service, times(1)).readAll(requestId, page, size);
+        verify(service, times(1)).readAll(page, size, filterMock);
     }
 
 }

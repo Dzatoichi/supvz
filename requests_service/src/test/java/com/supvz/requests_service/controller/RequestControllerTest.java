@@ -81,7 +81,7 @@ class RequestControllerTest {
     }
 
     @Test
-    void update__InvalidPayload__ReturnsBadRequest() throws Exception {
+    void update__InvalidPayloadSubject__ReturnsBadRequest() throws Exception {
         RequestUpdatePayload payload = new RequestUpdatePayload(null, "  ", null);
 
         when(service.update(1, payload)).thenThrow(new RequestNotFoundException("messageMock"));
@@ -91,7 +91,21 @@ class RequestControllerTest {
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());
 
-        verify(service, times(1)).update(1, payload);
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void update__InvalidPayloadDescription__ReturnsBadRequest() throws Exception {
+        RequestUpdatePayload payload = new RequestUpdatePayload(null, null, "  ");
+
+        when(service.update(1, payload)).thenThrow(new RequestNotFoundException("messageMock"));
+
+        mvc.perform(patch(URI.formatted(1))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(service);
     }
 
     @Test

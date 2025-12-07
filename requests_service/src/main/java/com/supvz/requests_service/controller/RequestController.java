@@ -52,7 +52,7 @@ public class RequestController {
      * Ручка для удаления заявки.
      *
      * @param id идентификатор заявки
-     * @return {@link ResponseEntity} response ответ
+     * @return {@link ResponseEntity} response ответ.
      */
     @DeleteMapping
     public ResponseEntity<?> delete(

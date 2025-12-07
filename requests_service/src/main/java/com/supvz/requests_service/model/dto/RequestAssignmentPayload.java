@@ -9,6 +9,7 @@ import java.util.UUID;
 * Схема для создания ответа на запрос.
  */
 public record RequestAssignmentPayload(
+        @NotNull long requestId,
         @NotNull long handymanId,
         @NullOrNotBlank
         String comment

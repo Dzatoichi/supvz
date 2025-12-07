@@ -56,5 +56,3 @@ public class ApplicationExceptionHandler extends DefaultHandlerExceptionResolver
         return ResponseEntity.badRequest().body(body);
     }
 }
-
-// TODO: логи исправить и перевести

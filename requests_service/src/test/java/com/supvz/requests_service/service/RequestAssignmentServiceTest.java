@@ -31,13 +31,10 @@
 //class RequestAssignmentServiceTest {
 //    @InjectMocks
 //    private RequestAssignmentEntityService service;
-//
 //    @Mock
 //    private RequestAssignmentMapper mapper;
-//
 //    @Mock
 //    private RequestAssignmentRepository repo;
-//
 //    @Mock
 //    private RequestService requestService;
 //

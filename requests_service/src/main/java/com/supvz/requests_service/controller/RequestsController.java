@@ -26,7 +26,7 @@ public class RequestsController {
      * Ручка создания заявки.
      *
      * @param payload полезная нагрузка для создания заявки.
-     * @return {@link RequestDto} - Представление заявки для передачи между слоями, приложениями.
+     * @return {@link RequestDto} - представление заявки для передачи между слоями, приложениями.
      */
     @PostMapping
     public ResponseEntity<RequestDto> create(
@@ -42,7 +42,8 @@ public class RequestsController {
      *
      * @param page номер страницы.
      * @param size размер получаемой выборки.
-     * @return {@link PageDto} с {@link RequestDto} - Представление страницы и заявок для передачи между слоями, приложениями.
+     * @param filter фильтр для фильтрации заявок.
+     * @return {@link PageDto} с {@link RequestDto} - представление страницы и заявок для передачи между слоями, приложениями.
      */
     @GetMapping
     public ResponseEntity<PageDto<RequestDto>> readAll(
