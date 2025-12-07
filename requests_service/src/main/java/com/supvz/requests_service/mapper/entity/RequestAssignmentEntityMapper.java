@@ -1,6 +1,7 @@
 package com.supvz.requests_service.mapper.entity;
 
 import com.supvz.requests_service.core.enums.AssignmentAction;
+import com.supvz.requests_service.core.enums.RequestStatus;
 import com.supvz.requests_service.mapper.action.ActionMapper;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
@@ -33,6 +34,7 @@ public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
      */
     @Override
     public RequestAssignment create(Request request, RequestAssignmentPayload payload) {
+        request.setStatus(RequestStatus.assigned);
         return RequestAssignment.builder()
                 .request(request)
                 .handymanId(payload.handymanId())

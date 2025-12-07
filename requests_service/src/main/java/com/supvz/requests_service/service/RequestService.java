@@ -1,10 +1,7 @@
 package com.supvz.requests_service.service;
 
 import com.supvz.requests_service.core.filter.RequestFilter;
-import com.supvz.requests_service.model.dto.PageDto;
-import com.supvz.requests_service.model.dto.RequestDto;
-import com.supvz.requests_service.model.dto.RequestPayload;
-import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 
 /*
@@ -13,7 +10,7 @@ import com.supvz.requests_service.model.entity.Request;
 public interface RequestService {
     RequestDto create(RequestPayload payload);
 
-    PageDto<RequestDto> readAll(int page, int size, RequestFilter filter);
+    PageDto<RequestPlainDto> readAll(int page, int size, RequestFilter filter);
 
     RequestDto read(long id);
 

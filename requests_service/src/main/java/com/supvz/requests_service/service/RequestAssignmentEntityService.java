@@ -40,11 +40,13 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
     public RequestAssignmentDto create(RequestAssignmentPayload payload) {
         log.info("Создание ответа на заявку [{}]. Мастер: [{}].", payload.requestId(), payload.handymanId());
         Request request = requestService.get(payload.requestId());
+//        todo: get and assign request
         RequestAssignment mapped = mapper.create(request, payload);
         RequestAssignment saved = repo.save(mapped);
         log.info("Ответ [{}] на заявку [{}] успешно создан мастером [{}].", saved.getId(), payload.requestId(), payload.handymanId());
         return mapper.read(saved);
     }
+    // todo: нельзя создать ответ на заявку, если она выполнена, отказана или уже кем-то выполняется. конфликт.
 
 
     /**

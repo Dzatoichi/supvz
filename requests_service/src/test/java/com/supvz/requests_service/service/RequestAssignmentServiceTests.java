@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class RequestAssignmentServiceTest {
+class RequestAssignmentServiceTests {
     @InjectMocks
     private RequestAssignmentEntityService target;
     @Mock

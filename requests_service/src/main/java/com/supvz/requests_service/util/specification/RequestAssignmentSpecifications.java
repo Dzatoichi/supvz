@@ -8,7 +8,7 @@ public class RequestAssignmentSpecifications {
     public static Specification<RequestAssignment> hasRequestId(Long requestId) {
         return (root, _, cb) -> {
             if (requestId == null) return cb.conjunction();
-            return cb.equal(root.get("requestId"), requestId);
+            return cb.equal(root.get("request").get("id"), requestId);
         };
     }
 

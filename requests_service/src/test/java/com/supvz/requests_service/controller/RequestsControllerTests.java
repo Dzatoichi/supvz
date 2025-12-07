@@ -5,6 +5,7 @@ import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestDto;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.RequestPayload;
+import com.supvz.requests_service.model.dto.RequestPlainDto;
 import com.supvz.requests_service.service.RequestService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ class RequestsControllerTests {
     @Test
     void create__ValidPayload__ReturnsOk() throws Exception {
         RequestPayload payloadMock = new RequestPayload(1, 1, null, null);
-        RequestDto dtoMock = new RequestDto(1, 1, 1, null, null, null);
+        RequestDto dtoMock = new RequestDto(1, 1, 1, null, null, null, null);
 
         when(service.create(payloadMock)).thenReturn(dtoMock);
 
@@ -78,7 +79,7 @@ class RequestsControllerTests {
         int size = 5;
         RequestFilter filter = new RequestFilter(null, null, null, null);
 
-        PageDto<RequestDto> body = new PageDto<>(List.of(), page, size, 1, false, false);
+        PageDto<RequestPlainDto> body = new PageDto<>(List.of(), page, size, 1, false, false);
 
         when(service.readAll(page, size, filter))
                 .thenReturn(new PageDto<>(List.of(), page, size, 1, false, false));

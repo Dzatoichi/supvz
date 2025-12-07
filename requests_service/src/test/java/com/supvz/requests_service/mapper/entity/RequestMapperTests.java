@@ -18,7 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class RequestMapperTest {
+class RequestMapperTests {
     @InjectMocks
     private RequestEntityMapper target;
     @Mock
@@ -50,7 +50,7 @@ class RequestMapperTest {
         long appellantIdMock = 12;
         String descriptionMock = "descriptionMock";
         String subjectMock = "subjectMock";
-        Request request = Request.builder()
+        Request requestMock = Request.builder()
                 .id(requestIdMock)
                 .pvzId(pvzIdMock)
                 .appellantId(appellantIdMock)
@@ -61,7 +61,7 @@ class RequestMapperTest {
 
         when(assignmentMapper.read(assignmentMock)).thenReturn(assignmentDtoMock);
 
-        RequestDto result = assertDoesNotThrow(() -> target.read(request));
+        RequestDto result = assertDoesNotThrow(() -> target.read(requestMock));
 
         assertEquals(requestIdMock, result.id());
         assertEquals(pvzIdMock, result.pvzId());
@@ -73,77 +73,77 @@ class RequestMapperTest {
 
     @Test
     void read__HandlesNullAssignments() {
-        Request request = Request.builder()
+        Request requestMock = Request.builder()
                 .id(1L)
                 .pvzId(123)
                 .description("desc")
                 .assignments(null)
                 .build();
 
-        RequestDto dto = target.read(request);
 
-        assertTrue(dto.assignments().isEmpty());
+        RequestDto result = assertDoesNotThrow(() -> target.read(requestMock));
+
+        assertTrue(result.assignments().isEmpty());
     }
 
     @Test
     void readPage__MapsPageOfRequests() {
-        Request request = Request.builder()
+        Request requestMock = Request.builder()
                 .id(1L)
                 .pvzId(123)
                 .description("desc")
                 .assignments(List.of())
                 .build();
 
-        Page<Request> page = new PageImpl<>(List.of(request));
+        Page<Request> page = new PageImpl<>(List.of(requestMock));
 
-        PageDto<RequestDto> dtoPage = target.readPage(page);
+        PageDto<RequestPlainDto> result = assertDoesNotThrow(() -> target.readPage(page));
 
-        assertEquals(0, dtoPage.page());
-        assertEquals(1, dtoPage.size());
-        assertEquals(1, dtoPage.total());
-        assertFalse(dtoPage.hasNext());
-        assertFalse(dtoPage.hasPrev());
-        assertTrue(dtoPage.content().stream().map(RequestDto::id).toList().contains(1L));
+        assertEquals(0, result.page());
+        assertEquals(1, result.size());
+        assertEquals(1, result.total());
+        assertFalse(result.hasNext());
+        assertFalse(result.hasPrev());
+        assertTrue(result.content().stream().map(RequestPlainDto::id).toList().contains(1L));
     }
 
     @Test
     void update__UpdatesNonNullFields() {
-        Request request = Request.builder()
+        Request requestMock = Request.builder()
                 .id(1L)
                 .pvzId(100)
                 .subject("oldSubject")
                 .description("oldDescription")
                 .build();
 
-        int newPvzId = 200;
-        String newSubject = "newSubject";
-        String newDescription = "newDescription";
-        RequestUpdatePayload payload = new RequestUpdatePayload(newPvzId, newSubject, newDescription);
+        int newPvzIdMock = 200;
+        String newSubjectMock = "newSubjectMock";
+        String newDescriptionMock = "newDescriptionMock";
+        RequestUpdatePayload payloadMock = new RequestUpdatePayload(newPvzIdMock, newSubjectMock, newDescriptionMock);
 
-        Request updated = target.update(request, payload);
+        Request updated = assertDoesNotThrow(() -> target.update(requestMock, payloadMock));
 
-        assertEquals(newPvzId, updated.getPvzId());
-        assertEquals(newSubject, updated.getSubject());
-        assertEquals(newDescription, updated.getDescription());
+        assertEquals(newPvzIdMock, updated.getPvzId());
+        assertEquals(newSubjectMock, updated.getSubject());
+        assertEquals(newDescriptionMock, updated.getDescription());
     }
 
     @Test
     void update__SkipsNullFields() {
-        int oldPvzId = 100;
-        String oldDescription = "oldDescription";
-        String oldSubject = "oldSubject";
-        Request request = Request.builder()
-                .pvzId(oldPvzId)
-                .description(oldDescription)
-                .subject(oldSubject)
+        int oldPvzIdMock = 100;
+        String oldDescriptionMock = "oldDescriptionMock";
+        String oldSubjectMock = "oldSubjectMock";
+        Request requestMock = Request.builder()
+                .pvzId(oldPvzIdMock)
+                .description(oldDescriptionMock)
+                .subject(oldSubjectMock)
                 .build();
+        RequestUpdatePayload payloadMock = new RequestUpdatePayload(null, null, null);
 
-        RequestUpdatePayload payload = new RequestUpdatePayload(null, null, null);
+        Request result = assertDoesNotThrow(() -> target.update(requestMock, payloadMock));
 
-        Request updated = target.update(request, payload);
-
-        assertEquals(oldPvzId, updated.getPvzId());
-        assertEquals(oldSubject, updated.getSubject());
-        assertEquals(oldDescription, updated.getDescription());
+        assertEquals(oldPvzIdMock, result.getPvzId());
+        assertEquals(oldSubjectMock, result.getSubject());
+        assertEquals(oldDescriptionMock, result.getDescription());
     }
 }

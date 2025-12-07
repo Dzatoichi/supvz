@@ -2,10 +2,7 @@ package com.supvz.requests_service.service;
 
 import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestFilter;
-import com.supvz.requests_service.model.dto.PageDto;
-import com.supvz.requests_service.model.dto.RequestDto;
-import com.supvz.requests_service.model.dto.RequestPayload;
-import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.mapper.entity.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
@@ -54,7 +51,7 @@ public class RequestEntityService implements RequestService {
      * @return {@link PageDto} с {@link RequestDto} - представление страницы и заявок для передачи между слоями, приложениями.
      */
     @Override
-    public PageDto<RequestDto> readAll(int page, int size, RequestFilter filter) {
+    public PageDto<RequestPlainDto> readAll(int page, int size, RequestFilter filter) {
         Pageable pageable = PageRequest.of(page, size);
         Specification<Request> spec = configureSpecifications(filter);
         Page<Request> requestPage = repo.findAll(spec, pageable);
@@ -87,6 +84,7 @@ public class RequestEntityService implements RequestService {
         log.debug("Получение заявки [{}].", id);
         return repo.findById(id).map(mapper::read)
                 .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
+//        todo: подумать о пагинации вложенных assignments
     }
 
     /**

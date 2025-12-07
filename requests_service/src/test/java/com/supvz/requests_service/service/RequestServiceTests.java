@@ -2,10 +2,7 @@ package com.supvz.requests_service.service;
 
 import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestFilter;
-import com.supvz.requests_service.model.dto.PageDto;
-import com.supvz.requests_service.model.dto.RequestDto;
-import com.supvz.requests_service.model.dto.RequestPayload;
-import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.mapper.entity.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
@@ -55,12 +52,12 @@ class RequestServiceTests {
     void readAll__ReturnsPageDto() {
         RequestFilter filterMock = mock(RequestFilter.class);
         Page<Request> pageMock = mock(Page.class);
-        PageDto<RequestDto> pageDtoMock = mock(PageDto.class);
+        PageDto<RequestPlainDto> pageDtoMock = mock(PageDto.class);
 
         when(repo.findAll(any(Specification.class), any(Pageable.class))).thenReturn(pageMock);
         when(mapper.readPage(pageMock)).thenReturn(pageDtoMock);
 
-        PageDto<RequestDto> result = Assertions.assertDoesNotThrow(() -> target.readAll(1, 1, filterMock));
+        PageDto<RequestPlainDto> result = Assertions.assertDoesNotThrow(() -> target.readAll(1, 1, filterMock));
         Assertions.assertEquals(pageDtoMock, result);
 
         verify(repo, times(1)).findAll(any(Specification.class), any(Pageable.class));

@@ -4,6 +4,7 @@ import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestDto;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.RequestPayload;
+import com.supvz.requests_service.model.dto.RequestPlainDto;
 import com.supvz.requests_service.service.RequestService;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
@@ -43,15 +44,15 @@ public class RequestsController {
      * @param page номер страницы.
      * @param size размер получаемой выборки.
      * @param filter фильтр для фильтрации заявок.
-     * @return {@link PageDto} с {@link RequestDto} - представление страницы и заявок для передачи между слоями, приложениями.
+     * @return {@link PageDto} с {@link RequestPlainDto} - представление страницы и заявок для передачи между слоями, приложениями.
      */
     @GetMapping
-    public ResponseEntity<PageDto<RequestDto>> readAll(
+    public ResponseEntity<PageDto<RequestPlainDto>> readAll(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "5") int size,
             @ModelAttribute @Nullable RequestFilter filter
     ) {
-        PageDto<RequestDto> body = service.readAll(page, size, filter);
+        PageDto<RequestPlainDto> body = service.readAll(page, size, filter);
         return ResponseEntity.ok(body);
     }
 }

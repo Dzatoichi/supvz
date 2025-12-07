@@ -1,9 +1,6 @@
 package com.supvz.requests_service.mapper.entity;
 
-import com.supvz.requests_service.model.dto.PageDto;
-import com.supvz.requests_service.model.dto.RequestDto;
-import com.supvz.requests_service.model.dto.RequestPayload;
-import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +40,22 @@ public class RequestEntityMapper implements RequestMapper {
                 request.getId(),
                 request.getPvzId(),
                 request.getAppellantId(),
+                request.getStatus(),
                 request.getSubject(),
                 request.getDescription(),
                 assignments == null ? List.of() : assignments.stream().map(assignmentMapper::read).toList()
+        );
+    }
+
+    @Override
+    public RequestPlainDto readPlain(Request request) {
+        return new RequestPlainDto(
+                request.getId(),
+                request.getPvzId(),
+                request.getAppellantId(),
+                request.getStatus(),
+                request.getSubject(),
+                request.getDescription()
         );
     }
 
@@ -53,9 +63,9 @@ public class RequestEntityMapper implements RequestMapper {
      * Метод для преобразования Page из springframework.data.Page в ДТО
      */
     @Override
-    public PageDto<RequestDto> readPage(Page<Request> page) {
-        return PageDto.<RequestDto>builder()
-                .content(page.getContent().stream().map(this::read).toList())
+    public PageDto<RequestPlainDto> readPage(Page<Request> page) {
+        return PageDto.<RequestPlainDto>builder()
+                .content(page.getContent().stream().map(this::readPlain).toList())
                 .page(page.getNumber())
                 .size(page.getSize())
                 .total(page.getTotalPages())

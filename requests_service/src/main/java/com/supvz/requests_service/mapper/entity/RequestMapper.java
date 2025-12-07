@@ -1,9 +1,6 @@
 package com.supvz.requests_service.mapper.entity;
 
-import com.supvz.requests_service.model.dto.PageDto;
-import com.supvz.requests_service.model.dto.RequestDto;
-import com.supvz.requests_service.model.dto.RequestPayload;
-import com.supvz.requests_service.model.dto.RequestUpdatePayload;
+import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import org.springframework.data.domain.Page;
 
@@ -21,10 +18,12 @@ public interface RequestMapper {
      */
     RequestDto read(Request request);
 
+    RequestPlainDto readPlain(Request request);
+
     /*
     Метод для преобразования Page из springframework.data.Page в ДТО
      */
-    PageDto<RequestDto> readPage(Page<Request> page);
+    PageDto<RequestPlainDto> readPage(Page<Request> page);
 
     /*
     Метод для преобразования сущности и полезной нагрузки для обновления в сущность.

@@ -39,7 +39,7 @@ public class Request {
     private void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (updatedAt == null) updatedAt = LocalDateTime.now();
-        if (status == null) status = RequestStatus.assigned;
+        if (status == null) status = RequestStatus.pending;
     }
 
     @PreUpdate
