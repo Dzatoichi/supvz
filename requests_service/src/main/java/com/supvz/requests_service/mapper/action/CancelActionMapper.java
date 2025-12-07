@@ -3,6 +3,7 @@ package com.supvz.requests_service.mapper.action;
 import com.supvz.requests_service.core.enums.AssignmentAction;
 import com.supvz.requests_service.core.enums.RequestStatus;
 import com.supvz.requests_service.model.entity.RequestAssignment;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
  *
  * <p>Данный маппер является реализацией поведения {@code  AssignmentAction.cancel}</p>
  */
+@Slf4j
 @Component
 public class CancelActionMapper implements ActionMapper {
     /**
@@ -29,6 +31,8 @@ public class CancelActionMapper implements ActionMapper {
         assignment.setProcessedAt(LocalDateTime.now());
         assignment.setAction(this.getType());
         assignment.getRequest().setStatus(RequestStatus.pending);
+        log.info("Заявка [{}] отменена и становится в ожидание. По ответу [{}].",
+                assignment.getRequest().getId(), assignment.getId());
         return assignment;
     }
 

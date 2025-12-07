@@ -3,6 +3,7 @@ package com.supvz.requests_service.mapper.action;
 import com.supvz.requests_service.core.enums.AssignmentAction;
 import com.supvz.requests_service.core.enums.RequestStatus;
 import com.supvz.requests_service.model.entity.RequestAssignment;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
  *
  * <p>Данный маппер является реализацией поведения {@code  AssignmentAction.reject}</p>
  */
+@Slf4j
 @Component
 public class RejectActionMapper implements ActionMapper {
     /**
@@ -29,6 +31,8 @@ public class RejectActionMapper implements ActionMapper {
         assignment.setProcessedAt(LocalDateTime.now());
         assignment.setAction(this.getType());
         assignment.getRequest().setStatus(RequestStatus.rejected);
+        log.info("Заявка [{}] отказана. По ответу [{}].",
+                assignment.getRequest().getId(), assignment.getId());
         return assignment;
     }
 
