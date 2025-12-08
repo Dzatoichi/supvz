@@ -3,6 +3,8 @@ package com.supvz.notifications_service.service.sender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.supvz.notifications_service.model.dto.NotificationDto;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,19 +27,23 @@ class WebNotificationSenderTests {
     @Mock
     ObjectMapper objectMapper;
 
+    @BeforeEach
+    void setUp() throws IllegalAccessException {
+        FieldUtils.writeField(target, "baseTopic", "valueMock", true);
+    }
+
     @SneakyThrows
     @Test
     void sendWebNotification__Success() {
-        NotificationDto mockDto = mock(NotificationDto.class);
+        NotificationDto mockDto = NotificationDto.builder().recipientId("recipientIdMock").build();
         String mockSerialized = "serializedMock";
-        String mockDestination = "dummy";
 
         when(objectMapper.writeValueAsString(mockDto)).thenReturn(mockSerialized);
-        doNothing().when(messagingTemplate).convertAndSend(mockDestination, mockSerialized);
+        doNothing().when(messagingTemplate).convertAndSend(any(String.class), eq(mockSerialized));
 
         assertDoesNotThrow(() -> target.send(mockDto));
 
         verify(objectMapper, times(1)).writeValueAsString(mockDto);
-        verify(messagingTemplate, times(1)).convertAndSend(any(), mockSerialized);
+        verify(messagingTemplate, times(1)).convertAndSend(any(String.class), eq(mockSerialized));
     }
 }
