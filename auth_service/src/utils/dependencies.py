@@ -2,10 +2,11 @@ from fastapi import Depends, HTTPException, Request, status
 
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
+from src.schemas.users_schemas import UserAuthRequestSchema
 from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.services.user_service import UserService
 
-# DAO
+# region DAOS
 
 
 def get_users_dao() -> UsersDAO:
@@ -23,7 +24,7 @@ def get_refresh_token_dao() -> RefreshTokensDAO:
     return RefreshTokensDAO()
 
 
-# Сервисы
+# region Сервисы
 
 
 def get_stateful_token_service(
@@ -53,7 +54,7 @@ def get_jwt_tokens_service(
     return JWTTokensService(repo=repo)
 
 
-def get_access_token_from_cookie(request: Request) -> str:
+def get_access_token_from_cookie(request: Request) -> UserAuthRequestSchema:
     """Зависимость для получения access токена из куки"""
     access_token = request.cookies.get("access_token")
     if not access_token:

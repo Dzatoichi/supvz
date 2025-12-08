@@ -3,7 +3,8 @@ spring:
     compose:
       enabled: true
       file:
-        - docker-compose.yaml
+        - docker_build/dev/docker-compose.yaml
 
-server:
-  port: 8001
+logging:
+  level:
+    com.supvz.requests_service: trace

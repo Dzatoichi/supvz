@@ -6,7 +6,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-from src.schemas.users_schemas import SubscriptionEnum, UserRole
+from src.schemas.users_schemas import SubscriptionEnum, UserRoleEnum
 
 if TYPE_CHECKING:
     from src.models.tokens.refresh_tokens import RefreshTokens
@@ -26,22 +26,16 @@ class Users(Base):
         nullable=False,
         index=True,
     )
-    phone_number: Mapped[str] = mapped_column(
-        String(32),
-        unique=True,
-        nullable=False,
-        index=True,
-    )
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UserRole] = mapped_column(
+    role: Mapped[UserRoleEnum] = mapped_column(
         SAEnum(
-            UserRole,
+            UserRoleEnum,
             name="user_role",
             native_enum=False,
         ),
         nullable=False,
-        default=UserRole.owner,
+        default=UserRoleEnum.owner,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(

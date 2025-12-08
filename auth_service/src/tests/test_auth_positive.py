@@ -9,14 +9,11 @@ async def test_register_user(client):
             "email": "test@example.com",
             "password": "12345678",
             "confirm_password": "12345678",
-            "name": "Test User",
-            "phone_number": "+1234567890",
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["email"] == "test@example.com"
-    assert data["name"] == "Test User"
 
 
 @pytest.mark.anyio

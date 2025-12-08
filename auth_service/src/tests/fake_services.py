@@ -14,14 +14,13 @@ class FakeAuthService:
     Класс-заглушка (mock) для сервиса аутентификации пользователей.
     """
 
-    async def register_user(self, data, repo):
+    async def register_user(self, data, repo, token_service=None):
         """
         Метод регистрации пользователя.
         """
         return {
             "id": 1,
             "email": data.email,
-            "name": data.name,
             "role": "owner",
             "subscription": "test",
             "created_at": "2024-01-01T00:00:00",
@@ -62,7 +61,7 @@ class FakeJWTTokensService:
     Класс-заглушка (mock) для сервиса работы с JWT токенами.
     """
 
-    async def refresh_token(self, refresh_token, repo):
+    async def refresh_token(self, refresh_token):
         return {"refresh_token": "refresh", "access_token": "access"}
 
 

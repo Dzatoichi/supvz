@@ -1,4 +1,3 @@
-import re
 from datetime import datetime
 from enum import Enum
 from typing import Annotated
@@ -18,7 +17,7 @@ from src.core.security.permissions.role_permissions import get_permissions_for_r
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
-class UserRole(str, Enum):
+class UserRoleEnum(str, Enum):
     """
     Перечисление ролей пользователя.
     """
@@ -32,6 +31,10 @@ class UserRole(str, Enum):
 
 
 class SubscriptionEnum(Enum):
+    """
+    Перечисление статусов подписки.
+    """
+
     paid = "paid"
     test = "test"
     expired = "expired"
@@ -43,7 +46,6 @@ class UserBaseSchema(BaseModel):
     """
 
     email: EmailStr
-    name: str | None = None
 
     @field_validator("email")
     @classmethod
@@ -70,18 +72,7 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
-    name: str
-    phone_number: str
-
-    @field_validator("phone_number")
-    @classmethod
-    def validate_phone_number(cls, values: str) -> str:
-        """
-        Функция валиадации номера телефона.
-        """
-        if not re.match(r"^\+\d{1,15}$", values):
-            raise ValueError("Invalid phone number")
-        return values
+    register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -93,17 +84,20 @@ class UserRegisterSchema(UserLoginSchema):
         return self
 
 
-class UserUpdateSchema(BaseModel):
+class UserUpdateSchema(UserBaseSchema):
     """
     Схема изменения пользователя.
     """
 
-    id: int
-    name: str | None = None
-    phone_number: str | None = None
-    email: EmailStr | None = None
+    pass
 
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+class UserUpdateMeSchema(UserBaseSchema):
+    """
+    Схема для изменения собственных данных пользователя
+    """
+
+    pass
 
 
 class UserReadSchema(UserBaseSchema):
@@ -112,7 +106,7 @@ class UserReadSchema(UserBaseSchema):
     """
 
     id: int
-    role: UserRole
+    role: UserRoleEnum
     subscription: SubscriptionEnum
     permissions: list[PermissionEnum] = []
     created_at: datetime
@@ -126,18 +120,11 @@ class UserReadSchema(UserBaseSchema):
 
 
 class UserAuthRequestSchema(BaseModel):
-    """Pydantic model for user authorization request."""
+    """
+    Схема для принятия авторизационного запроса(токена).
+    """
 
     access_token: str
-
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-
-class UserAuthResponseSchema(BaseModel):
-    """Pydantic model for user authorization response."""
-
-    role: UserRole
-    permissions: list[PermissionEnum]
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -153,9 +140,6 @@ class PasswordResetConfirmSchema(BaseModel):
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "PasswordResetConfirmSchema":
-        """
-        Метод проверки на совпадение пароля.
-        """
         if self.new_password != self.confirm_new_password:
             raise ValueError("Passwords do not match")
         return self
@@ -174,9 +158,6 @@ class UserPasswordUpdateSchema(BaseModel):
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserPasswordUpdateSchema":
-        """
-        Метод проверки на совпадение пароля.
-        """
         if self.new_password != self.confirm_password:
             raise ValueError("Passwords do not match")
         return self
@@ -195,3 +176,15 @@ class UserForgotPasswordSchema(BaseModel):
         return v.lower()
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
+class UserRegisterEmployeeSchema(BaseModel):
+    """
+    Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
+    """
+
+    pvz_id: int
+    owner_id: int
+    role: UserRoleEnum
+
+    model_config = ConfigDict(from_attributes=True)

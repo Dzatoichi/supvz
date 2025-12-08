@@ -2,13 +2,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 
-from src.dao.tokensDAO import RefreshTokensDAO
+from src.core.security.permissions import PermissionEnum
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
     UserForgotPasswordSchema,
     UserLoginSchema,
     UserReadSchema,
+    UserRegisterEmployeeSchema,
     UserRegisterSchema,
 )
 from src.services.auth_service import AuthService
@@ -16,42 +17,49 @@ from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
-    get_refresh_token_dao,
     get_stateful_token_service,
     get_users_dao,
 )
-from src.utils.rate_limiter import limiter
 
-auth_router = APIRouter(prefix="/auth", tags=["auth"])
+auth_router = APIRouter(prefix="/auth", tags=["Authorization"])
 
 
-@auth_router.post("/register", response_model=UserReadSchema)
-@limiter.limit("3/hour")
+@auth_router.post("/register", response_model=UserReadSchema, status_code=201)
 async def register_user(
-    request: Request,
     user_in: UserRegisterSchema,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
-):
+    token_service: JWTTokensService | None = Depends(get_jwt_tokens_service),
+) -> UserReadSchema:
     """
     Ручка регистрации пользователя.
     POST [/auth/register]
     """
-    user = await auth_service.register_user(data=user_in, repo=repo)
+    if user_in.register_token:
+        user = await auth_service.register_user(
+            data=user_in,
+            repo=repo,
+            token_service=token_service,
+        )
+        return user
+
+    user = await auth_service.register_user(
+        data=user_in,
+        repo=repo,
+        token_service=None,
+    )
 
     return user
 
 
-@auth_router.post("/login", response_model=dict, status_code=200)
-@limiter.limit("5/minute")
+@auth_router.post("/login", responses={200: {"description": "Succesful login"}})
 async def login(
-    request: Request,
     response: Response,
     credentials: UserLoginSchema,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
-):
+) -> None:
     """
     Ручка аутентификации пользователя.
     POST [/auth/login]
@@ -75,21 +83,17 @@ async def login(
         max_age=3600 * 24 * 7,
     )
 
-    return {"description": "Log In successfully"}
-
 
 @auth_router.post(
     "/forgot_password",
     responses={200: {"description": "If the email is registered, a reset link has been sent"}},
 )
-@limiter.limit("5/hour")
 async def forgot_password(
-    request: Request,
     data: UserForgotPasswordSchema,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     token_service: StatefulTokenService = Depends(get_stateful_token_service),
-):
+) -> None:
     """
     Ручка запроса на изменение-сброс пароля пользователя в случае, если пользователь забыл пароль.
     POST [/auth/forgot_password]
@@ -102,14 +106,12 @@ async def forgot_password(
 
 
 @auth_router.post("/reset_password", responses={200: {"description": "Password successfully reset"}})
-@limiter.limit("5/minute")
 async def reset_password(
-    request: Request,
     confirm_data: PasswordResetConfirmSchema,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     token_service: StatefulTokenService = Depends(get_stateful_token_service),
-):
+) -> None:
     """
     Ручка сброса пароля.
     POST [/auth/reset_password]
@@ -122,37 +124,31 @@ async def reset_password(
     )
 
 
-@limiter.limit("5/minute")
-@auth_router.post("/logout", response_model=dict, status_code=200)
+@auth_router.post("/logout", responses={200: {"description": "Logged out successfully"}})
 async def logout(
-    request: Request,
     response: Response,
     refresh_token: Annotated[str | None, Cookie()] = None,
     auth_service: AuthService = Depends(get_auth_service),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
-):
+) -> None:
     """
     Ручка завершения сессии/выхода пользователя.
     POST [/auth/logout]
     """
     await auth_service.logout_user(refresh_token=refresh_token, response=response, token_service=token_service)
-    return {"description": "Logged out successfully"}
 
 
-@auth_router.post("/refresh_token", response_model=dict, status_code=200)
-@limiter.limit("60/minute")
+@auth_router.post("/refresh_token", responses={200: {"description": "Refreshed successfully"}})
 async def refresh_token(
-    request: Request,
     response: Response,
     refresh_token: Annotated[str | None, Cookie()] = None,
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
-    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
-):
+) -> None:
     """
     Ручка для обновления access-токена, выдачи нового refresh-токена.
     POST [/auth/refresh_token]
     """
-    result = await token_service.refresh_token(refresh_token=refresh_token, repo=repo)
+    result = await token_service.refresh_token(refresh_token=refresh_token)
     refresh_token = result["refresh_token"]
     access_token = result["access_token"]
 
@@ -169,18 +165,15 @@ async def refresh_token(
         max_age=3600 * 24 * 7,
     )
 
-    return {"description": "Refreshed successfully"}
 
-
-@auth_router.post("/authorize")
+@auth_router.post("/authorize", status_code=200)
 async def authorize_user(
     request: Request,
-    permission: str,
+    permission: PermissionEnum,
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
-    token_repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
-):
+) -> None:
     """
     Авторизация пользователя по access токену.
     """
@@ -189,8 +182,25 @@ async def authorize_user(
         token=token,
         token_service=token_service,
         repo=repo,
-        token_repo=token_repo,
         permission=permission,
     )
 
     return
+
+
+@auth_router.post("/generate_register_token", response_model=dict)
+async def generate_register_token(
+    employee_data: UserRegisterEmployeeSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    repo: UsersDAO = Depends(get_users_dao),
+) -> dict:
+    """
+    Создание токена регистрации сотрудника
+    """
+    result = await auth_service.generate_register_token(
+        employee_data=employee_data,
+        token_service=token_service,
+        repo=repo,
+    )
+    return result

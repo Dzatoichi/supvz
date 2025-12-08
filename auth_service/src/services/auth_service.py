@@ -1,14 +1,26 @@
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, Response, status
+from fastapi import Response
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.permissions import PermissionEnum, has_permission
-from src.dao.tokensDAO import RefreshTokensDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserLoginSchema, UserReadSchema, UserRegisterSchema
+from src.schemas.users_schemas import (
+    UserLoginSchema,
+    UserReadSchema,
+    UserRegisterEmployeeSchema,
+    UserRegisterSchema,
+)
 from src.services.token_service import JWTTokensService, StatefulTokenService
+from src.utils.exceptions import (
+    IncorrectPasswordException,
+    InvalidTokenException,
+    PermissionDeniedException,
+    TokenExpiredException,
+    UserAlreadyExistsException,
+    UserNotFoundException,
+)
 
 
 class AuthService:
@@ -20,30 +32,34 @@ class AuthService:
         self,
         data: UserRegisterSchema,
         repo: UsersDAO,
+        token_service: JWTTokensService | None = None,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.
         """
-        user = await repo.get_user_by_email(data.email)
+        user = await repo.get_user_by_email(email=data.email)
         if user:
-            raise HTTPException(status.HTTP_409_CONFLICT, "User already exists")
+            raise UserAlreadyExistsException("User already exists")
 
-        hashed_password = hash_helper.hash(data.password)
+        hashed_password = hash_helper.hash(plain_str=data.password)
         payload = {
             "email": data.email,
-            "phone_number": data.phone_number,
-            "name": data.name,
             "hashed_password": hashed_password,
         }
-        user = await repo.create(payload)
-        return UserReadSchema(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            role=user.role,
-            sub=user.subscription,
-            created_at=user.created_at,
-        )
+
+        if data.register_token:
+            register_token_payload = await token_service.validate_token(
+                token=data.register_token,
+                token_type=TokenTypesEnum.register,
+            )
+            owner_id = register_token_payload.get("owner_id")
+            owner = await repo.get_by_id(id=owner_id)
+            if not owner:
+                raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
+
+            payload["role"] = register_token_payload.get("role")
+
+        return await repo.create(payload=payload)
 
     async def login_user(
         self,
@@ -54,12 +70,12 @@ class AuthService:
         """
         Метод аутентификации пользователя.
         """
-        user = await repo.get_user_by_email(credentials.email)
+        user = await repo.get_user_by_email(email=credentials.email)
         if not user:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User not found")
+            raise UserNotFoundException("User not found")
 
         if not hash_helper.verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid password")
+            raise IncorrectPasswordException("Incorrect password")
 
         access_token = await token_service.create_token(
             token_type=TokenTypesEnum.access,
@@ -83,20 +99,20 @@ class AuthService:
         """
         Метод сброса пароля пользователя.
         """
-        token_data = await token_service.get_reset_token_data(token)
+        token_data = await token_service.get_reset_token_data(token=token)
 
         if not token_data:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
+            raise InvalidTokenException("Invalid token")
 
         if token_data.used:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token already used")
+            raise InvalidTokenException("Token is already used")
 
         if token_data.expires_at < datetime.now(timezone.utc):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
+            raise TokenExpiredException("Token has expired")
 
-        hashed_password = hash_helper.hash(new_password)
+        hashed_password = hash_helper.hash(plain_str=new_password)
         result = await repo.set_password(user_id=token_data.user_id, hashed_password=hashed_password)
-        await token_service.mark_token_as_used(token_data)
+        await token_service.mark_token_as_used(token_obj=token_data)
 
         return result
 
@@ -111,10 +127,10 @@ class AuthService:
         Метод генерации токена сброса пароля и инициации его отправки на email через notification_service.
         """
 
-        user = await repo.get_user_by_email(user_email)
+        user = await repo.get_user_by_email(email=user_email)
 
         if user:
-            token = await token_service.create_stateful_token(user.id)
+            token = await token_service.create_stateful_token(user_id=user.id)
 
             # Интеграция с notification_service (пока заглушка)
             # reset_url = f"https://frontend.example.com/reset-password?token={token}"
@@ -132,33 +148,51 @@ class AuthService:
         """
         Метод завершения сессии/выхода пользователя.
         """
+
+        if not refresh_token:
+            raise InvalidTokenException("Invalid token")
+
         await token_service.revoke_token(token=refresh_token)
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         return True
+
+    async def generate_register_token(
+        self,
+        employee_data: UserRegisterEmployeeSchema,
+        token_service: JWTTokensService,
+        repo: UsersDAO,
+    ) -> dict:
+        owner_id = employee_data.owner_id
+        owner = await repo.get_by_id(id=owner_id)
+        if not owner:
+            raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
+
+        register_token = await token_service.create_register_token(
+            token_type=TokenTypesEnum.register,
+            pvz_id=employee_data.pvz_id,
+            owner_id=employee_data.owner_id,
+            role=employee_data.role,
+        )
+        return {"register_token": register_token}
 
     async def authorize_user(
         self,
         token: str,
         token_service: JWTTokensService,
         repo: UsersDAO,
-        token_repo: RefreshTokensDAO,
         permission: PermissionEnum,
     ) -> None:
+        """
+        Метод для авторизации пользователя.
+        """
         token_payload = await token_service.validate_token(
             token=token,
             token_type=TokenTypesEnum.access,
-            repo=token_repo,
         )
         user_id = token_payload.get("user_id")
-        user = await repo.get_by_id(user_id)
+        user = await repo.get_by_id(id=user_id)
         if not user or not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Пользователь не найден или неактивен",
-            )
+            raise UserNotFoundException("User not found")
         if not has_permission(role=user.role, permission=permission):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Недостаточно прав",
-            )
+            raise PermissionDeniedException("Not enough permissions")

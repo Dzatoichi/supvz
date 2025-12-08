@@ -16,7 +16,10 @@ dependencies = [
     "asyncpg (>=0.30.0,<0.31.0)",
     "uvicorn (>=0.35.0,<0.36.0)",
     "fastapi (>=0.116.1,<0.117.0)",
-    "pytest (>=8.4.2,<9.0.0)"
+    "pytest (>=8.4.2,<9.0.0)",
+    "fastapi-pagination (>=0.14.3,<0.15.0)",
+    "pytest-asyncio (>=1.2.0,<2.0.0)",
+    "httpx (>=0.28.1,<0.29.0)"
 ]
 
 
@@ -35,19 +38,16 @@ exclude = [
     "**/venv/**",
     "**/env/**",
     "**/site-packages/**",
-
     # Миграции
     "**/migrations/**",
     "**/alembic/versions/**",
     "**/db/migrations/**",
-
     # Сгенерированные файлы
     "**/build/**",
     "**/dist/**",
     "**/__pycache__/**",
     "**/*.pyc",
     "**/*.pyo",
-
     # Дополнительные исключения
     "**/.git/**",
     "**/.mypy_cache/**",
