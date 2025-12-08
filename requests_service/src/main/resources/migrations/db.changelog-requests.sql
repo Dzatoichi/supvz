@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS request_assignments
     comment TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP NOT NULL DEFAULT now(),
-    FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE
+    FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE,
+    UNIQUE (request_id, handyman_id)
 );
 
 --changeset re1kur:3

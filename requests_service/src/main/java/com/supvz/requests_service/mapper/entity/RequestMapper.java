@@ -29,4 +29,6 @@ public interface RequestMapper {
     Метод для преобразования сущности и полезной нагрузки для обновления в сущность.
      */
     Request update(Request found, RequestUpdatePayload payload);
+
+    Request assign(Request request);
 }

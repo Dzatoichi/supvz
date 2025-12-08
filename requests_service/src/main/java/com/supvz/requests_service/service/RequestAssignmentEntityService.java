@@ -1,5 +1,6 @@
 package com.supvz.requests_service.service;
 
+import com.supvz.requests_service.core.exception.RequestAssignmentConflictException;
 import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
 import com.supvz.requests_service.core.filter.RequestAssignmentFilter;
 import com.supvz.requests_service.model.dto.*;
@@ -39,8 +40,9 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
     @Transactional
     public RequestAssignmentDto create(RequestAssignmentPayload payload) {
         log.info("Создание ответа на заявку [{}]. Мастер: [{}].", payload.requestId(), payload.handymanId());
-        Request request = requestService.get(payload.requestId());
-//        todo: get and assign request
+        if (repo.existsByRequestIdAndHandymanId(payload.requestId(), payload.handymanId()))
+            throw new RequestAssignmentConflictException("Мастер [%s] уже взял или брал в работу заявку [%s].".formatted(payload.handymanId(), payload.requestId()));
+        Request request = requestService.assign(payload.requestId());
         RequestAssignment mapped = mapper.create(request, payload);
         RequestAssignment saved = repo.save(mapped);
         log.info("Ответ [{}] на заявку [{}] успешно создан мастером [{}].", saved.getId(), payload.requestId(), payload.handymanId());
@@ -128,4 +130,6 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         repo.delete(found);
         log.info("Ответ [{}] на заявку успешно удалён.", id);
     }
+//    todo: удалить эндпоинт, метод этот. удаление бессмысленно, тогда мастер может
+//     незаметно удалить свой ответ + будет дублирование логики из update.
 }

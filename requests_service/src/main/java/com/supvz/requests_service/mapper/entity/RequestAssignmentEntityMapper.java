@@ -2,6 +2,7 @@ package com.supvz.requests_service.mapper.entity;
 
 import com.supvz.requests_service.core.enums.AssignmentAction;
 import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.core.exception.RequestConflictException;
 import com.supvz.requests_service.mapper.action.ActionMapper;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
@@ -34,7 +35,6 @@ public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
      */
     @Override
     public RequestAssignment create(Request request, RequestAssignmentPayload payload) {
-        request.setStatus(RequestStatus.assigned);
         return RequestAssignment.builder()
                 .request(request)
                 .handymanId(payload.handymanId())
@@ -79,8 +79,9 @@ public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
      */
     @Override
     public RequestAssignment update(RequestAssignment assignment, RequestAssignmentUpdatePayload payload) {
-        if (payload.action() != null)
+        if (payload.action() != null) {
             assignment = actionMappers.get(payload.action()).map(assignment);
+        }
         if (payload.handymanId() != null)
             assignment.setHandymanId(payload.handymanId());
         if (payload.comment() != null)
@@ -88,3 +89,4 @@ public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
         return assignment;
     }
 }
+// todo: Комментарии сделать

@@ -1,5 +1,7 @@
 package com.supvz.requests_service.mapper.entity;
 
+import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.core.exception.RequestConflictException;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
@@ -87,4 +89,17 @@ public class RequestEntityMapper implements RequestMapper {
             request.setDescription(payload.description());
         return request;
     }
+
+    @Override
+    public Request assign(Request request) {
+        RequestStatus status = request.getStatus();
+        if (status == RequestStatus.rejected)
+            throw new RequestConflictException("Заявка [%s] отклонена, невозможно взять в работу.".formatted(request.getId()));
+        if (status == RequestStatus.completed)
+            throw new RequestConflictException("Заявка [%s] уже выполнена, невозможно взять в работу.".formatted(request.getId()));
+        request.setStatus(RequestStatus.assigned);
+        return request;
+    }
+//    todo: если я не указываю @Transactional в этом методе, тогда транзакция выше все равно распространяется на этот метод?
+//    todo: написать тест и комментарий
 }

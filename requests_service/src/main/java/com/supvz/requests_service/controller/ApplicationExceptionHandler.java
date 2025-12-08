@@ -19,6 +19,7 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class ApplicationExceptionHandler extends DefaultHandlerExceptionResolver {
+//    todo: Появились новые исключения. Написать по ним тесты и handler'ы.
     /**
      * Обработка исключения при отсутствии валидации.
      */

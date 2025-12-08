@@ -1,5 +1,7 @@
 package com.supvz.requests_service.service;
 
+import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.core.exception.RequestConflictException;
 import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.*;
@@ -130,5 +132,41 @@ public class RequestEntityService implements RequestService {
         log.debug("Получение сущности заявки [{}].", id);
         return repo.findById(id)
                 .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
+    }
+
+    @Override
+    public Request assign(long requestId) {
+        log.debug("Изменение статуса заявки [{}] с {} на {}.", requestId, RequestStatus.pending, RequestStatus.assigned);
+        Request request = repo.findById(requestId)
+                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(requestId)));
+        request = mapper.assign(request);
+        request = repo.save(request);
+        return request;
+//    todo: написать тест и комментарий
+    }
+
+    @Override
+    public void setStatus(Request request, RequestStatus newStatus) {
+        log.debug("Изменение статуса заявки [{}].", request.getId());
+        RequestStatus requestStatus = request.getStatus();
+        if (requestStatus == RequestStatus.rejected)
+            throw new RequestConflictException("Заявка [%s] отклонена, статус невозможно обновить.".formatted(request.getId()));
+        if (requestStatus == RequestStatus.completed)
+            throw new RequestConflictException("Заявка [%s] уже выполнена, статус невозможно обновить.".formatted(request.getId()));
+        if (newStatus == RequestStatus.pending) {
+            if (!(repo.countByStatus(newStatus) > 1)) {
+                request.setStatus(newStatus);
+                log.info("Заявка [{}] вновь ожидает выполнения.", request.getId());
+                return;
+            } else {
+                log.info("Заявка [{}] взята в работу несколькими мастерами, поэтому статус остается неизменным.", request.getId());
+                return;
+            }
+        }
+        request.setStatus(newStatus);
+        log.info("Статус заявки [{}] успешно изменен. Новый статус [{}].", request.getId(), newStatus);
+//    todo: написать тест и комментарий
+//        насколько быстрее(или наоборот), если я сразу определяю переменную для request.getId(),
+//        а не вызываю request.getId() каждый раз
     }
 }
