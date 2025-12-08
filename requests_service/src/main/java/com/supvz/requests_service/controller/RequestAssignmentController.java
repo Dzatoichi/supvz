@@ -47,18 +47,4 @@ public class RequestAssignmentController {
         RequestAssignmentDto body = service.update(id, payload);
         return ResponseEntity.ok(body);
     }
-
-    /**
-     * Ручка для удаления ответа на заявку.
-     *
-     * @param id      идентификатор ответа на заявку.
-     * @return {@link ResponseEntity} - response ответ.
-     */
-    @DeleteMapping
-    public ResponseEntity<?> delete(
-            @PathVariable(name = "id") long id
-    ) {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
-    }
 }

@@ -6,7 +6,7 @@ import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
-import com.supvz.requests_service.mapper.entity.RequestMapper;
+import com.supvz.requests_service.mapper.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
 import com.supvz.requests_service.util.specification.RequestSpecifications;
 import jakarta.transaction.Transactional;
@@ -139,6 +139,11 @@ public class RequestEntityService implements RequestService {
         log.debug("Изменение статуса заявки [{}] с {} на {}.", requestId, RequestStatus.pending, RequestStatus.assigned);
         Request request = repo.findById(requestId)
                 .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(requestId)));
+        RequestStatus status = request.getStatus();
+        if (status == RequestStatus.rejected)
+            throw new RequestConflictException("Заявка [%s] отклонена, невозможно взять в работу.".formatted(request.getId()));
+        if (status == RequestStatus.completed)
+            throw new RequestConflictException("Заявка [%s] уже выполнена, невозможно взять в работу.".formatted(request.getId()));
         request = mapper.assign(request);
         request = repo.save(request);
         return request;
@@ -146,27 +151,18 @@ public class RequestEntityService implements RequestService {
     }
 
     @Override
+    @Transactional
     public void setStatus(Request request, RequestStatus newStatus) {
-        log.debug("Изменение статуса заявки [{}].", request.getId());
         RequestStatus requestStatus = request.getStatus();
-        if (requestStatus == RequestStatus.rejected)
+        if (requestStatus == newStatus) return;
+        log.debug("Изменение статуса заявки [{}].", request.getId());
+        boolean isAlreadyRejected = requestStatus == RequestStatus.rejected;
+        boolean isAlreadyCompleted = requestStatus == RequestStatus.completed;
+        if (isAlreadyRejected)
             throw new RequestConflictException("Заявка [%s] отклонена, статус невозможно обновить.".formatted(request.getId()));
-        if (requestStatus == RequestStatus.completed)
+        if (isAlreadyCompleted)
             throw new RequestConflictException("Заявка [%s] уже выполнена, статус невозможно обновить.".formatted(request.getId()));
-        if (newStatus == RequestStatus.pending) {
-            if (!(repo.countByStatus(newStatus) > 1)) {
-                request.setStatus(newStatus);
-                log.info("Заявка [{}] вновь ожидает выполнения.", request.getId());
-                return;
-            } else {
-                log.info("Заявка [{}] взята в работу несколькими мастерами, поэтому статус остается неизменным.", request.getId());
-                return;
-            }
-        }
         request.setStatus(newStatus);
         log.info("Статус заявки [{}] успешно изменен. Новый статус [{}].", request.getId(), newStatus);
-//    todo: написать тест и комментарий
-//        насколько быстрее(или наоборот), если я сразу определяю переменную для request.getId(),
-//        а не вызываю request.getId() каждый раз
     }
 }

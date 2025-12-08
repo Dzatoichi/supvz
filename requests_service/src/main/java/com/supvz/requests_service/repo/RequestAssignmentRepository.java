@@ -1,5 +1,6 @@
 package com.supvz.requests_service.repo;
 
+import com.supvz.requests_service.core.enums.AssignmentAction;
 import com.supvz.requests_service.model.entity.RequestAssignment;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -21,4 +22,6 @@ public interface RequestAssignmentRepository extends CrudRepository<RequestAssig
     boolean existsByRequestIdAndHandymanId(
             @Param("requestId") long requestId,
             @Param("handymanId") long handymanId);
+
+    boolean existsByRequestIdAndActionAndIdNot(Long requestId, AssignmentAction action, Long excludedId);
 }

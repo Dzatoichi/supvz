@@ -1,4 +1,4 @@
-package com.supvz.requests_service.mapper.entity;
+package com.supvz.requests_service.mapper;
 
 import com.supvz.requests_service.core.enums.RequestStatus;
 import com.supvz.requests_service.core.exception.RequestConflictException;
@@ -92,11 +92,6 @@ public class RequestEntityMapper implements RequestMapper {
 
     @Override
     public Request assign(Request request) {
-        RequestStatus status = request.getStatus();
-        if (status == RequestStatus.rejected)
-            throw new RequestConflictException("Заявка [%s] отклонена, невозможно взять в работу.".formatted(request.getId()));
-        if (status == RequestStatus.completed)
-            throw new RequestConflictException("Заявка [%s] уже выполнена, невозможно взять в работу.".formatted(request.getId()));
         request.setStatus(RequestStatus.assigned);
         return request;
     }

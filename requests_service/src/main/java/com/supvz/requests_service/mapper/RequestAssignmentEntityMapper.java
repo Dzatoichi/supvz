@@ -1,9 +1,5 @@
-package com.supvz.requests_service.mapper.entity;
+package com.supvz.requests_service.mapper;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
-import com.supvz.requests_service.core.enums.RequestStatus;
-import com.supvz.requests_service.core.exception.RequestConflictException;
-import com.supvz.requests_service.mapper.action.ActionMapper;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
@@ -13,22 +9,13 @@ import com.supvz.requests_service.model.entity.RequestAssignment;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 /**
  * Реализация маппера для работы с ответами на заявки.
  */
 @Component
 public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
-    private final Map<AssignmentAction, ActionMapper> actionMappers;
-
-    public RequestAssignmentEntityMapper(List<ActionMapper> mapperList) {
-        this.actionMappers = mapperList.stream()
-                .collect(Collectors.toMap(ActionMapper::getType, Function.identity()));
-    }
 
     /**
      * Метод для преобразования полезной нагрузки в сущность.
@@ -80,7 +67,8 @@ public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
     @Override
     public RequestAssignment update(RequestAssignment assignment, RequestAssignmentUpdatePayload payload) {
         if (payload.action() != null) {
-            assignment = actionMappers.get(payload.action()).map(assignment);
+            assignment.setProcessedAt(LocalDateTime.now());
+            assignment.setAction(payload.action());
         }
         if (payload.handymanId() != null)
             assignment.setHandymanId(payload.handymanId());

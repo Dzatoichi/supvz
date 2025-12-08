@@ -1,12 +1,14 @@
 package com.supvz.requests_service.service;
 
+import com.supvz.requests_service.core.enums.AssignmentAction;
+import com.supvz.requests_service.core.enums.RequestStatus;
 import com.supvz.requests_service.core.exception.RequestAssignmentConflictException;
 import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
 import com.supvz.requests_service.core.filter.RequestAssignmentFilter;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
-import com.supvz.requests_service.mapper.entity.RequestAssignmentMapper;
+import com.supvz.requests_service.mapper.RequestAssignmentMapper;
 import com.supvz.requests_service.repo.RequestAssignmentRepository;
 import com.supvz.requests_service.util.specification.RequestAssignmentSpecifications;
 import lombok.RequiredArgsConstructor;
@@ -106,30 +108,29 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
     @Transactional
     public RequestAssignmentDto update(long id, RequestAssignmentUpdatePayload payload) {
         log.debug("Обновление ответа [{}] на заявку.", id);
-        RequestAssignment found = repo.findById(id)
-                .orElseThrow(() -> new RequestAssignmentNotFoundException
-                        ("Ответ [%s] на заявку не найден.".formatted(id)));
-        RequestAssignment mapped = mapper.update(found, payload);
+        RequestAssignment assignment = repo.findById(id)
+                .orElseThrow(() -> new RequestAssignmentNotFoundException("Ответ [%s] на заявку не найден.".formatted(id)));
+        if (payload.action() != null) {
+            processAction(assignment, payload.action());
+        }
+        RequestAssignment mapped = mapper.update(assignment, payload);
         RequestAssignment saved = repo.save(mapped);
         log.info("Ответ [{}] на заявку успешно обновлен.", saved.getId());
         return mapper.read(saved);
     }
 
-    /**
-     * Удаление определенного ответа на заявку по его идентификатору.
-     *
-     * @param id идентификатор ответа на заявку.
-     */
-    @Override
-    @Transactional
-    public void delete(long id) {
-        log.debug("Удаление ответа [{}] на заявку.", id);
-        RequestAssignment found = repo.findById(id)
-                .orElseThrow(() -> new RequestAssignmentNotFoundException
-                        ("Ответ [%s] на заявку не найден.".formatted(id)));
-        repo.delete(found);
-        log.info("Ответ [{}] на заявку успешно удалён.", id);
+    private void processAction(RequestAssignment assignment, AssignmentAction action) {
+        Long assignmentId = assignment.getId();
+        Request request = assignment.getRequest();
+        long handymanId = assignment.getHandymanId();
+        Long requestId = request.getId();
+        boolean isCancel = action == AssignmentAction.cancel;
+        RequestStatus targetRequestStatus = action.getTargetRequestStatus();
+
+        if (isCancel && repo.existsByRequestIdAndActionAndIdNot(requestId, AssignmentAction.assign, assignmentId)) {
+            log.warn("Мастер [{}] отменяет ответ [{}], но заявка [{}] остается в работе у других.", handymanId, assignmentId, requestId);
+            targetRequestStatus = request.getStatus();
+        }
+        requestService.setStatus(request, targetRequestStatus);
     }
-//    todo: удалить эндпоинт, метод этот. удаление бессмысленно, тогда мастер может
-//     незаметно удалить свой ответ + будет дублирование логики из update.
 }

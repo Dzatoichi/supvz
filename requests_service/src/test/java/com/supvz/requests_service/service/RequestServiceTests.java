@@ -4,7 +4,7 @@ import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
-import com.supvz.requests_service.mapper.entity.RequestMapper;
+import com.supvz.requests_service.mapper.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
