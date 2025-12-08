@@ -14,4 +14,3 @@ public record RequestFilter(
         RequestStatus requestStatus
 ) {
 }
-// TODO: подумать еще о параметрах фильтрации.

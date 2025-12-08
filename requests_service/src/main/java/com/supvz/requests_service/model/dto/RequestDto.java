@@ -16,6 +16,5 @@ public record RequestDto(
         String subject,
         String description,
         List<RequestAssignmentDto> assignments
-//        todo: ошибка передавать просто молча все ответы на эту заявку
 ) {
 }

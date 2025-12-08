@@ -84,7 +84,6 @@ public class RequestEntityService implements RequestService {
         log.debug("Получение заявки [{}].", id);
         return repo.findById(id).map(mapper::read)
                 .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
-//        todo: подумать о пагинации вложенных assignments
     }
 
     /**

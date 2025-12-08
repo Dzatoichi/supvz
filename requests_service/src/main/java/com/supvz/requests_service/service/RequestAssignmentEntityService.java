@@ -46,8 +46,6 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         log.info("Ответ [{}] на заявку [{}] успешно создан мастером [{}].", saved.getId(), payload.requestId(), payload.handymanId());
         return mapper.read(saved);
     }
-    // todo: нельзя создать ответ на заявку, если она выполнена, отказана или уже кем-то выполняется. конфликт.
-
 
     /**
      * Получение страницы ответов на заявки с фильтрацией.
@@ -95,7 +93,6 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
                         ("Ответ [%s] на заявку не найден.".formatted(id)));
     }
 
-
     /**
      * Обновление определенного ответа на заявку по его идентификатору.
      *
@@ -115,7 +112,6 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         log.info("Ответ [{}] на заявку успешно обновлен.", saved.getId());
         return mapper.read(saved);
     }
-
 
     /**
      * Удаление определенного ответа на заявку по его идентификатору.

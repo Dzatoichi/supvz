@@ -19,7 +19,6 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class ApplicationExceptionHandler extends DefaultHandlerExceptionResolver {
-
     /**
      * Обработка исключения при отсутствии валидации.
      */
@@ -35,11 +34,9 @@ public class ApplicationExceptionHandler extends DefaultHandlerExceptionResolver
      */
     @ExceptionHandler
     public ResponseEntity<?> handleRequestNotFoundException(RequestNotFoundException ex) {
-        log.info(ex.getMessage());
-
+        log.warn(ex.getMessage());
         HttpStatus status = HttpStatus.BAD_REQUEST;
         Map<String, Object> body = Map.of("status", status.value(), "message", ex.getMessage());
-
         return ResponseEntity.badRequest().body(body);
     }
 
@@ -48,11 +45,9 @@ public class ApplicationExceptionHandler extends DefaultHandlerExceptionResolver
      */
     @ExceptionHandler
     public ResponseEntity<?> handleRequestAssignmentNotFoundException(RequestAssignmentNotFoundException ex) {
-        log.info(ex.getMessage());
-
+        log.warn(ex.getMessage());
         HttpStatus status = HttpStatus.BAD_REQUEST;
         Map<String, Object> body = Map.of("status", status.value(), "message", ex.getMessage());
-
         return ResponseEntity.badRequest().body(body);
     }
 }

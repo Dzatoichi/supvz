@@ -51,5 +51,4 @@ public class RequestAssignmentsController {
         PageDto<RequestAssignmentDto> body = service.readAll(page, size, filter);
         return ResponseEntity.ok(body);
     }
-//    todo: а где фильтрация?
 }
