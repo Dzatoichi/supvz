@@ -1,5 +1,6 @@
 package com.supvz.requests_service.mapper;
 
+import com.supvz.requests_service.core.enums.RequestStatus;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
@@ -145,5 +146,16 @@ class RequestMapperTests {
         assertEquals(oldPvzIdMock, result.getPvzId());
         assertEquals(oldSubjectMock, result.getSubject());
         assertEquals(oldDescriptionMock, result.getDescription());
+    }
+
+    @Test
+    void setStatus__Success() {
+        RequestStatus oldStatusMock = RequestStatus.assigned;
+        RequestStatus newStatusMock = RequestStatus.completed;
+        Request requestMock = Request.builder().status(oldStatusMock).build();
+
+        Request result = assertDoesNotThrow(() -> target.setStatus(requestMock, newStatusMock));
+
+        assertEquals(newStatusMock, result.getStatus());
     }
 }

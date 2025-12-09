@@ -1,5 +1,7 @@
 package com.supvz.requests_service.service;
 
+import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.core.exception.RequestConflictException;
 import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.*;
@@ -18,6 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,7 +43,7 @@ class RequestServiceTests {
         when(repo.save(mappedMock)).thenReturn(savedMock);
         when(mapper.read(savedMock)).thenReturn(dtoMock);
 
-        RequestDto result = Assertions.assertDoesNotThrow(() -> target.create(payload));
+        RequestDto result = assertDoesNotThrow(() -> target.create(payload));
         Assertions.assertEquals(dtoMock, result);
 
         verify(mapper, times(1)).create(payload);
@@ -57,7 +60,7 @@ class RequestServiceTests {
         when(repo.findAll(any(Specification.class), any(Pageable.class))).thenReturn(pageMock);
         when(mapper.readPage(pageMock)).thenReturn(pageDtoMock);
 
-        PageDto<RequestPlainDto> result = Assertions.assertDoesNotThrow(() -> target.readAll(1, 1, filterMock));
+        PageDto<RequestPlainDto> result = assertDoesNotThrow(() -> target.readAll(1, 1, filterMock));
         Assertions.assertEquals(pageDtoMock, result);
 
         verify(repo, times(1)).findAll(any(Specification.class), any(Pageable.class));
@@ -73,7 +76,7 @@ class RequestServiceTests {
         when(repo.findById(requestIdMock)).thenReturn(Optional.of(entityMock));
         when(mapper.read(entityMock)).thenReturn(dtoMock);
 
-        RequestDto result = Assertions.assertDoesNotThrow(() -> target.read(requestIdMock));
+        RequestDto result = assertDoesNotThrow(() -> target.read(requestIdMock));
         Assertions.assertEquals(dtoMock, result);
 
         verify(repo, times(1)).findById(requestIdMock);
@@ -85,7 +88,7 @@ class RequestServiceTests {
         long requestIdMock = 1;
 
         when(repo.findById(requestIdMock)).thenReturn(Optional.empty());
-        Assertions.assertThrows(RequestNotFoundException.class, () -> target.read(requestIdMock));
+        assertThrows(RequestNotFoundException.class, () -> target.read(requestIdMock));
 
         verify(repo, times(1)).findById(requestIdMock);
         verifyNoInteractions(mapper);
@@ -104,7 +107,7 @@ class RequestServiceTests {
         when(repo.save(mapped)).thenReturn(mapped);
         when(mapper.read(mapped)).thenReturn(body);
 
-        RequestDto result = Assertions.assertDoesNotThrow(() -> target.update(requestIdMock, payload));
+        RequestDto result = assertDoesNotThrow(() -> target.update(requestIdMock, payload));
         Assertions.assertEquals(body, result);
 
         verify(repo, times(1)).findById(requestIdMock);
@@ -121,7 +124,7 @@ class RequestServiceTests {
 
         when(repo.findById(requestIdMock)).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(RequestNotFoundException.class, () -> target.update(requestIdMock, payloadMock));
+        assertThrows(RequestNotFoundException.class, () -> target.update(requestIdMock, payloadMock));
 
         verify(repo, times(1)).findById(requestIdMock);
         verifyNoInteractions(mapper);
@@ -135,7 +138,7 @@ class RequestServiceTests {
 
         when(repo.findById(requestIdMock)).thenReturn(Optional.of(entityMock));
 
-        Assertions.assertDoesNotThrow(() -> target.delete(requestIdMock));
+        assertDoesNotThrow(() -> target.delete(requestIdMock));
 
         verify(repo, times(1)).findById(requestIdMock);
         verify(repo, times(1)).delete(entityMock);
@@ -146,9 +149,105 @@ class RequestServiceTests {
         long requestIdMock = 1;
 
         when(repo.findById(requestIdMock)).thenReturn(Optional.empty());
-        Assertions.assertThrows(RequestNotFoundException.class, () -> target.delete(requestIdMock));
+        assertThrows(RequestNotFoundException.class, () -> target.delete(requestIdMock));
 
         verify(repo, times(1)).findById(requestIdMock);
         verifyNoMoreInteractions(repo);
+    }
+
+    @Test
+    void assign__ReturnsRequest() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = mock(RequestStatus.class);
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+        RequestStatus assignedStatusMock = RequestStatus.assigned;
+
+        when(repo.findById(requestIdMock)).thenReturn(Optional.of(requestMock));
+        when(mapper.setStatus(requestMock, assignedStatusMock)).thenReturn(requestMock);
+        when(repo.save(requestMock)).thenReturn(requestMock);
+
+        assertDoesNotThrow(() -> target.assign(requestIdMock));
+
+        verify(repo, times(1)).findById(requestIdMock);
+        verify(mapper, times(1)).setStatus(requestMock, assignedStatusMock);
+        verify(repo, times(1)).save(requestMock);
+    }
+
+    @Test
+    void assign__RequestIsCompleted__ThrowsConflictException() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = RequestStatus.completed;
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+
+        when(repo.findById(requestIdMock)).thenReturn(Optional.of(requestMock));
+
+        assertThrows(RequestConflictException.class, () -> target.assign(requestIdMock));
+
+        verify(repo, times(1)).findById(requestIdMock);
+        verify(mapper, never()).setStatus(any(Request.class), any(RequestStatus.class));
+        verify(repo, never()).save(any(Request.class));
+    }
+
+    @Test
+    void assign__RequestIsRejected__ThrowsConflictException() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = RequestStatus.rejected;
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+
+        when(repo.findById(requestIdMock)).thenReturn(Optional.of(requestMock));
+
+        assertThrows(RequestConflictException.class, () -> target.assign(requestIdMock));
+
+        verify(repo, times(1)).findById(requestIdMock);
+        verify(mapper, never()).setStatus(any(Request.class), any(RequestStatus.class));
+        verify(repo, never()).save(any(Request.class));
+    }
+
+    @Test
+    void setStatus__StatusIsChanges() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = RequestStatus.assigned;
+        RequestStatus newStatusMock = mock(RequestStatus.class);
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+
+        assertDoesNotThrow(() -> target.setStatus(requestMock, newStatusMock));
+
+        verify(mapper, times(1)).setStatus(requestMock, newStatusMock);
+    }
+
+    @Test
+    void setStatus__RequestIsCompleted__ThrowsConflictException() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = RequestStatus.completed;
+        RequestStatus newStatusMock = mock(RequestStatus.class);
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+
+        assertThrows(RequestConflictException.class, () -> target.setStatus(requestMock, newStatusMock));
+
+        verify(mapper, never()).setStatus(any(Request.class), any(RequestStatus.class));
+    }
+
+    @Test
+    void setStatus__RequestIsRejected__ThrowsConflictException() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = RequestStatus.completed;
+        RequestStatus newStatusMock = mock(RequestStatus.class);
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+
+        assertThrows(RequestConflictException.class, () -> target.setStatus(requestMock, newStatusMock));
+
+        verify(mapper, never()).setStatus(any(Request.class), any(RequestStatus.class));
+    }
+
+    @Test
+    void setStatus__NewStatusAndCurrentAreSame__Returns() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = RequestStatus.assigned;
+        RequestStatus newStatusMock = RequestStatus.assigned;
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+
+        assertDoesNotThrow(() -> target.setStatus(requestMock, newStatusMock));
+
+        verify(mapper, never()).setStatus(any(Request.class), any(RequestStatus.class));
     }
 }

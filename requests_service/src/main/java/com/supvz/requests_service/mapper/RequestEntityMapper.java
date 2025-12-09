@@ -1,7 +1,6 @@
 package com.supvz.requests_service.mapper;
 
 import com.supvz.requests_service.core.enums.RequestStatus;
-import com.supvz.requests_service.core.exception.RequestConflictException;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
@@ -90,11 +89,12 @@ public class RequestEntityMapper implements RequestMapper {
         return request;
     }
 
+    /**
+     * Метод изменения статуса сущности заявки.
+     */
     @Override
-    public Request assign(Request request) {
-        request.setStatus(RequestStatus.assigned);
+    public Request setStatus(Request request, RequestStatus newStatus) {
+        request.setStatus(newStatus);
         return request;
     }
-//    todo: если я не указываю @Transactional в этом методе, тогда транзакция выше все равно распространяется на этот метод?
-//    todo: написать тест и комментарий
 }

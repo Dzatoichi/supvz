@@ -19,7 +19,7 @@ public interface RequestService {
 
     void delete(long id);
 
-    Request get(long id);
+//    Request get(long id);
 
     Request assign(long request);
 

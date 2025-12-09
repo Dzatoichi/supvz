@@ -121,48 +121,69 @@ public class RequestEntityService implements RequestService {
         log.info("Заявка [{}] успешно удалена.", id);
     }
 
+//    /**
+//     * Получение сущности определенной заявки по ее идентификатору.
+//     *
+//     * @param id идентификатор заявки.
+//     * @return {@link Request} - сущность заявки.
+//     */
+//    @Override
+//    public Request get(long id) {
+//        log.debug("Получение сущности заявки [{}].", id);
+//        return repo.findById(id)
+//                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
+//    }
+
     /**
-     * Получение сущности определенной заявки по ее идентификатору.
+     * Взятие заявки в работу.
+     * <br/>
+     * То есть изменение статуса заявки на {@code RequestStatus.assigned}.
+     * <br/>
+     * Невозможно взять заявку в работу, если заявка уже выполнена или отклонена.
+     * <br/>
+     * То есть, если статус {@code RequestStatus.completed} или {@code RequestStatus.rejected}.
      *
-     * @param id идентификатор заявки.
-     * @return {@link Request} - сущность заявки.
+     * @param requestId идентификатор заявки.
+     * @return {@link Request} - сущность обновленной заявки.
      */
     @Override
-    public Request get(long id) {
-        log.debug("Получение сущности заявки [{}].", id);
-        return repo.findById(id)
-                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
-    }
-
-    @Override
     public Request assign(long requestId) {
-        log.debug("Изменение статуса заявки [{}] с {} на {}.", requestId, RequestStatus.pending, RequestStatus.assigned);
+        RequestStatus assignedStatus = RequestStatus.assigned;
+        log.debug("Изменение статуса заявки [{}] с {} на {}.", requestId, RequestStatus.pending, assignedStatus);
         Request request = repo.findById(requestId)
                 .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(requestId)));
-        RequestStatus status = request.getStatus();
-        if (status == RequestStatus.rejected)
-            throw new RequestConflictException("Заявка [%s] отклонена, невозможно взять в работу.".formatted(request.getId()));
-        if (status == RequestStatus.completed)
-            throw new RequestConflictException("Заявка [%s] уже выполнена, невозможно взять в работу.".formatted(request.getId()));
-        request = mapper.assign(request);
+        checkConflict(request);
+        request = mapper.setStatus(request, assignedStatus);
         request = repo.save(request);
         return request;
-//    todo: написать тест и комментарий
     }
 
+    private static void checkConflict(Request request) {
+        RequestStatus status = request.getStatus();
+        if (status == RequestStatus.rejected)
+            throw new RequestConflictException("Заявка [%s] отклонена, невозможно изменить статус работы заявки.".formatted(request.getId()));
+        if (status == RequestStatus.completed)
+            throw new RequestConflictException("Заявка [%s] уже выполнена, невозможно изменить статус работы заявки.".formatted(request.getId()));
+    }
+
+    /**
+     * Обновление статуса заявки.
+     * <br/>
+     * Невозможно обновить статус, если заявка уже выполнена или отклонена.
+     * <br/>
+     * То есть, если статус {@code RequestStatus.completed} или {@code RequestStatus.rejected}.
+     *
+     * @param request сущность заявки.
+     * @param newStatus новый статус заявки.
+     */
     @Override
     @Transactional
     public void setStatus(Request request, RequestStatus newStatus) {
         RequestStatus requestStatus = request.getStatus();
         if (requestStatus == newStatus) return;
         log.debug("Изменение статуса заявки [{}].", request.getId());
-        boolean isAlreadyRejected = requestStatus == RequestStatus.rejected;
-        boolean isAlreadyCompleted = requestStatus == RequestStatus.completed;
-        if (isAlreadyRejected)
-            throw new RequestConflictException("Заявка [%s] отклонена, статус невозможно обновить.".formatted(request.getId()));
-        if (isAlreadyCompleted)
-            throw new RequestConflictException("Заявка [%s] уже выполнена, статус невозможно обновить.".formatted(request.getId()));
-        request.setStatus(newStatus);
+        checkConflict(request);
+        mapper.setStatus(request, newStatus);
         log.info("Статус заявки [{}] успешно изменен. Новый статус [{}].", request.getId(), newStatus);
     }
 }

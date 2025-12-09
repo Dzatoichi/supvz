@@ -119,6 +119,17 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         return mapper.read(saved);
     }
 
+    /**
+     * Вспомогательный метод для обработки действия ответа.
+     * <br/>
+     * Метод обрабатывает в зависимости от {@code AssignmentAction}.
+     * <br/>
+     * Например, если ответ заявки с действием отмены выполнения и, например, данной заявкой занимается еще как минимум
+     * один человек, то заявка остается с тем статусом, что у нее уже есть.
+     *
+     * @param assignment сущность ответа на заявку.
+     * @param action     действие, которое отвечает, какой статус приобретет заявка.
+     */
     private void processAction(RequestAssignment assignment, AssignmentAction action) {
         Long assignmentId = assignment.getId();
         Request request = assignment.getRequest();
@@ -126,7 +137,6 @@ public class RequestAssignmentEntityService implements RequestAssignmentService 
         Long requestId = request.getId();
         boolean isCancel = action == AssignmentAction.cancel;
         RequestStatus targetRequestStatus = action.getTargetRequestStatus();
-
         if (isCancel && repo.existsByRequestIdAndActionAndIdNot(requestId, AssignmentAction.assign, assignmentId)) {
             log.warn("Мастер [{}] отменяет ответ [{}], но заявка [{}] остается в работе у других.", handymanId, assignmentId, requestId);
             targetRequestStatus = request.getStatus();

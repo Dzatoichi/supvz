@@ -1,6 +1,8 @@
 package com.supvz.requests_service.controller;
 
+import com.supvz.requests_service.core.exception.RequestAssignmentConflictException;
 import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
+import com.supvz.requests_service.core.exception.RequestConflictException;
 import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -50,5 +52,32 @@ public class ApplicationExceptionHandler extends DefaultHandlerExceptionResolver
         HttpStatus status = HttpStatus.BAD_REQUEST;
         Map<String, Object> body = Map.of("status", status.value(), "message", ex.getMessage());
         return ResponseEntity.badRequest().body(body);
+    }
+
+
+    /**
+     * Обработка исключения при конфликте с ответом на заявку.
+     * <br/>
+     * Например, ответ на заявку уже был однажды создан.
+     */
+    @ExceptionHandler(RequestAssignmentConflictException.class)
+    public ResponseEntity<?> handleRequestAssignmentConflictException(RequestAssignmentConflictException ex) {
+        log.warn(ex.getMessage());
+        HttpStatus status = HttpStatus.CONFLICT;
+        Map<String, Object> body = Map.of("status", status, "message", ex.getMessage());
+        return ResponseEntity.status(status).body(body);
+    }
+
+    /**
+     * Обработка исключения при конфликте с заявкой.
+     * <br/>
+     * Например, заявка выполнена или отклонена, а есть попытка изменить ее статус.
+     */
+    @ExceptionHandler(RequestConflictException.class)
+    public ResponseEntity<?> handleRequestConflictException(RequestConflictException ex) {
+        log.warn(ex.getMessage());
+        HttpStatus status = HttpStatus.CONFLICT;
+        Map<String, Object> body = Map.of("status", status, "message", ex.getMessage());
+        return ResponseEntity.status(status).body(body);
     }
 }
