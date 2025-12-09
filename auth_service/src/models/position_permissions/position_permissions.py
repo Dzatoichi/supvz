@@ -17,8 +17,15 @@ class SystemPositionPermissions(Base):
         primary_key=True,
     )
 
-    position = relationship("SystemPositions", back_populates="permission_links")
-    permission = relationship("Permissions", back_populates="system_role_links")
+    position: Mapped["SystemPositions"] = relationship(
+        "SystemPositions",
+        back_populates="permission_links",
+    )
+
+    permission: Mapped["Permissions"] = relationship(
+        "Permissions",
+        back_populates="system_position_links",
+    )
 
 
 class CustomPositionPermissions(Base):
@@ -30,5 +37,12 @@ class CustomPositionPermissions(Base):
 
     permission_id: Mapped[int] = mapped_column(ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
 
-    position = relationship("CustomPositions", back_populates="permission_links")
-    permission = relationship("Permissions", back_populates="custom_role_links")
+    position: Mapped["CustomPositions"] = relationship(
+        "CustomPositions",
+        back_populates="permission_links",
+    )
+
+    permission: Mapped["Permissions"] = relationship(
+        "Permissions",
+        back_populates="custom_position_links",
+    )

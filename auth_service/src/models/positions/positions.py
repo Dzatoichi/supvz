@@ -4,9 +4,13 @@ from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
+from src.schemas.positions_schemas import PositionSourceEnum
 
 if TYPE_CHECKING:
-    from src.models.position_permissions.position_permissions import PositionPermissions
+    from src.models.position_permissions.position_permissions import (
+        CustomPositionPermissions,
+        SystemPositionPermissions,
+    )
 
 
 class SystemPositions(Base):
@@ -18,11 +22,15 @@ class SystemPositions(Base):
 
     title: Mapped[str] = mapped_column(String(255))
 
-    permission_links: Mapped[List["PositionPermissions"]] = relationship(
-        "PositionPermissions",
+    permission_links: Mapped[List["SystemPositionPermissions"]] = relationship(
+        "SystemPositionPermissions",
         back_populates="position",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def position_source(self) -> str:
+        return PositionSourceEnum.system
 
 
 class CustomPositions(Base):
@@ -40,8 +48,12 @@ class CustomPositions(Base):
         index=True,
     )
 
-    permission_links: Mapped[List["PositionPermissions"]] = relationship(
-        "PositionPermissions",
+    permission_links: Mapped[List["CustomPositionPermissions"]] = relationship(
+        "CustomPositionPermissions",
         back_populates="position",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def position_source(self) -> str:
+        return PositionSourceEnum.custom

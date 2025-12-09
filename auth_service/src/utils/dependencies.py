@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, Request, status
 
 from src.dao.permissionsDAO import PermissionsDAO
-from src.dao.positionsDAO import PositionDAO
+from src.dao.positionsDAO import CustomPositionDAO, SystemPositionDAO
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.database.base import db_helper
@@ -34,9 +34,14 @@ def get_permissions_dao() -> PermissionsDAO:
     return PermissionsDAO()
 
 
-def get_position_dao() -> PositionDAO:
-    """Создаем DAO для работы с Position."""
-    return PositionDAO()
+def get_custom_position_dao() -> CustomPositionDAO:
+    """Создаем DAO для работы с CustomPosition."""
+    return CustomPositionDAO()
+
+
+def get_system_position_dao() -> SystemPositionDAO:
+    """Создаем DAO для работы с SystemPosition."""
+    return SystemPositionDAO()
 
 
 # region Сервисы
@@ -70,13 +75,15 @@ def get_jwt_tokens_service(
 
 
 def get_position_service(
-    position_dao: PositionDAO = Depends(get_position_dao),
+    custom_position_dao: CustomPositionDAO = Depends(get_custom_position_dao),
+    system_position_dao: SystemPositionDAO = Depends(get_system_position_dao),
     permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
 ) -> "PositionService":
     """Создает сервис для работы с должностями."""
     return PositionService(
         db_helper=db_helper,
-        position_dao=position_dao,
+        custom_position_dao=custom_position_dao,
+        system_position_dao=system_position_dao,
         permissions_dao=permissions_dao,
     )
 

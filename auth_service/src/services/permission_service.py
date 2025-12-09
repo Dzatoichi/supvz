@@ -26,7 +26,7 @@ class PermissionService:
             raise PermissionsFilterException("Нужно передавать либо position_id, либо user_id, но не оба.")
 
         elif position_id is not None:
-            perms = await self.perm_dao.get_permissions_by_position(position_id=position_id, params=params)
+            perms = await self.perm_dao.get_permissions_by_custom_position(position_id=position_id, params=params)
 
         else:
             perms = await self.perm_dao.get_permissions_by_user(user_id=user_id, params=params)

@@ -19,6 +19,7 @@ from src.utils.exceptions import (
     InvalidTokenException,
     PermissionDeniedException,
     PermissionsNotFound,
+    PositionNotFoundException,
     TokenExpiredException,
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -53,7 +54,22 @@ class AuthService:
             "hashed_password": hashed_password,
         }
 
-        perm_ids = await perm_repo.get_permissions_ids_by_position(position_id=data.position_id)
+        # TODO: доделать токен
+        if data.invite_token:
+            pass
+        else:
+            position_id = data.position_id
+            position_source = data.position_source
+
+        if position_id and position_source:
+            if position_source == "system":
+                perm_ids = await perm_repo.get_permissions_ids_by_system_position(position_id=position_id)
+            elif position_source == "custom":
+                perm_ids = await perm_repo.get_permissions_ids_by_custom_position(position_id=position_id)
+            else:
+                raise PositionNotFoundException("Не определен position source для нахождения прав доступа.")
+        else:
+            perm_ids = []
 
         if not perm_ids:
             raise PermissionsNotFound("Никаких прав доступа для этой должности не найдено.")

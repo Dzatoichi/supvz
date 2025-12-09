@@ -11,14 +11,9 @@ from pydantic import (
     model_validator,
 )
 
+from src.schemas.positions_schemas import PositionSourceEnum
+
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
-
-
-class PositionSourceEnum(str, Enum):
-    """Перечисление таблиц с должностями"""
-
-    system = "system"
-    custom = "custom"
 
 
 class SubscriptionEnum(Enum):
