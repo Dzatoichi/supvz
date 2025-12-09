@@ -173,17 +173,22 @@ public class RequestEntityService implements RequestService {
      * <br/>
      * То есть, если статус {@code RequestStatus.completed} или {@code RequestStatus.rejected}.
      *
-     * @param request сущность заявки.
+     * @param request   сущность заявки.
      * @param newStatus новый статус заявки.
      */
     @Override
     @Transactional
     public void setStatus(Request request, RequestStatus newStatus) {
         RequestStatus requestStatus = request.getStatus();
-        if (requestStatus == newStatus) return;
-        log.debug("Изменение статуса заявки [{}].", request.getId());
+        Long requestId = request.getId();
+        if (requestStatus == newStatus) {
+            if (requestStatus == RequestStatus.assigned)
+                return;
+            throw new RequestConflictException("Заявка [%s] уже имеет данный статус [%s] работы.".formatted(requestId, requestStatus));
+        }
+        log.debug("Изменение статуса заявки [{}].", requestId);
         checkConflict(request);
         mapper.setStatus(request, newStatus);
-        log.info("Статус заявки [{}] успешно изменен. Новый статус [{}].", request.getId(), newStatus);
+        log.info("Статус заявки [{}] успешно изменен. Новый статус [{}].", requestId, newStatus);
     }
 }

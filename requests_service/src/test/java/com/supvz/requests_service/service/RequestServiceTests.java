@@ -240,13 +240,25 @@ class RequestServiceTests {
     }
 
     @Test
-    void setStatus__NewStatusAndCurrentAreSame__Returns() {
+    void setStatus__NewStatusAndCurrentAreAssigned__Success() {
         long requestIdMock = 1;
         RequestStatus requestStatusMock = RequestStatus.assigned;
         RequestStatus newStatusMock = RequestStatus.assigned;
         Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
 
         assertDoesNotThrow(() -> target.setStatus(requestMock, newStatusMock));
+
+        verify(mapper, never()).setStatus(any(Request.class), any(RequestStatus.class));
+    }
+
+    @Test
+    void setStatus__NewStatusAndCurrentAreSameAndNotAssigned__Success() {
+        long requestIdMock = 1;
+        RequestStatus requestStatusMock = RequestStatus.completed;
+        RequestStatus newStatusMock = RequestStatus.completed;
+        Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
+
+        assertThrows(RequestConflictException.class, () -> target.setStatus(requestMock, newStatusMock));
 
         verify(mapper, never()).setStatus(any(Request.class), any(RequestStatus.class));
     }
