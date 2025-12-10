@@ -43,6 +43,7 @@ class EmployeesService:
             "user_id": data.user_id,
             "owner_id": data.owner_id,
             "position_id": data.position_id,
+            "position_source": data.position_source,
             "phone_number": data.phone_number,
             "name": data.name,
             "pvzs": [],

@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from fastapi_pagination import Page, Params, paginate
+from fastapi_pagination import Page, Params
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
@@ -110,14 +110,11 @@ class PVZService:
         if group_id is not None:
             filters["group_id"] = group_id
 
-        pvzs = await repo.get_pvzs(**filters)
+        pvzs = await repo.get_pvzs(params=params, **filters)
 
-        pvzs_page = paginate(pvzs, params=params)
+        pvzs.items = [PVZRead.model_validate(pvz) for pvz in pvzs.items]
 
-        # конвертация ORM -> Pydantic
-        pvzs_page.items = [PVZRead.model_validate(pvz) for pvz in pvzs_page.items]
-
-        return pvzs_page
+        return pvzs
 
     async def delete_pvz_by_id(
         self,
