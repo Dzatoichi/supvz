@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -24,6 +24,13 @@ class SubscriptionEnum(Enum):
     paid = "paid"
     test = "test"
     expired = "expired"
+
+
+class StatusResponseSchema(BaseModel):
+    """Схема для возврата текстового ответа."""
+
+    status: Literal["ok", "error"] = "ok"
+    message: str | None = None
 
 
 class UserBaseSchema(BaseModel):
@@ -174,3 +181,15 @@ class UserForgotPasswordSchema(BaseModel):
 
 class UpdateUserPermissionsSchema(BaseModel):
     permission_ids: list[int]
+
+
+class UpdateUsersPermissionsSchema(BaseModel):
+    """
+    Схема для обновления списка прав у всех юзеров,
+    которые подаются на вход
+    """
+
+    users: list[int]
+    new_permission_ids: list[int]
+
+    model_config = ConfigDict(from_attributes=True)

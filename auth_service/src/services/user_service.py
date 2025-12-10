@@ -6,7 +6,9 @@ from src.models.users.users import Users
 from src.schemas.permissions_schemas import PermissionReadSchema
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
+    StatusResponseSchema,
     SubscriptionEnum,
+    UpdateUsersPermissionsSchema,
     UserAuthRequestSchema,
     UserReadSchema,
     UserUpdateSchema,
@@ -139,3 +141,22 @@ class UserService:
                 )
 
                 return [PermissionReadSchema.model_validate(p) for p in permissions]
+
+    async def update_users_permissions(
+        self,
+        data: UpdateUsersPermissionsSchema,
+        repo: UsersDAO,
+    ) -> StatusResponseSchema:
+        """
+        Обновляет права пользователей.
+        """
+
+        await repo.update_users_permissions(
+            user_ids=data.users,
+            permission_ids=data.new_permission_ids,
+        )
+
+        return StatusResponseSchema(
+            status="ok",
+            message=f"Права обновлены для {len(data.users)} пользователей.",
+        )

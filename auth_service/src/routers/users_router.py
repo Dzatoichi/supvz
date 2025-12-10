@@ -5,7 +5,9 @@ from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.permissions_schemas import PermissionReadSchema
 from src.schemas.users_schemas import (
+    StatusResponseSchema,
     UpdateUserPermissionsSchema,
+    UpdateUsersPermissionsSchema,
     UserAuthRequestSchema,
     UserReadSchema,
     UserUpdateSchema,
@@ -106,6 +108,19 @@ async def update_permissions(
         user_repo=user_repo,
         perm_repo=perm_repo,
     )
+
+
+@users_router.put("/permissions/", response_model=StatusResponseSchema)
+async def update_users_permissions(
+    data: UpdateUsersPermissionsSchema,
+    user_service: UserService = Depends(get_user_service),
+    repo: UsersDAO = Depends(get_users_dao),
+) -> StatusResponseSchema:
+    """
+    Ручка для bulk update permissions у юзеров.
+    Старые права удаляются, новые назначаются.
+    """
+    return await user_service.update_users_permissions(data=data, repo=repo)
 
 
 @users_router.delete("/{user_id}", status_code=204)

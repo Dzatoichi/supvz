@@ -1,4 +1,5 @@
 from fastapi_pagination import Page, Params
+from pydantic import TypeAdapter
 
 from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.positionsDAO import CustomPositionDAO, SystemPositionDAO
@@ -29,6 +30,7 @@ class PositionService:
         self.custom_position_dao = custom_position_dao
         self.system_position_dao = system_position_dao
         self.perm_dao = permissions_dao
+        self.adapter = TypeAdapter(PositionReadSchema)
 
     async def get_positions(
         self,
@@ -38,6 +40,8 @@ class PositionService:
     ) -> Page[PositionReadSchema]:
         """Возвращает список всех должностей с возможностью отфильтровать по owner_id"""
 
+        adapter = TypeAdapter(PositionReadSchema)
+
         if position_source == PositionSourceEnum.system:
             positions = await self.system_position_dao.get_positions(params=params)
         elif position_source == PositionSourceEnum.custom:
@@ -46,7 +50,7 @@ class PositionService:
         if positions.total == 0:
             raise PositionNotFoundException("Не найдено ни одной должности.")
 
-        positions.items = [PositionReadSchema.model_validate(pos) for pos in positions.items]
+        positions.items = [adapter.validate_python(pos) for pos in positions.items]
         return positions
 
     async def get_position(
@@ -64,7 +68,7 @@ class PositionService:
         if not position:
             raise PositionNotFoundException("Должность с таким id не найдена.")
 
-        return PositionReadSchema.model_validate(position)
+        return self.adapter.validate_python(position)
 
     async def create_position(
         self,
@@ -103,7 +107,7 @@ class PositionService:
                 else:
                     position.permissions = None
 
-                return PositionReadSchema.model_validate(position)
+        return self.adapter.validate_python(position)
 
     async def update_position(
         self,
