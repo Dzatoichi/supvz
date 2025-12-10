@@ -6,6 +6,3 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
     url: ${DB_URL}
-
-server:
-  port: 8002

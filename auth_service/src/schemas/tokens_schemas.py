@@ -8,3 +8,4 @@ class TokenTypesEnum(StrEnum):
 
     access = "access"
     refresh = "refresh"
+    register = "register"

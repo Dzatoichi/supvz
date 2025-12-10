@@ -65,6 +65,7 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
+    register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
 
     position_id: int | None = None
     position_source: PositionSourceEnum | None = None
@@ -97,15 +98,20 @@ class UserRegisterSchema(UserLoginSchema):
         return self
 
 
-class UserUpdateSchema(BaseModel):
+class UserUpdateSchema(UserBaseSchema):
     """
     Схема изменения пользователя.
     """
 
-    id: int
-    email: EmailStr | None = None
+    pass
 
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+class UserUpdateMeSchema(UserBaseSchema):
+    """
+    Схема для изменения собственных данных пользователя
+    """
+
+    pass
 
 
 class UserReadSchema(UserBaseSchema):
@@ -191,5 +197,15 @@ class UpdateUsersPermissionsSchema(BaseModel):
 
     users: list[int]
     new_permission_ids: list[int]
+
+# TODO: начать использовать position
+class UserRegisterEmployeeSchema(BaseModel):
+    """
+    Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
+    """
+
+    pvz_id: int
+    owner_id: int
+    role: UserRoleEnum
 
     model_config = ConfigDict(from_attributes=True)

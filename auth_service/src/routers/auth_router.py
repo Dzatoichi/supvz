@@ -10,6 +10,7 @@ from src.schemas.users_schemas import (
     UserForgotPasswordSchema,
     UserLoginSchema,
     UserReadSchema,
+    UserRegisterEmployeeSchema,
     UserRegisterSchema,
 )
 from src.services.auth_service import AuthService
@@ -31,14 +32,25 @@ async def register_user(
     auth_service: AuthService = Depends(get_auth_service),
     repo: UsersDAO = Depends(get_users_dao),
     perm_repo: PermissionsDAO = Depends(get_permissions_dao),
+    token_service: JWTTokensService | None = Depends(get_jwt_tokens_service),
 ) -> UserReadSchema:
     """
     Ручка регистрации пользователя.
     POST [/auth/register]
     """
+    if user_in.register_token:
+        user = await auth_service.register_user(
+            data=user_in,
+            repo=repo,
+            token_service=token_service,
+            perm_repo=perm_repo,
+        )
+        return user
+
     user = await auth_service.register_user(
-        data=data,
-        user_repo=repo,
+        data=user_in,
+        repo=repo,
+        token_service=None,
         perm_repo=perm_repo,
     )
 
@@ -177,3 +189,23 @@ async def authorize_user(
         repo=repo,
         permission=permission,
     )
+
+    return
+
+
+@auth_router.post("/generate_register_token", response_model=dict)
+async def generate_register_token(
+    employee_data: UserRegisterEmployeeSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+    repo: UsersDAO = Depends(get_users_dao),
+) -> dict:
+    """
+    Создание токена регистрации сотрудника
+    """
+    result = await auth_service.generate_register_token(
+        employee_data=employee_data,
+        token_service=token_service,
+        repo=repo,
+    )
+    return result

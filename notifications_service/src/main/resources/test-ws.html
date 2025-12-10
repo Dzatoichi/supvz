@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSocket Test</title>
+  <!-- Подключаем SockJS и STOMP.js из CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+  <h2>WebSocket + STOMP Test</h2>
+  <div id="status">Подключение...</div>
+  <ul id="messages"></ul>
+
+  <script>
+    const statusDiv = document.getElementById('status');
+    const messagesList = document.getElementById('messages');
+
+    // Создаём SockJS-соединение
+    const socket = new SockJS('http://localhost:8003/ws');
+
+    // Создаём STOMP-клиент
+    const stompClient = new StompJs.Client({
+      webSocketFactory: () => socket,
+      debug: (msg) => console.log('[STOMP Debug]', msg),
+      reconnectDelay: 5000, // пытаться переподключиться каждые 5 сек
+      onConnect: () => {
+        statusDiv.textContent = '✅ Подключено!';
+        statusDiv.style.color = 'green';
+
+        // Подписываемся на топик (измени, если у тебя другой путь)
+        stompClient.subscribe('/topic/notifications', (frame) => {
+          const message = JSON.parse(frame.body);
+          const li = document.createElement('li');
+          li.textContent = `🔔 ${new Date().toLocaleTimeString()} — ${message.subject || message}`;
+          messagesList.appendChild(li);
+        });
+
+        // Пример: отправка сообщения на сервер (если у тебя есть @MessageMapping)
+        // stompClient.publish({
+        //   destination: '/backend/test',
+        //   body: JSON.stringify({ text: 'Привет с фронта!' })
+        // });
+      },
+      onStompError: (frame) => {
+        statusDiv.textContent = '❌ Ошибка подключения';
+        statusDiv.style.color = 'red';
+        console.error('[STOMP Error]', frame);
+      }
+    });
+
+    // Запускаем подключение
+    stompClient.activate();
+  </script>
+</body>
+</html>

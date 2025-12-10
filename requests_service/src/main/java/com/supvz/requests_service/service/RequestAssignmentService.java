@@ -1,17 +1,18 @@
 package com.supvz.requests_service.service;
 
-import com.supvz.requests_service.core.PageDto;
-import com.supvz.requests_service.core.RequestAssignmentDto;
-import com.supvz.requests_service.core.RequestAssignmentPayload;
-import com.supvz.requests_service.core.RequestAssignmentUpdatePayload;
+import com.supvz.requests_service.core.filter.RequestAssignmentFilter;
+import com.supvz.requests_service.model.dto.PageDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentDto;
+import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
+import com.supvz.requests_service.model.dto.RequestAssignmentUpdatePayload;
 
 /*
 Интерфейс сервиса для работы с ответами на запросы.
  */
 public interface RequestAssignmentService {
-    RequestAssignmentDto create(long id, RequestAssignmentPayload payload);
+    RequestAssignmentDto create(RequestAssignmentPayload payload);
 
-    PageDto<RequestAssignmentDto> readAll(long requestId, int page, int size);
+    PageDto<RequestAssignmentDto> readAll(int page, int size, RequestAssignmentFilter filter);
 
     RequestAssignmentDto read(long id);
 
