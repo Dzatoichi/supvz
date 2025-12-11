@@ -75,7 +75,7 @@ class PVZService:
             type=pvz_update.type,
             address=pvz_update.address,
             owner_id=pvz_update.owner_id,
-            group=pvz_update.group,
+            group_id=pvz_update.group_id,
             curator_id=pvz_update.curator_id,
             created_at=pvz_update.created_at,
         )

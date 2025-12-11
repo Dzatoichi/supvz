@@ -57,3 +57,15 @@ exclude = [
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "C4"]
 ignore = ["E501", "F821", "B008"]
+[tool.poetry.group.dev.dependencies]
+taskipy = "^1.14.1"
+polyfactory = "^3.1.0"
+
+[tool.taskipy.tasks]
+test-up = "docker compose up -d postgres_test"
+test = "pytest"
+test-down = "docker compose stop postgres_test"
+test-full = "task test-up && task test && task test-down"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
