@@ -9,6 +9,7 @@ pytestmark = pytest.mark.anyio
 async def test_get_pvz_not_found(client):
     """
     Тест: Получение несуществующего ПВЗ (404).
+    GET /pvzs/{pvz_id}
     Проверяет, что API возвращает корректную ошибку, если ID не найден.
     """
     non_existent_id = 999999
@@ -24,6 +25,7 @@ async def test_get_pvz_not_found(client):
 async def test_update_pvz_not_found(client):
     """
     Тест: Обновление несуществующего ПВЗ (404).
+    PATCH /pvzs/{pvz_id}
     """
     non_existent_id = 999999
     update_data = {
@@ -40,6 +42,7 @@ async def test_update_pvz_not_found(client):
 async def test_delete_pvz_not_found(client):
     """
     Тест: Удаление несуществующего ПВЗ (404).
+    DELETE /pvzs/{pvz_id}
     """
     non_existent_id = 999999
 
@@ -52,6 +55,7 @@ async def test_delete_pvz_not_found(client):
 async def test_create_pvz_duplicate_code(client, session):
     """
     Тест: Создание ПВЗ с уже существующим кодом (409 Conflict).
+    POST /pvzs/
     Проверяет уникальность поля 'code'.
     """
     existing_code = "DUPLICATE-CODE"
@@ -70,6 +74,7 @@ async def test_create_pvz_duplicate_code(client, session):
 async def test_create_pvz_validation_error(client):
     """
     Тест: Ошибка валидации данных (422 Unprocessable Entity).
+    GET /pvzs/{pvz_id}/employees
     Проверяет реакцию на отсутствие обязательных полей.
     """
     invalid_payload = {}
@@ -85,6 +90,7 @@ async def test_create_pvz_validation_error(client):
 async def test_create_pvz_invalid_types(client):
     """
     Тест: Ошибка типов данных (422).
+    PATCH /pvzs/group_assignment
     Проверяет, что нельзя передать строку туда, где ожидается число.
     """
     payload = {

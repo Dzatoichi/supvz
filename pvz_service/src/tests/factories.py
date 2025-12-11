@@ -30,7 +30,7 @@ class AsyncPersistenceFactory(ModelFactory[T], Generic[T]):
         data = cls.build(**kwargs)
         data_dict = data.model_dump(mode="json")
 
-        # cls.__model_cls__ - это ссылка на SQLAlchemy модель
+        # cls.__model_cls__ - ссылка на SQLAlchemy модель
         db_obj = cls.__model_cls__(**data_dict)
 
         session.add(db_obj)
@@ -41,6 +41,8 @@ class AsyncPersistenceFactory(ModelFactory[T], Generic[T]):
 class GroupFactory(AsyncPersistenceFactory[PVZGroupCreateSchema]):
     __model__ = PVZGroupCreateSchema
     __model_cls__ = PVZGroups
+
+    owner_id = 0
 
 
 class EmployeeFactory(AsyncPersistenceFactory[EmployeeCreateRequestSchema]):
