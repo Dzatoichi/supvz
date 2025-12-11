@@ -1,8 +1,54 @@
+// Каким или какими протоколами логи будут получаться агентом.
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint: "0.0.0.0:4318"
+  }
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+    metrics = [otelcol.exporter.prometheus.default.input]
+  }
+}
+
+// Здесь прописываем эндпоинт для темпо. Он будет хранить трейсы, отправленные агентом аллой.
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+  }
+  tls {
+    insecure = true
+  }
+}
+
+otelcol.processor.batch "default" {
+}
+
+otelcol.service "default" {
+  pipelines = [
+    {
+      receivers  = [otelcol.receiver.otlp.default.receiver]
+      processors = [otelcol.processor.batch.default]
+      exporters  = [otelcol.exporter.otlphttp.tempo]
+    },
+  ]
+}
+
+// Здесь прописывается эндпоинт локи для пуша логов.
 loki.write "local" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
   }
 }
+
+/* Честно говоря, не особо понимаю, что происходит ниже.
+Предположу, что здесь мы указываем сеть контейнеров и контейнеры в целом, которые будут парситься для сбора логов.
+Этим и силен аллой, он собирает логи не в целом с приложения, а с его контейнера.
+Эта сила называется - discovery. Локи сам находит и определяет контейнеры для последующего парсинга.
+
+Также указываются правила, лейблы, которые парсит агент.
+*/
 
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"

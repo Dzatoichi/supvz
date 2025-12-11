@@ -65,3 +65,23 @@ app:
       processing:
         batch-size: ${APP_INBOX_SCHEDULE_PROCESSING_BATCH_SIZE}
         delay-ms: ${APP_INBOX_SCHEDULE_PROCESSING_DELAY_MS}
+
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    otlp:
+      endpoint: {ALLOY_URL}
+      protocol: http/protobuf
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - prometheus

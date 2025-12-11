@@ -1,7 +1,7 @@
 services:
-  postgres:
+  psql:
     image: postgres:17-alpine
-    container_name: notifications_postgres
+    container_name: notifications-psql
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
@@ -17,7 +17,7 @@ services:
       start_period: 10s
 
   message-broker:
-    container_name: message_broker
+    container_name: message-broker
     image: rabbitmq:4-management-alpine
     volumes:
       - ./docker_build/message_broker/init/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
@@ -31,7 +31,7 @@ services:
       - "15672:15672"
       - "15692:15692"
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,7 +41,7 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-    container_name: notifications_service
+    container_name: notifications-service
     restart: always
     expose:
       - "8003"
@@ -54,7 +54,7 @@ services:
       postgres:
         condition: service_healthy
       message-broker:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8003/actuator/health || exit 1" ]
       interval: 5s
@@ -62,8 +62,8 @@ services:
       retries: 30
 
 
-# ________OBSERVABILITY__________________
-  prometheus:
+  # ________OBSERVABILITY__________________
+  prometheus: # сбор и хранение метрик
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
@@ -76,7 +76,7 @@ services:
       timeout: 5s
       retries: 5
 
-  loki:
+  loki: # сбор и хранение логов
     image: grafana/loki:2.9.2
     container_name: loki
     user: root
@@ -89,7 +89,18 @@ services:
     ports:
       - "3100:3100"
 
-  alloy:
+  tempo:
+    image: grafana/tempo:2.9.0
+    container_name: tempo
+    volumes:
+      - ./docker_build/tempo/tempo.yaml:/etc/tempo/tempo.yaml
+      - tempo_data:/var/tempo
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    ports:
+      - "3200:3200"
+
+
+  alloy: # агент, который собирает логи
     image: grafana/alloy:latest
     container_name: alloy
     environment:
@@ -107,18 +118,18 @@ services:
     ports:
       - "9080:9080"
 
-  notifications-postgres-exporter:
+  notifications-psql-exporter: # агент для сбора метрик у БД
     image: prometheuscommunity/postgres-exporter:latest
-    container_name: notifications_postgres_exporter
+    container_name: notifications-psql-exporter
     environment:
-      DATA_SOURCE_NAME: postgresql://${DB_USER}:${DB_PASS}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable
+      DATA_SOURCE_NAME: postgresql://${DB_USER}:${DB_PASS}@psql:${DB_PORT}/${DB_NAME}?sslmode=disable
     ports:
       - "9187:9187"
     depends_on:
       postgres:
         condition: service_healthy
 
-  grafana:
+  grafana: # визуализация, дашборды
     image: grafana/grafana:latest
     container_name: grafana
     environment:
@@ -132,7 +143,7 @@ services:
       prometheus:
         condition: service_healthy
 
-# ____________UTIL____________
+  # ____________UTIL____________
   nginx:
     image: nginx:stable-alpine
     container_name: nginx
@@ -149,3 +160,4 @@ volumes:
   loki_chunks:
   loki_index:
   loki_rules:
+  tempo_data:

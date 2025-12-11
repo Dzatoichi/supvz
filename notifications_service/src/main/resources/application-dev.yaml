@@ -67,3 +67,23 @@ app:
       processing:
         batch-size: 50
         delay-ms: 10000
+
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    otlp:
+      endpoint: http://localhost:4318
+      protocol: http/protobuf
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - prometheus

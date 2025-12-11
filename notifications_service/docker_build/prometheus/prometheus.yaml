@@ -13,7 +13,7 @@ scrape_configs:
       - targets: ["notifications-service:8003"]
   - job_name: notifications_db
     static_configs:
-      - targets: ["notifications-postgres-exporter:9187"]
+      - targets: ["notifications-psql-exporter:9187"]
   - job_name: message_broker (rabbitmq)
     static_configs:
       - targets: ["message-broker:15692"]
