@@ -19,6 +19,13 @@ class PVZGroupsService:
         repo: PVZGroupsDAO,
     ):
         """Создаёт новую группу ПВЗ"""
+        existing_group = await repo.get_group(name=data.name)
+        if existing_group:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Группа с таким именем уже существет",
+            )
+
         payload = data.model_dump()
         group = await repo.create(payload)
 
@@ -28,14 +35,22 @@ class PVZGroupsService:
         self,
         group_id: int,
         data: PVZGroupUpdateSchema,
-        repo: PVZsDAO,
+        pvz_repo: PVZsDAO,
+        group_repo: PVZGroupsDAO,
     ):
         """Обновляет данные группы ПВЗ и кураторство для ПВЗ при необходимости."""
 
-        group = await repo.update(group_id, **data.model_dump(exclude_unset=True))
+        existing_group = await group_repo.get_by_id(id=group_id)
+        if not existing_group:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Группы с таким id не существет",
+            )
+
+        group = await group_repo.update(group_id, **data.model_dump(exclude_unset=True))
 
         if data.curator_id:
-            await repo.update_pvzs_curator_by_group(group_id, data.curator_id)
+            await pvz_repo.update_pvzs_curator_by_group(group_id, data.curator_id)
 
         return PVZGroupResponseSchema.model_validate(group)
 
@@ -92,10 +107,24 @@ class PVZGroupsService:
     ):
         """Удаляет группу ПВЗ."""
 
+        existing_group = await repo.get_by_id(id=group_id)
+        if not existing_group:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Группы с таким id не существет",
+            )
+
         await repo.delete(id=group_id)
 
     async def assign_curator(self, group_id: int, curator_id: int, repo: PVZGroupsDAO, pvz_repo: PVZsDAO):
         """Привязывает куратора к группе, а также ко всем пвз состоящим в этой группе"""
+
+        existing_group = await repo.get_by_id(id=group_id)
+        if not existing_group:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Группы с таким id не существет",
+            )
 
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():  # ← одна транзакция

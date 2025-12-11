@@ -56,7 +56,12 @@ async def assign_curator_to_group(
 ):
     """Назначение куратора для группы и всех ПВЗ в этой группе."""
 
-    return await service.assign_curator(group_id=group_id, curator_id=curator_id, pvz_repo=pvz_repo, repo=repo)
+    return await service.assign_curator(
+        group_id=group_id,
+        curator_id=curator_id,
+        pvz_repo=pvz_repo,
+        repo=repo,
+    )
 
 
 @pvz_groups_router.patch("/{group_id}", response_model=PVZGroupResponseSchema)
@@ -64,11 +69,17 @@ async def update_group(
     group_id: int,
     data: PVZGroupUpdateSchema,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
-    repo: PVZsDAO = Depends(get_pvz_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+    group_repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
 ):
     """Обновляет существующую группу ПВЗ."""
 
-    return await service.update_group(group_id, data, repo)
+    return await service.update_group(
+        group_id=group_id,
+        data=data,
+        pvz_repo=pvz_repo,
+        group_repo=group_repo,
+    )
 
 
 @pvz_groups_router.get("/{group_id}", response_model=PVZGroupResponseSchema)

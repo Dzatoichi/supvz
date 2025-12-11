@@ -11,6 +11,7 @@ pytestmark = pytest.mark.anyio
 async def test_add_pvz(client, session):
     """
     Тест: Успешное создание ПВЗ.
+    POST /pvzs/
     Проверяет корректность ответа API и сохранение внешних ключей (group_id).
     """
 
@@ -34,6 +35,7 @@ async def test_add_pvz(client, session):
 async def test_update_pvz_success(client, session):
     """
     Тест: Успешное обновление данных ПВЗ (PATCH).
+    PATCH /pvzs/{pvz_id}
     Проверяет изменение полей и привязку к новым сущностям (группа, куратор).
     """
 
@@ -59,6 +61,7 @@ async def test_update_pvz_success(client, session):
 async def test_get_pvz_by_id_success(client, session):
     """
     Тест: Получение одного ПВЗ по ID.
+    GET /pvzs/{pvz_id}
     Проверяет соответствие возвращаемых данных созданным в БД.
     """
 
@@ -76,6 +79,7 @@ async def test_get_pvz_by_id_success(client, session):
 async def test_get_pvzs_with_query_params(client, session):
     """
     Тест: Фильтрация списка ПВЗ и пагинация.
+    GET /pvzs/
     Проверяет, что фильтр по group_id возвращает только целевые записи
     и корректно считает total count.
     """
@@ -111,6 +115,7 @@ async def test_get_pvzs_with_query_params(client, session):
 async def test_delete_pvz_success(client, session):
     """
     Тест: Удаление ПВЗ.
+    DELETE /pvzs/{pvz_id}
     Проверяет статус ответа API и физическое отсутствие записи в БД после удаления.
     """
 
@@ -131,6 +136,7 @@ async def test_delete_pvz_success(client, session):
 async def test_get_employees_success(client, session):
     """
     Тест: Получение списка сотрудников, привязанных к конкретному ПВЗ.
+    GET /pvzs/{pvz_id}/employees
     Проверяет корректность работы Many-to-Many связей.
     """
 
@@ -167,6 +173,7 @@ async def test_get_employees_success(client, session):
 async def test_assign_pvz_to_group_success(client, session):
     """
     Тест: Массовая привязка ПВЗ к группе.
+    PATCH /pvzs/group_assignment
     Проверяет обновление group_id у списка переданных ПВЗ.
     """
 
