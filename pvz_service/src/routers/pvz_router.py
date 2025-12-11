@@ -7,7 +7,7 @@ from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.schemas.employees_schemas import EmployeeResponseSchema
-from src.schemas.pvz_group_schemas import AssignPVZToGroupSchema
+from src.schemas.pvz_group_schemas import PVZAssignmentSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
 from src.utils.dependencies import (
@@ -30,6 +30,26 @@ async def add_pvz(
     pvz = await pvz_service.add_pvz(data=pvz_in, repo=repo, group_repo=group_repo)
 
     return pvz
+
+
+@pvz_router.patch(
+    "/group_assignment",
+    status_code=status.HTTP_200_OK,
+)
+async def assign_pvz_to_group(
+    data: PVZAssignmentSchema,
+    service: PVZService = Depends(get_pvz_service),
+    repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+):
+    """Привязка одного или нескольких ПВЗ к указанной группе."""
+
+    return await service.assign_pvz_to_group(
+        group_id=data.group_id,
+        pvz_ids=data.pvz_ids,
+        repo=repo,
+        pvz_repo=pvz_repo,
+    )
 
 
 @pvz_router.patch("/{pvz_id}", response_model=PVZRead)
@@ -117,24 +137,3 @@ async def delete_pvz_by_id(
 
     result = await pvz_service.delete_pvz_by_id(pvz_id=pvz_id, repo=repo)
     return result
-
-
-@pvz_router.patch(
-    "/group_assignment",
-    status_code=status.HTTP_200_OK,
-)
-async def assign_pvz_to_group(
-    group_id: int,
-    data: AssignPVZToGroupSchema,
-    service: PVZService = Depends(get_pvz_service),
-    repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
-    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
-):
-    """Привязка одного или нескольких ПВЗ к указанной группе."""
-
-    return await service.assign_pvz_to_group(
-        group_id=group_id,
-        pvz_ids=data.pvz_ids,
-        repo=repo,
-        pvz_repo=pvz_repo,
-    )

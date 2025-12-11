@@ -19,5 +19,9 @@ class DataBaseHelper:
             expire_on_commit=False,
         )
 
+    async def session_getter(self):
+        async with self.async_session_maker() as session:
+            yield session
+
 
 db_helper = DataBaseHelper()
