@@ -1,6 +1,6 @@
 services:
-  psql_dev:
-    container_name: dev_psql
+  dev-psql:
+    container_name: dev-psql
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: postgres

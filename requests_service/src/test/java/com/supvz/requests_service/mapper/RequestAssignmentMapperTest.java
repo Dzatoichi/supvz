@@ -1,6 +1,6 @@
 package com.supvz.requests_service.mapper;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
+import com.supvz.requests_service.model.entity.enums.AssignmentAction;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
@@ -56,7 +56,7 @@ class RequestAssignmentMapperTest {
                 .comment(commentMock)
                 .build();
 
-        RequestAssignmentDto result = assertDoesNotThrow(() -> target.read(entityMock));;
+        RequestAssignmentDto result = assertDoesNotThrow(() -> target.read(entityMock));
 
         assertEquals(assignmentIdMock, result.id());
         assertEquals(requestIdMock, result.requestId());

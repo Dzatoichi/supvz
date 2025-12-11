@@ -1,6 +1,6 @@
 package com.supvz.requests_service.model.entity;
 
-import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.model.entity.enums.RequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

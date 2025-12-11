@@ -1,7 +1,8 @@
 package com.supvz.requests_service.service;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
-import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.core.exception.RequestAssignmentInvalidPayloadException;
+import com.supvz.requests_service.model.entity.enums.AssignmentAction;
+import com.supvz.requests_service.model.entity.enums.RequestStatus;
 import com.supvz.requests_service.core.exception.RequestAssignmentConflictException;
 import com.supvz.requests_service.core.exception.RequestAssignmentNotFoundException;
 import com.supvz.requests_service.core.exception.RequestNotFoundException;
@@ -195,7 +196,7 @@ class RequestAssignmentServiceTests {
         long assignmentIdMock = 1;
         long requestIdMock = 2L;
         RequestStatus requestStatusMock = RequestStatus.assigned;
-        AssignmentAction actionMock = AssignmentAction.cancel;
+        AssignmentAction actionMock = AssignmentAction.self_cancel;
         RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null, null);
         Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
         RequestAssignment assignmentMock = RequestAssignment.builder().id(assignmentIdMock).request(requestMock).build();
@@ -224,7 +225,7 @@ class RequestAssignmentServiceTests {
         long assignmentIdMock = 1;
         long requestIdMock = 2L;
         RequestStatus requestStatusMock = RequestStatus.assigned;
-        AssignmentAction actionMock = AssignmentAction.cancel;
+        AssignmentAction actionMock = AssignmentAction.self_cancel;
         RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null, null);
         Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
         RequestAssignment assignmentMock = RequestAssignment.builder().id(assignmentIdMock).request(requestMock).build();
@@ -261,5 +262,133 @@ class RequestAssignmentServiceTests {
         verify(repo, times(1)).findById(assignmentIdMock);
         verifyNoInteractions(mapper);
         verifyNoMoreInteractions(repo);
+    }
+
+    @Test
+    void update__WithSystemCancelAction__ThrowsRequestAssignmentInvalidPayloadException() {
+        long assignmentIdMock = 1;
+        Request requestMock = Request.builder().id(1L).build();
+        RequestAssignment assignmentMock = RequestAssignment.builder()
+                .id(assignmentIdMock)
+                .request(requestMock)
+                .build();
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
+                AssignmentAction.system_cancel, null, null
+        );
+
+        when(repo.findById(assignmentIdMock)).thenReturn(Optional.of(assignmentMock));
+
+        assertThrows(
+                RequestAssignmentInvalidPayloadException.class,
+                () -> target.update(assignmentIdMock, payloadMock)
+        );
+
+        verify(repo, times(1)).findById(assignmentIdMock);
+        verifyNoInteractions(mapper, requestService);
+    }
+
+    @Test
+    void update__WithCompleteAction__CancelsOtherActiveAssignmentsAndSetsRequestStatusToCompleted() {
+        long assignmentIdMock = 1;
+        long requestIdMock = 2L;
+        Request requestMock = Request.builder().id(requestIdMock).build();
+        RequestAssignment assignmentMock = RequestAssignment.builder()
+                .id(assignmentIdMock)
+                .request(requestMock)
+                .build();
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
+                AssignmentAction.complete, null, null
+        );
+        RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
+
+        when(repo.findById(assignmentIdMock)).thenReturn(Optional.of(assignmentMock));
+        when(repo.setActiveAssignmentsAsSystemCancelByRequestIdInsteadAssignmentId(requestIdMock, assignmentIdMock))
+                .thenReturn(2);
+        when(mapper.update(assignmentMock, payloadMock)).thenReturn(assignmentMock);
+        when(repo.save(assignmentMock)).thenReturn(assignmentMock);
+        when(mapper.read(assignmentMock)).thenReturn(dtoMock);
+        doNothing().when(requestService).setStatus(requestMock, RequestStatus.completed);
+
+        RequestAssignmentDto result = assertDoesNotThrow(() ->
+                target.update(assignmentIdMock, payloadMock)
+        );
+        Assertions.assertEquals(dtoMock, result);
+
+        verify(repo, times(1)).findById(assignmentIdMock);
+        verify(repo, times(1)).setActiveAssignmentsAsSystemCancelByRequestIdInsteadAssignmentId(requestIdMock, assignmentIdMock);
+        verify(mapper, times(1)).update(assignmentMock, payloadMock);
+        verify(repo, times(1)).save(assignmentMock);
+        verify(mapper, times(1)).read(assignmentMock);
+        verify(requestService, times(1)).setStatus(requestMock, RequestStatus.completed);
+    }
+
+    @Test
+    void update__WithRejectAction__CancelsOtherActiveAssignmentsAndSetsRequestStatusToRejected() {
+        long assignmentIdMock = 1;
+        long requestIdMock = 2L;
+        Request requestMock = Request.builder().id(requestIdMock).build();
+        RequestAssignment assignmentMock = RequestAssignment.builder()
+                .id(assignmentIdMock)
+                .request(requestMock)
+                .build();
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
+                AssignmentAction.reject, null, null
+        );
+        RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
+
+        when(repo.findById(assignmentIdMock)).thenReturn(Optional.of(assignmentMock));
+        when(repo.setActiveAssignmentsAsSystemCancelByRequestIdInsteadAssignmentId(requestIdMock, assignmentIdMock))
+                .thenReturn(1);
+        when(mapper.update(assignmentMock, payloadMock)).thenReturn(assignmentMock);
+        when(repo.save(assignmentMock)).thenReturn(assignmentMock);
+        when(mapper.read(assignmentMock)).thenReturn(dtoMock);
+        doNothing().when(requestService).setStatus(requestMock, RequestStatus.rejected);
+
+        RequestAssignmentDto result = assertDoesNotThrow(() ->
+                target.update(assignmentIdMock, payloadMock)
+        );
+        Assertions.assertEquals(dtoMock, result);
+
+        verify(repo, times(1)).findById(assignmentIdMock);
+        verify(repo, times(1)).setActiveAssignmentsAsSystemCancelByRequestIdInsteadAssignmentId(requestIdMock, assignmentIdMock);
+        verify(mapper, times(1)).update(assignmentMock, payloadMock);
+        verify(repo, times(1)).save(assignmentMock);
+        verify(mapper, times(1)).read(assignmentMock);
+        verify(requestService, times(1)).setStatus(requestMock, RequestStatus.rejected);
+    }
+
+    @Test
+    void update__WithCompleteActionAndNoOtherActiveAssignments__SetsRequestStatusToCompletedWithoutCanceling() {
+        long assignmentIdMock = 1;
+        long requestIdMock = 2L;
+        Request requestMock = Request.builder().id(requestIdMock).build();
+        RequestAssignment assignmentMock = RequestAssignment.builder()
+                .id(assignmentIdMock)
+                .request(requestMock)
+                .build();
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
+                AssignmentAction.complete, null, null
+        );
+        RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
+
+        when(repo.findById(assignmentIdMock)).thenReturn(Optional.of(assignmentMock));
+        when(repo.setActiveAssignmentsAsSystemCancelByRequestIdInsteadAssignmentId(requestIdMock, assignmentIdMock))
+                .thenReturn(0);
+        when(mapper.update(assignmentMock, payloadMock)).thenReturn(assignmentMock);
+        when(repo.save(assignmentMock)).thenReturn(assignmentMock);
+        when(mapper.read(assignmentMock)).thenReturn(dtoMock);
+        doNothing().when(requestService).setStatus(requestMock, RequestStatus.completed);
+
+        RequestAssignmentDto result = assertDoesNotThrow(() ->
+                target.update(assignmentIdMock, payloadMock)
+        );
+        Assertions.assertEquals(dtoMock, result);
+
+        verify(repo, times(1)).findById(assignmentIdMock);
+        verify(repo, times(1)).setActiveAssignmentsAsSystemCancelByRequestIdInsteadAssignmentId(requestIdMock, assignmentIdMock);
+        verify(mapper, times(1)).update(assignmentMock, payloadMock);
+        verify(repo, times(1)).save(assignmentMock);
+        verify(mapper, times(1)).read(assignmentMock);
+        verify(requestService, times(1)).setStatus(requestMock, RequestStatus.completed);
     }
 }

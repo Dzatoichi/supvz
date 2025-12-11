@@ -1,7 +1,6 @@
 package com.supvz.requests_service.core.filter;
 
-import com.supvz.requests_service.core.enums.RequestStatus;
-import lombok.Builder;
+import com.supvz.requests_service.model.entity.enums.RequestStatus;
 
 
 /**

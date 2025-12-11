@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS request_assignments
     id BIGSERIAL PRIMARY KEY,
     request_id BIGINT NOT NULL,
     handyman_id BIGINT NOT NULL,
-    action VARCHAR(16) NOT NULL DEFAULT 'assign' CHECK (action IN ('cancel', 'assign', 'reject', 'complete')),
+    action VARCHAR(16) NOT NULL DEFAULT 'assign' CHECK (action IN ('self_cancel', 'system_cancel', 'assign', 'reject', 'complete')),
     processed_at TIMESTAMP,
     comment TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT now(),

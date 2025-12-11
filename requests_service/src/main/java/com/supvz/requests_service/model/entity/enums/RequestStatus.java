@@ -1,4 +1,4 @@
-package com.supvz.requests_service.core.enums;
+package com.supvz.requests_service.model.entity.enums;
 
 /*
 Перечисление статусов заявок.

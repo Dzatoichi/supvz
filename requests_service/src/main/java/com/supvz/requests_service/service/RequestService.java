@@ -1,6 +1,6 @@
 package com.supvz.requests_service.service;
 
-import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.model.entity.enums.RequestStatus;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;

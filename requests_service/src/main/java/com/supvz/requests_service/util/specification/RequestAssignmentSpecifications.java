@@ -1,6 +1,6 @@
 package com.supvz.requests_service.util.specification;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
+import com.supvz.requests_service.model.entity.enums.AssignmentAction;
 import com.supvz.requests_service.model.entity.RequestAssignment;
 import org.springframework.data.jpa.domain.Specification;
 

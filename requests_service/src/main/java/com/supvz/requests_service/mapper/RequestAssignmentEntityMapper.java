@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 /**
- * Реализация маппера для работы с ответами на заявки.
+ * Реализация маппера для работы с обращениями на заявки.
  */
 @Component
 public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
