@@ -1,29 +1,8 @@
-from enum import Enum
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
-
-class PositionSourceEnum(str, Enum):
-    """Перечисление таблиц с должностями"""
-
-    system = "system"
-    custom = "custom"
-
-
-class SystemPositionBaseSchema(BaseModel):
-    """Базовая схема системной должности."""
-
-    title: str
-
-
-class SystemPositionReadSchema(SystemPositionBaseSchema):
-    """Схема для чтения системной должности."""
-
-    id: int
-    position_source: Literal[PositionSourceEnum.system] = PositionSourceEnum.system
-
-    model_config = ConfigDict(from_attributes=True)
+from src.schemas.enums import PositionSourceEnum
 
 
 class CustomPositionBaseSchema(BaseModel):
@@ -64,9 +43,3 @@ class CustomPositionWithPermissionsReadSchema(CustomPositionBaseSchema):
     permissions_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)
-
-
-PositionReadSchema = Annotated[
-    SystemPositionReadSchema | CustomPositionReadSchema,
-    Field(discriminator="position_source"),
-]

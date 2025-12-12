@@ -5,8 +5,8 @@ from src.core.security.hash_helper import hash_helper
 from src.core.security.token_handler import TokenHandler
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.models.tokens.stateful_tokens import StatefulTokens
+from src.schemas.enums import PositionSourceEnum
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserRoleEnum
 from src.settings.config import settings
 from src.utils.exceptions import (
     InvalidTokenException,
@@ -50,14 +50,20 @@ class JWTTokensService:
         token_type: TokenTypesEnum,
         pvz_id: int,
         owner_id: int,
-        role: UserRoleEnum,
+        position_id: int,
+        position_source: PositionSourceEnum,
     ) -> str:
         """
         Создание JWT токена для регистрации сотрудника.
         """
 
         token_handler = TokenHandler(token_type=token_type)
-        token, expires_at = token_handler.sign_register_jwt(pvz_id=pvz_id, owner_id=owner_id, role=role)
+        token, expires_at = token_handler.sign_register_jwt(
+            pvz_id=pvz_id,
+            owner_id=owner_id,
+            position_id=position_id,
+            position_source=position_source,
+        )
         return token
 
     async def revoke_token(

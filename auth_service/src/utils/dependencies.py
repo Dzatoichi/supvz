@@ -1,7 +1,8 @@
 from fastapi import Depends, HTTPException, Request, status
 
+from src.dao.custom_positionsDAO import CustomPositionDAO
 from src.dao.permissionsDAO import PermissionsDAO
-from src.dao.positionsDAO import CustomPositionDAO, SystemPositionDAO
+from src.dao.system_positionsDAO import SystemPositionDAO
 from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
 from src.dao.usersDAO import UsersDAO
 from src.database.base import db_helper

@@ -2,8 +2,8 @@ from fastapi_pagination import Page, Params
 from pydantic import TypeAdapter
 
 from src.dao.permissionsDAO import PermissionsDAO
+from src.schemas.enums import PositionSourceEnum
 from src.schemas.permissions_schemas import PermissionReadSchema
-from src.schemas.positions_schemas import PositionSourceEnum
 from src.utils.exceptions import PermissionsFilterException, PermissionsNotFound
 
 

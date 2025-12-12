@@ -11,7 +11,7 @@ from pydantic import (
     model_validator,
 )
 
-from src.schemas.positions_schemas import PositionSourceEnum
+from src.schemas.enums import PositionSourceEnum
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
@@ -198,6 +198,7 @@ class UpdateUsersPermissionsSchema(BaseModel):
     users: list[int]
     new_permission_ids: list[int]
 
+
 # TODO: начать использовать position
 class UserRegisterEmployeeSchema(BaseModel):
     """
@@ -206,6 +207,7 @@ class UserRegisterEmployeeSchema(BaseModel):
 
     pvz_id: int
     owner_id: int
-    role: UserRoleEnum
+    position_id: int
+    position_source: PositionSourceEnum = PositionSourceEnum.system
 
     model_config = ConfigDict(from_attributes=True)

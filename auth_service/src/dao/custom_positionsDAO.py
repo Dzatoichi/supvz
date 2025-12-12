@@ -6,7 +6,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO, T
-from src.models import CustomPositions, SystemPositions
+from src.models import CustomPositions
 
 
 class CustomPositionDAO(BaseDAO[CustomPositions]):
@@ -73,25 +73,3 @@ class CustomPositionDAO(BaseDAO[CustomPositions]):
         result = await session.execute(stmt)
 
         return result.scalar_one_or_none()
-
-
-class SystemPositionDAO(BaseDAO[SystemPositions]):
-    """
-    Класс DAO для работы с сущностями SystemPositions.
-    """
-
-    def __init__(self):
-        super().__init__(model=SystemPositions)
-
-    @BaseDAO.with_exception
-    async def get_positions(
-        self,
-        params: Params,
-    ) -> Page[SystemPositions]:
-        """
-        Получает список должностей с фильтрацией и пагинацией.
-        """
-        async with self._get_session() as session:
-            stmt = select(self.model).order_by(self.model.id.desc())
-
-            return await paginate(session, stmt, params)

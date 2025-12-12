@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import Response
+from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
 
 from src.core.security.hash_helper import hash_helper
@@ -107,7 +108,6 @@ class AuthService:
 
         return result
 
-
     async def login_user(
         self,
         credentials: UserLoginSchema,
@@ -166,7 +166,7 @@ class AuthService:
     # TODO: доделать после реализации notification service
     async def forgot_password(
         self,
-        user_email: str,
+        user_email: EmailStr,
         repo: UsersDAO,
         token_service: StatefulTokenService,
     ) -> str:
@@ -219,7 +219,8 @@ class AuthService:
             token_type=TokenTypesEnum.register,
             pvz_id=employee_data.pvz_id,
             owner_id=employee_data.owner_id,
-            role=employee_data.role,
+            position_id=employee_data.position_id,
+            position_source=employee_data.position_source,
         )
         return {"register_token": register_token}
 

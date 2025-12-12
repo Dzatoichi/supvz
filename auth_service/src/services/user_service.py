@@ -11,7 +11,6 @@ from src.schemas.users_schemas import (
     UpdateUsersPermissionsSchema,
     UserAuthRequestSchema,
     UserReadSchema,
-    UserRoleEnum,
     UserUpdateMeSchema,
     UserUpdateSchema,
 )

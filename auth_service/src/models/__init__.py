@@ -13,8 +13,10 @@ __all__ = [
 
 # 1. Сначала базовые модели без зависимостей
 from src.models.permissions.permissions import Permissions
-from src.models.position_permissions.position_permissions import CustomPositionPermissions, SystemPositionPermissions
-from src.models.positions.positions import CustomPositions, SystemPositions
+from src.models.position_permissions.custom_position_permissions import CustomPositionPermissions
+from src.models.position_permissions.system_position_permissions import SystemPositionPermissions
+from src.models.positions.custom_positions import CustomPositions
+from src.models.positions.system_positions import SystemPositions
 
 # 3. В конце модели, которые зависят от Users
 from src.models.tokens.refresh_tokens import RefreshTokens

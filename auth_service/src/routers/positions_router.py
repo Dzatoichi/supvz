@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi_pagination import Page, Params
 
-from src.schemas.positions_schemas import (
+from src.schemas.custom_positions_schemas import (
     CustomPositionCreateSchema,
     CustomPositionUpdateSchema,
     CustomPositionWithPermissionsReadSchema,
+)
+from src.schemas.enums import PositionSourceEnum
+from src.schemas.system_positions_schemas import (
     PositionReadSchema,
-    PositionSourceEnum,
 )
 from src.services.position_service import PositionService
 from src.utils.dependencies import (

@@ -87,7 +87,11 @@ class EmployeesDAO(BaseDAO[Employees]):
 
     @BaseDAO.with_exception
     async def get_employees_filtered(
-        self, user_id: int, params: Params, pvz_id: int | None = None, position_id: int | None = None
+        self,
+        user_id: int,
+        params: Params,
+        pvz_id: int | None = None,
+        position_id: int | None = None,
     ) -> Employees:
         """Возвращает список сотрудников владельца, при необходимости фильтрует по ID ПВЗ."""
         async with self._get_session() as session:

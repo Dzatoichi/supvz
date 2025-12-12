@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from src.database.base import db_helper
 from src.models import Permissions, SystemPositions
-from src.models.position_permissions.position_permissions import SystemPositionPermissions
+from src.models.position_permissions.system_position_permissions import SystemPositionPermissions
 
 # --- КОНФИГУРАЦИЯ ДАННЫХ ---
 

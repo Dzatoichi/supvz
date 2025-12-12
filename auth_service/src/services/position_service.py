@@ -1,14 +1,17 @@
 from fastapi_pagination import Page, Params
 from pydantic import TypeAdapter
 
+from src.dao.custom_positionsDAO import CustomPositionDAO
 from src.dao.permissionsDAO import PermissionsDAO
-from src.dao.positionsDAO import CustomPositionDAO, SystemPositionDAO
-from src.schemas.positions_schemas import (
+from src.dao.system_positionsDAO import SystemPositionDAO
+from src.schemas.custom_positions_schemas import (
     CustomPositionCreateSchema,
     CustomPositionUpdateSchema,
     CustomPositionWithPermissionsReadSchema,
+)
+from src.schemas.enums import PositionSourceEnum
+from src.schemas.system_positions_schemas import (
     PositionReadSchema,
-    PositionSourceEnum,
 )
 from src.utils.exceptions import (
     PositionAlreadyExistsException,

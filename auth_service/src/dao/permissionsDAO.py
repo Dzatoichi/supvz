@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO
 from src.models.permissions.permissions import Permissions
-from src.models.position_permissions.position_permissions import (
-    CustomPositionPermissions,
+from src.models.position_permissions.custom_position_permissions import CustomPositionPermissions
+from src.models.position_permissions.system_position_permissions import (
     SystemPositionPermissions,
 )
 from src.models.user_permissions.user_permissions import UserPermissions
