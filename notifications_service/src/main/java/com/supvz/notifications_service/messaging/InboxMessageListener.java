@@ -61,16 +61,8 @@ public class InboxMessageListener {
      */
     @RabbitListener(queues = "${app.messaging.inbox-queue}")
     public void listen(Message message) {
-        Map<String, Object> headers = message.getMessageProperties().getHeaders();
-//        Context context = propagator.extract(
-//                Context.current(),
-//                headers,
-//                (header, key) -> String.valueOf(header.get(key))
-//        );
-
         try {
             InboxMessage inboxEvent = objectMapper.readValue(message.getBody(), InboxMessage.class);
-            MDC.put("event_id", inboxEvent.eventId().toString());
             log.debug("Получено из очереди inbox событие [{}].", inboxEvent.eventId());
             try {
                 initializers.get(inboxEvent.eventType()).initialize(inboxEvent);

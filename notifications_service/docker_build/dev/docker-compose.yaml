@@ -1,6 +1,6 @@
 services:
-  psql:
-    container_name: dev_psql
+  dev-psql:
+    container_name: dev-psql
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: postgres
@@ -8,8 +8,8 @@ services:
       POSTGRES_DB: notifications_db
     ports:
       - "5432:5432"
-  rabbitmq:
-    container_name: dev_mb
+  dev-mb:
+    container_name: dev-mb
     image: rabbitmq:4-management-alpine
     volumes:
       - ../message_broker/init/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
