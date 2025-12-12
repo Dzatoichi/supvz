@@ -2,9 +2,9 @@ name: CI_PYTHON
 
 on:
   pull_request:
-    branches: [dev]
+    branches: [ dev ]
   push:
-    branches: [dev]
+    branches: [ dev ]
 jobs:
   lint:
     name: Lint (${{ matrix.service }})
@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service, pvz_service]
+        service: [ auth_service, pvz_service ]
     env:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service, pvz_service]
+        service: [ auth_service, pvz_service ]
     env:
       SERVICE_DIR: ${{ matrix.service }}
     steps:
@@ -53,7 +53,20 @@ jobs:
           sudo curl -sSL https://install.python-poetry.org | python3 -
           export PATH="$HOME/.local/bin:$PATH"
           poetry install --no-root
+      - name: Create .env.test
+        if: matrix.service == 'pvz_service'
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: |
+          echo "DB_HOST=localhost" > .env.test
+          echo "DB_PORT=5433" >> .env.test
+          echo "DB_USER=test_user" >> .env.test
+          echo "DB_PASS=test_pass" >> .env.test
+          echo "DB_NAME=test_pvz_db" >> .env.test
       - name: Run tests
         working-directory: ${{ env.SERVICE_DIR }}
         run: |
-          poetry run pytest
+          if [ "${{ matrix.service }}" == "pvz_service" ]; then
+             poetry run python src/tests/run_tests.py
+          else
+             poetry run pytest
+          fi

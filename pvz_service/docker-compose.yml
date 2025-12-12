@@ -51,6 +51,7 @@ services:
   postgres_test:
     image: postgres:17
     container_name: pvz_postgres_test
+    profiles: [ "test" ]
     environment:
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_pass

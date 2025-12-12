@@ -6,19 +6,34 @@ pytestmark = pytest.mark.anyio
 
 
 @pytest.mark.asyncio
-async def test_create_group_validation_error(client):
+@pytest.mark.parametrize(
+    "payload, error_field",
+    [
+        ({}, "required"),
+        ({"owner_id": "boss"}, "valid integer"),
+        ({"name": None}, "string"),
+    ],
+)
+async def test_create_group_validation_error(client, payload, error_field):
     """
     Тест: Ошибка валидации при создании группы (422).
-    Проверяет, что нельзя создать группу без обязательного поля owner_id.
+    POST /pvz_groups
     """
-    invalid_payload = {}
+    base_payload = GroupFactory.build().model_dump()
+    base_payload.update(payload)
 
-    response = await client.post("/pvz_groups", json=invalid_payload)
+    final_payload = payload if payload == {} else base_payload
+
+    response = await client.post("/pvz_groups", json=final_payload)
 
     assert response.status_code == 422
+
     data = response.json()
-    assert "error" in data
-    assert data["error"] == "validation_error"
+    error_messages = data["detail"]
+
+    match_found = any(error_field.lower() in msg.lower() for msg in error_messages)
+
+    assert match_found
 
 
 @pytest.mark.asyncio
@@ -53,7 +68,7 @@ async def test_get_group_not_found(client):
 
     assert response.status_code == 404
     # Проверь точный текст ошибки в своем сервисе
-    assert response.json()["error"] == "not_found"
+    assert response.json()["error"] == "pvz_group_not_found"
 
 
 @pytest.mark.asyncio
@@ -85,7 +100,7 @@ async def test_update_group_conflict_name(client, session):
 
     assert response.status_code == 409
     data = response.json()
-    assert data["error"] == "validation_error"
+    assert data["error"] == "pvz_group_already_exists"
 
 
 @pytest.mark.asyncio
