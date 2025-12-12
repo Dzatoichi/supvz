@@ -11,6 +11,7 @@ from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
     UserLoginSchema,
     UserReadSchema,
+    UserRegisterEmployeeSchema,
     UserRegisterSchema,
 )
 from src.services.token_service import JWTTokensService, StatefulTokenService
@@ -19,6 +20,7 @@ from src.utils.exceptions import (
     InvalidTokenException,
     PermissionDeniedException,
     PermissionsNotFound,
+    PositionNotFoundException,
     TokenExpiredException,
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -38,6 +40,7 @@ class AuthService:
         data: UserRegisterSchema,
         user_repo: UsersDAO,
         perm_repo: PermissionsDAO,
+        token_service: JWTTokensService | None = None,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.
@@ -53,7 +56,31 @@ class AuthService:
             "hashed_password": hashed_password,
         }
 
-        perm_ids = await perm_repo.get_permissions_ids_by_position(position_id=data.position_id)
+        # TODO: переделать под должности, исправить
+        if data.register_token:
+            register_token_payload = await token_service.validate_token(
+                token=data.register_token,
+                token_type=TokenTypesEnum.register,
+            )
+            owner_id = register_token_payload.get("owner_id")
+            owner = await repo.get_by_id(id=owner_id)
+            if not owner:
+                raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
+
+            payload["role"] = register_token_payload.get("role")
+        else:
+            position_id = data.position_id
+            position_source = data.position_source
+
+        if position_id and position_source:
+            if position_source == "system":
+                perm_ids = await perm_repo.get_permissions_ids_by_system_position(position_id=position_id)
+            elif position_source == "custom":
+                perm_ids = await perm_repo.get_permissions_ids_by_custom_position(position_id=position_id)
+            else:
+                raise PositionNotFoundException("Не определен position source для нахождения прав доступа.")
+        else:
+            perm_ids = []
 
         if not perm_ids:
             raise PermissionsNotFound("Никаких прав доступа для этой должности не найдено.")
@@ -79,6 +106,7 @@ class AuthService:
                 result = UserReadSchema.model_validate(user)
 
         return result
+
 
     async def login_user(
         self,
@@ -175,6 +203,25 @@ class AuthService:
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         return True
+
+    async def generate_register_token(
+        self,
+        employee_data: UserRegisterEmployeeSchema,
+        token_service: JWTTokensService,
+        repo: UsersDAO,
+    ) -> dict:
+        owner_id = employee_data.owner_id
+        owner = await repo.get_by_id(id=owner_id)
+        if not owner:
+            raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
+
+        register_token = await token_service.create_register_token(
+            token_type=TokenTypesEnum.register,
+            pvz_id=employee_data.pvz_id,
+            owner_id=employee_data.owner_id,
+            role=employee_data.role,
+        )
+        return {"register_token": register_token}
 
     async def authorize_user(
         self,

@@ -1,6 +1,7 @@
+import enum
 from typing import List
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
@@ -23,6 +24,13 @@ employee_pvz_association = Table(
 )
 
 
+class PositionSourceEnum(str, enum.Enum):
+    """Перечисление таблиц с должностями"""
+
+    system = "system"
+    custom = "custom"
+
+
 class Employees(Base):
     """Модель сотрудника."""
 
@@ -39,6 +47,11 @@ class Employees(Base):
 
     owner_id: Mapped[int] = mapped_column(index=True, nullable=False)
     position_id: Mapped[int] = mapped_column(nullable=False)
+    position_source: Mapped[PositionSourceEnum] = mapped_column(
+        Enum(PositionSourceEnum, native_enum=False),
+        nullable=False,
+        default=PositionSourceEnum.system,
+    )
 
     pvzs: Mapped[List["PVZs"]] = relationship(
         "PVZs",

@@ -13,9 +13,11 @@ class Settings(BaseSettings):
     DB_NAME: str
     JWT_ACCESS_SECRET_KEY: str
     JWT_REFRESH_SECRET_KEY: str
+    JWT_REGISTER_SECRET_KEY: str
     JWT_ALGORITHM: str
     JWT_ACCESS_EXPIRE_TIME: int
     JWT_REFRESH_EXPIRE_TIME: int
+    JWT_REGISTER_EXPIRE_TIME: int
 
     LOG_LEVEL: str
     LOG_TO_CONSOLE: bool
@@ -42,6 +44,11 @@ class Settings(BaseSettings):
             added_jwt_params = {
                 "secret_key": self.JWT_ACCESS_SECRET_KEY,
                 "expire_time": self.JWT_ACCESS_EXPIRE_TIME,
+            }
+        elif token_type == "register":
+            added_jwt_params = {
+                "secret_key": self.JWT_REGISTER_SECRET_KEY,
+                "expire_time": self.JWT_REGISTER_EXPIRE_TIME,
             }
         else:
             added_jwt_params = {

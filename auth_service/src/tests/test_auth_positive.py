@@ -10,6 +10,7 @@ async def test_register_user(client):
             "password": "12345678",
             "confirm_password": "12345678",
             "position_id": 0,
+            "position_source": "system",
         },
     )
     assert response.status_code == 201

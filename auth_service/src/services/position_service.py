@@ -1,8 +1,15 @@
 from fastapi_pagination import Page, Params
+from pydantic import TypeAdapter
 
 from src.dao.permissionsDAO import PermissionsDAO
-from src.dao.positionsDAO import PositionDAO
-from src.schemas.positions_schemas import PositionCreateSchema, PositionReadSchema, PositionUpdateSchema
+from src.dao.positionsDAO import CustomPositionDAO, SystemPositionDAO
+from src.schemas.positions_schemas import (
+    CustomPositionCreateSchema,
+    CustomPositionUpdateSchema,
+    CustomPositionWithPermissionsReadSchema,
+    PositionReadSchema,
+    PositionSourceEnum,
+)
 from src.utils.exceptions import (
     PositionAlreadyExistsException,
     PositionNotFoundException,
@@ -12,43 +19,62 @@ from src.utils.exceptions import (
 class PositionService:
     """Сервис для работы с должностями"""
 
-    def __init__(self, db_helper, position_dao: PositionDAO, permissions_dao: PermissionsDAO):
+    def __init__(
+        self,
+        db_helper,
+        custom_position_dao: CustomPositionDAO,
+        system_position_dao: SystemPositionDAO,
+        permissions_dao: PermissionsDAO,
+    ):
         self.db_helper = db_helper
-        self.position_dao = position_dao
+        self.custom_position_dao = custom_position_dao
+        self.system_position_dao = system_position_dao
         self.perm_dao = permissions_dao
+        self.adapter = TypeAdapter(PositionReadSchema)
 
     async def get_positions(
         self,
         params: Params,
+        position_source: PositionSourceEnum,
         owner_id: int | None = None,
     ) -> Page[PositionReadSchema]:
         """Возвращает список всех должностей с возможностью отфильтровать по owner_id"""
 
-        positions = await self.position_dao.get_positions(owner_id=owner_id, params=params)
+        adapter = TypeAdapter(PositionReadSchema)
+
+        if position_source == PositionSourceEnum.system:
+            positions = await self.system_position_dao.get_positions(params=params)
+        elif position_source == PositionSourceEnum.custom:
+            positions = await self.custom_position_dao.get_positions(owner_id=owner_id, params=params)
 
         if positions.total == 0:
             raise PositionNotFoundException("Не найдено ни одной должности.")
 
-        positions.items = [PositionReadSchema.model_validate(pos) for pos in positions.items]
+        positions.items = [adapter.validate_python(pos) for pos in positions.items]
         return positions
 
     async def get_position(
         self,
         position_id: int,
+        position_source: PositionSourceEnum,
     ) -> PositionReadSchema:
         """Возвращает одну должность по id"""
-        position = await self.position_dao.get_by_id(id=position_id)
+
+        if position_source == PositionSourceEnum.system:
+            position = await self.system_position_dao.get_by_id(id=position_id)
+        elif position_source == PositionSourceEnum.custom:
+            position = await self.custom_position_dao.get_by_id(id=position_id)
 
         if not position:
             raise PositionNotFoundException("Должность с таким id не найдена.")
 
-        return PositionReadSchema.model_validate(position)
+        return self.adapter.validate_python(position)
 
     async def create_position(
         self,
-        data: PositionCreateSchema,
+        data: CustomPositionCreateSchema,
     ) -> PositionReadSchema:
-        """Создает новую должность"""
+        """Создает новую кастомную должность"""
 
         payload = {
             "title": data.title,
@@ -57,7 +83,7 @@ class PositionService:
 
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
-                position = await self.position_dao.get_position(
+                position = await self.custom_position_dao.get_position(
                     title=data.title,
                     owner_id=data.owner_id,
                     session=session,
@@ -66,12 +92,13 @@ class PositionService:
                 if position:
                     raise PositionAlreadyExistsException("Должность с таким именем уже существует.")
 
-                position = await self.position_dao.create(
+                position = await self.custom_position_dao.create(
                     payload=payload,
                     session=session,
                 )
+
                 if data.permissions:
-                    await self.perm_dao.add_permissions_to_position(
+                    await self.perm_dao.add_permissions_to_custom_position(
                         position_id=position.id,
                         permission_ids=data.permissions,
                         session=session,
@@ -80,44 +107,52 @@ class PositionService:
                 else:
                     position.permissions = None
 
-                return PositionReadSchema.model_validate(position)
+        return self.adapter.validate_python(position)
 
     async def update_position(
         self,
         position_id: int,
-        data: PositionUpdateSchema,
-    ) -> PositionReadSchema:
+        data: CustomPositionUpdateSchema,
+    ) -> CustomPositionWithPermissionsReadSchema:
         """Обновляет имя и права долджности"""
 
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
-                already_exists = await self.position_dao.get_position(
+                existing_position = await self.custom_position_dao.get_position(
                     id=position_id,
                     session=session,
                 )
-                if not already_exists:
+                if not existing_position:
                     raise PositionNotFoundException("Должность с таким id не найдена.")
 
+                current_position = existing_position
+
                 if data.title:
-                    updated = await self.position_dao.update(
+                    current_position = await self.custom_position_dao.update(
                         position_id=position_id,
                         title=data.title,
                         session=session,
                     )
 
                 if data.permissions_ids is not None:
-                    await self.perm_dao.set_permissions_for_position(
+                    final_permission_ids = await self.perm_dao.set_permissions_for_custom_position(
                         position_id=position_id,
                         new_permission_ids=data.permissions_ids,
                         session=session,
                     )
-                if updated:
-                    result = updated
                 else:
-                    result = await self.position_dao.get_position(id=position_id, session=session)
-                return PositionReadSchema.model_validate(result)
+                    final_permission_ids = await self.perm_dao.get_permissions_ids_by_custom_position(
+                        position_id=position_id,
+                    )
+
+                return CustomPositionWithPermissionsReadSchema(
+                    id=current_position.id,
+                    owner_id=current_position.owner_id,
+                    title=current_position.title,
+                    permissions_ids=final_permission_ids,
+                )
 
     async def delete_position(self, position_id: int) -> None:
         """Метод удалаяет должность по id"""
 
-        await self.position_dao.delete(id=position_id)
+        await self.custom_position_dao.delete(id=position_id)

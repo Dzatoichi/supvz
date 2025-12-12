@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [requests_service]
+        service: [requests_service, notifications_service]
 
     steps:
     - uses: actions/checkout@v4

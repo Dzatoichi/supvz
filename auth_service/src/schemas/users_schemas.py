@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -10,6 +10,8 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
+from src.schemas.positions_schemas import PositionSourceEnum
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
@@ -22,6 +24,13 @@ class SubscriptionEnum(Enum):
     paid = "paid"
     test = "test"
     expired = "expired"
+
+
+class StatusResponseSchema(BaseModel):
+    """Схема для возврата текстового ответа."""
+
+    status: Literal["ok", "error"] = "ok"
+    message: str | None = None
 
 
 class UserBaseSchema(BaseModel):
@@ -56,7 +65,11 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
-    position_id: int
+    register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
+
+    position_id: int | None = None
+    position_source: PositionSourceEnum | None = None
+    invite_token: str | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -67,16 +80,38 @@ class UserRegisterSchema(UserLoginSchema):
             raise ValueError("Passwords do not match")
         return self
 
+    @model_validator(mode="after")
+    def validate_registration_fields(self) -> "UserRegisterSchema":
+        """
+        Проверка:
+        1) Если position_id указан, то обязательно position_source и наоборот.
+        2) Должен быть хотя бы один способ регистрации:
+           - invite_token или
+           - position_id + position_source
+        """
+        if (self.position_id is None) != (self.position_source is None):
+            raise ValueError("Необходимо указать и position_id, и position_source.")
 
-class UserUpdateSchema(BaseModel):
+        if not self.invite_token and self.position_id is None:
+            raise ValueError("Необходимо указать либо 'invite_token', либо 'position_id' + 'position_source'.")
+
+        return self
+
+
+class UserUpdateSchema(UserBaseSchema):
     """
     Схема изменения пользователя.
     """
 
-    id: int
-    email: EmailStr | None = None
+    pass
 
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+class UserUpdateMeSchema(UserBaseSchema):
+    """
+    Схема для изменения собственных данных пользователя
+    """
+
+    pass
 
 
 class UserReadSchema(UserBaseSchema):
@@ -152,3 +187,25 @@ class UserForgotPasswordSchema(BaseModel):
 
 class UpdateUserPermissionsSchema(BaseModel):
     permission_ids: list[int]
+
+
+class UpdateUsersPermissionsSchema(BaseModel):
+    """
+    Схема для обновления списка прав у всех юзеров,
+    которые подаются на вход
+    """
+
+    users: list[int]
+    new_permission_ids: list[int]
+
+# TODO: начать использовать position
+class UserRegisterEmployeeSchema(BaseModel):
+    """
+    Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
+    """
+
+    pvz_id: int
+    owner_id: int
+    role: UserRoleEnum
+
+    model_config = ConfigDict(from_attributes=True)

@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi_pagination import Params
+from fastapi_pagination import Page, Params
 
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.services.pvz_service import PVZService
@@ -161,7 +161,7 @@ class TestPVZService:
         Тест на то, что get_pvzs правильно передает фильтры в DAO.
         """
         mock_repo = AsyncMock()
-        mock_repo.get_pvzs.return_value = []
+        mock_repo.get_pvzs.return_value = Page(items=[], total=0, page=1, size=50, pages=0)
 
         params = Params(page=1, size=50)
 
@@ -175,7 +175,7 @@ class TestPVZService:
             params=params,
         )
 
-        expected_filters = {"code": "PVZ-007", "address": "г. Москва"}
+        expected_filters = {"code": "PVZ-007", "address": "г. Москва", "params": params}
         mock_repo.get_pvzs.assert_awaited_once_with(**expected_filters)
 
     async def test_delete_pvz_by_id_success(self):

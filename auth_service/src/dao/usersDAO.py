@@ -81,3 +81,20 @@ class UsersDAO(BaseDAO[Users]):
             stmt = stmt.order_by(self.model.id.desc())
 
             return await paginate(session, stmt, params)
+
+    async def update_users_permissions(self, user_ids: list[int], permission_ids: list[int]) -> None:
+        """
+        Массовое обновление прав.
+        Сначала удаляет старые, потом пишет новые.
+        """
+        async with self._get_session() as session:
+            stmt_delete = delete(UserPermissions).where(UserPermissions.user_id.in_(user_ids))
+            await session.execute(stmt_delete)
+
+            values_to_insert = [
+                {"user_id": u_id, "permission_id": p_id} for u_id in user_ids for p_id in permission_ids
+            ]
+
+            stmt_insert = insert(UserPermissions).values(values_to_insert)
+            await session.execute(stmt_insert)
+            await session.commit()

@@ -14,7 +14,7 @@ class FakeAuthService:
     Класс-заглушка (mock) для сервиса аутентификации пользователей.
     """
 
-    async def register_user(self, data, user_repo, perm_repo):
+    async def register_user(self, data, user_repo, perm_repo, token_service=None):
         """
         Метод регистрации пользователя.
         """
