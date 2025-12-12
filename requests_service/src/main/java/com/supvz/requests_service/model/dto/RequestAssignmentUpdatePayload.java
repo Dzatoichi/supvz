@@ -11,7 +11,6 @@ import com.supvz.requests_service.model.entity.enums.AssignmentAction;
 public record RequestAssignmentUpdatePayload(
         @NullOrNotSystemCancel
         AssignmentAction action,
-        Long handymanId,
         @NullOrNotBlank
         String comment
 ) {

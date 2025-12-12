@@ -17,7 +17,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class RequestAssignmentMapperTest {
+class RequestAssignmentMapperTests {
     private final RequestAssignmentEntityMapper target = new RequestAssignmentEntityMapper();
 
     @Test
@@ -93,7 +93,6 @@ class RequestAssignmentMapperTest {
     void update__UpdatesNonNullFields() {
         AssignmentAction oldActionMock = mock(AssignmentAction.class);
         AssignmentAction newActionMock = mock(AssignmentAction.class);
-        long newHandymanMock = 2;
         String newCommentMock = "newCommentMock";
         RequestAssignment entityMock = RequestAssignment.builder()
                 .id(1L)
@@ -101,11 +100,10 @@ class RequestAssignmentMapperTest {
                 .action(oldActionMock)
                 .comment("oldCommentMock")
                 .build();
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(newActionMock, newHandymanMock, newCommentMock);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(newActionMock, newCommentMock);
 
         RequestAssignment result = assertDoesNotThrow(() -> target.update(entityMock, payloadMock));
 
-        assertEquals(newHandymanMock, result.getHandymanId());
         assertEquals(newCommentMock, result.getComment());
         assertEquals(newActionMock, result.getAction());
         assertNotNull(result.getProcessedAt());
@@ -121,7 +119,7 @@ class RequestAssignmentMapperTest {
                 .comment(oldComment)
                 .build();
 
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null);
 
         RequestAssignment updated = assertDoesNotThrow(() -> target.update(entityMock, payloadMock));
 

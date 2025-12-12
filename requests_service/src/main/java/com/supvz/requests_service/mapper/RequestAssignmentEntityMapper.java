@@ -70,8 +70,6 @@ public class RequestAssignmentEntityMapper implements RequestAssignmentMapper {
             assignment.setProcessedAt(LocalDateTime.now());
             assignment.setAction(payload.action());
         }
-        if (payload.handymanId() != null)
-            assignment.setHandymanId(payload.handymanId());
         if (payload.comment() != null)
             assignment.setComment(payload.comment());
         return assignment;

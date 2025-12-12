@@ -59,7 +59,7 @@ class RequestAssignmentControllerTests {
     void update__ReturnsOk() throws Exception {
         int assignmentIdMock = 1;
 
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null);
         RequestAssignmentDto dtoMock = new RequestAssignmentDto(1, 1, 1, null, null, null, null, null);
 
         when(service.update(assignmentIdMock, payloadMock)).thenReturn(dtoMock);
@@ -77,7 +77,7 @@ class RequestAssignmentControllerTests {
     void update__RequestAssignmentNotFound__ReturnsBadRequest() throws Exception {
         int assignmentIdMock = 1;
 
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null);
 
         when(service.update(assignmentIdMock, payloadMock)).thenThrow(new RequestAssignmentNotFoundException("test"));
 
@@ -93,7 +93,7 @@ class RequestAssignmentControllerTests {
     void update__InvalidPayloadComment__ReturnsBadRequest() throws Exception {
         int assignmentIdMock = 1;
 
-        RequestAssignmentUpdatePayload payload = new RequestAssignmentUpdatePayload(null, null, "  ");
+        RequestAssignmentUpdatePayload payload = new RequestAssignmentUpdatePayload(null, "  ");
 
         mvc.perform(patch(URI.formatted(assignmentIdMock))
                         .contentType(MediaType.APPLICATION_JSON)

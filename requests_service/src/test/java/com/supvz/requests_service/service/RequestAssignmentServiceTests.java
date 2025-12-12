@@ -170,7 +170,7 @@ class RequestAssignmentServiceTests {
     void update__WithAction__ReturnsRequestDto() {
         long assignmentIdMock = 1;
         AssignmentAction actionMock = AssignmentAction.assign;
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null);
         Request requestMock = Request.builder().id(1L).build();
         RequestAssignment assignmentMock = RequestAssignment.builder().id(assignmentIdMock).request(requestMock).build();
         RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
@@ -197,7 +197,7 @@ class RequestAssignmentServiceTests {
         long requestIdMock = 2L;
         RequestStatus requestStatusMock = RequestStatus.assigned;
         AssignmentAction actionMock = AssignmentAction.self_cancel;
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null);
         Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
         RequestAssignment assignmentMock = RequestAssignment.builder().id(assignmentIdMock).request(requestMock).build();
         RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
@@ -226,7 +226,7 @@ class RequestAssignmentServiceTests {
         long requestIdMock = 2L;
         RequestStatus requestStatusMock = RequestStatus.assigned;
         AssignmentAction actionMock = AssignmentAction.self_cancel;
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(actionMock, null);
         Request requestMock = Request.builder().id(requestIdMock).status(requestStatusMock).build();
         RequestAssignment assignmentMock = RequestAssignment.builder().id(assignmentIdMock).request(requestMock).build();
         RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
@@ -273,7 +273,7 @@ class RequestAssignmentServiceTests {
                 .request(requestMock)
                 .build();
         RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
-                AssignmentAction.system_cancel, null, null
+                AssignmentAction.system_cancel, null
         );
 
         when(repo.findById(assignmentIdMock)).thenReturn(Optional.of(assignmentMock));
@@ -297,7 +297,7 @@ class RequestAssignmentServiceTests {
                 .request(requestMock)
                 .build();
         RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
-                AssignmentAction.complete, null, null
+                AssignmentAction.complete, null
         );
         RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
 
@@ -332,7 +332,7 @@ class RequestAssignmentServiceTests {
                 .request(requestMock)
                 .build();
         RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
-                AssignmentAction.reject, null, null
+                AssignmentAction.reject, null
         );
         RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
 
@@ -367,7 +367,7 @@ class RequestAssignmentServiceTests {
                 .request(requestMock)
                 .build();
         RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(
-                AssignmentAction.complete, null, null
+                AssignmentAction.complete, null
         );
         RequestAssignmentDto dtoMock = mock(RequestAssignmentDto.class);
 
