@@ -20,7 +20,7 @@ class PVZGroupsService:
         repo: PVZGroupsDAO,
     ):
         """Создаёт новую группу ПВЗ"""
-        existing_group = await repo.get_group(name=data.name)
+        existing_group = await repo.get_group(name=data.name, owner_id=data.owner_id)
         if existing_group:
             raise PVZGroupAlreadyExistsException("Группа с таким именем уже существет")
 

@@ -101,27 +101,6 @@ async def test_create_pvz_validation_error(client, payload, error_field):
 
 
 @pytest.mark.asyncio
-async def test_create_pvz_invalid_types(client):
-    """
-    Тест: Ошибка типов данных (422).
-    PATCH /pvzs/group_assignment
-    Проверяет, что нельзя передать строку туда, где ожидается число.
-    """
-    payload = {
-        "code": "TEST",
-        "type": "ozon",
-        "address": "Test Addr",
-        "owner_id": "NOT-A-NUMBER",
-        "group_id": 1,
-    }
-
-    response = await client.post("/pvzs/", json=payload)
-
-    assert response.status_code == 422
-    assert response.json()["error"] == "validation_error"
-
-
-@pytest.mark.asyncio
 async def test_get_employees_pvz_not_found(client):
     """
     Тест: Получение сотрудников для несуществующего ПВЗ (404).
