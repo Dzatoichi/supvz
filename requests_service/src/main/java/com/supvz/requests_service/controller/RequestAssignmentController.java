@@ -9,8 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST-контроллер для обработки ответов на заявки.
- * Данный класс предназначен для работы с конкретными ответами на заявки по их идентификатору.
+ * REST-контроллер для обработки обращений на заявки.
+ * Данный класс предназначен для работы с конкретными обращениями на заявки по их идентификатору.
  */
 @RestController
 @RequestMapping("/api/v1/requests/assignments/{id}")
@@ -19,10 +19,10 @@ public class RequestAssignmentController {
     private final RequestAssignmentService service;
 
     /**
-     * Ручка для получения ответа на заявку.
+     * Ручка для получения обращения на заявку.
      *
-     * @param id идентификатор ответа на заявку.
-     * @return {@link RequestAssignmentDto} - представление ответа на заявку для перемещения между слоями, приложениями.
+     * @param id идентификатор обращения на заявку.
+     * @return {@link RequestAssignmentDto} - представление обращения на заявку для перемещения между слоями, приложениями.
      */
     @GetMapping
     public ResponseEntity<RequestAssignmentDto> read(
@@ -33,11 +33,11 @@ public class RequestAssignmentController {
     }
 
     /**
-     * Ручка для обновления ответа на заявку.
+     * Ручка для обновления обращения на заявку.
      *
-     * @param id      идентификатор ответа на заявку.
-     * @param payload полезная нагрузка для обновления ответа на заявку.
-     * @return {@link RequestAssignmentDto} - представление ответа на заявку для перемещения между слоями, приложениями.
+     * @param id      идентификатор обращения на заявку.
+     * @param payload полезная нагрузка для обновления обращения на заявку.
+     * @return {@link RequestAssignmentDto} - представление обращения на заявку для перемещения между слоями, приложениями.
      */
     @PatchMapping
     public ResponseEntity<RequestAssignmentDto> update(
@@ -46,19 +46,5 @@ public class RequestAssignmentController {
     ) {
         RequestAssignmentDto body = service.update(id, payload);
         return ResponseEntity.ok(body);
-    }
-
-    /**
-     * Ручка для удаления ответа на заявку.
-     *
-     * @param id      идентификатор ответа на заявку.
-     * @return {@link ResponseEntity} - response ответ.
-     */
-    @DeleteMapping
-    public ResponseEntity<?> delete(
-            @PathVariable(name = "id") long id
-    ) {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
     }
 }

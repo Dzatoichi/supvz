@@ -1,5 +1,6 @@
-package com.supvz.requests_service.mapper.entity;
+package com.supvz.requests_service.mapper;
 
+import com.supvz.requests_service.model.entity.enums.RequestStatus;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import org.springframework.data.domain.Page;
@@ -29,4 +30,6 @@ public interface RequestMapper {
     Метод для преобразования сущности и полезной нагрузки для обновления в сущность.
      */
     Request update(Request found, RequestUpdatePayload payload);
+
+    Request setStatus(Request request, RequestStatus newStatus);
 }

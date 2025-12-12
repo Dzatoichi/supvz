@@ -1,10 +1,8 @@
 package com.supvz.requests_service.model.entity;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
-import com.supvz.requests_service.core.enums.RequestStatus;
+import com.supvz.requests_service.model.entity.enums.AssignmentAction;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 

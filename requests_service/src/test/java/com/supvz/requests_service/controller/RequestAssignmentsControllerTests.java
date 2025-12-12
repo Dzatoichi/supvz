@@ -1,6 +1,9 @@
 package com.supvz.requests_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.supvz.requests_service.core.exception.RequestAssignmentConflictException;
+import com.supvz.requests_service.core.exception.RequestConflictException;
+import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestAssignmentFilter;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
@@ -57,6 +60,48 @@ class RequestAssignmentsControllerTests {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(service);
+    }
+
+    @Test
+    void create__AssignmentByRequestAlreadyExists__ReturnsConflict() throws Exception {
+        RequestAssignmentPayload payload = new RequestAssignmentPayload(1, 1, "commentMock");
+
+        when(service.create(payload)).thenThrow(new RequestAssignmentConflictException("mockMessage"));
+
+        mvc.perform(post(URI)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isConflict());
+
+        verify(service, times(1)).create(payload);
+    }
+
+    @Test
+    void create__RequestAlreadyCompletedOrRejected__ReturnsConflict() throws Exception {
+        RequestAssignmentPayload payload = new RequestAssignmentPayload(1, 1, "commentMock");
+
+        when(service.create(payload)).thenThrow(new RequestConflictException("mockMessage"));
+
+        mvc.perform(post(URI)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isConflict());
+
+        verify(service, times(1)).create(payload);
+    }
+
+    @Test
+    void create__RequestNotFound__ReturnsBadRequest() throws Exception {
+        RequestAssignmentPayload payload = new RequestAssignmentPayload(1, 1, "commentMock");
+
+        when(service.create(payload)).thenThrow(new RequestNotFoundException("mockMessage"));
+
+        mvc.perform(post(URI)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest());
+
+        verify(service, times(1)).create(payload);
     }
 
     @Test

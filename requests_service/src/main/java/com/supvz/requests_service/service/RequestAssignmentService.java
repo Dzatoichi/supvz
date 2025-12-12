@@ -17,6 +17,4 @@ public interface RequestAssignmentService {
     RequestAssignmentDto read(long id);
 
     RequestAssignmentDto update(long id, RequestAssignmentUpdatePayload payload);
-
-    void delete(long id);
 }

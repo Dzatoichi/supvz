@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST-контроллер для обработки ответов на заявки.
+ * REST-контроллер для обработки обращений на заявки.
  */
 @RestController
 @RequestMapping("/api/v1/requests/assignments")
@@ -21,10 +21,10 @@ public class RequestAssignmentsController {
     private final RequestAssignmentService service;
 
     /**
-     * Ручка создания ответа на заявку.
+     * Ручка создания обращения на заявку.
      *
-     * @param payload полезная нагрузка ответа на заявку.
-     * @return {@link RequestAssignmentDto} - представление ответа на заявку для перемещения между слоями, приложениями.
+     * @param payload полезная нагрузка обращения на заявку.
+     * @return {@link RequestAssignmentDto} - представление обращения на заявку для перемещения между слоями, приложениями.
      */
     @PostMapping
     public ResponseEntity<RequestAssignmentDto> create(
@@ -35,12 +35,12 @@ public class RequestAssignmentsController {
     }
 
     /**
-     * Ручка получения ответов мастеров по запросу.
+     * Ручка получения обращений мастеров по заявке.
      *
      * @param page номер страницы.
      * @param size размер выборки страницы.
-     * @param filter фильтр для фильтрации ответов на заявку.
-     * @return {@link PageDto} с {@link RequestAssignmentDto} - представление страницы и ответов на заявки для перемещения между слоями, приложениями.
+     * @param filter фильтр для фильтрации обращений на заявку.
+     * @return {@link PageDto} с {@link RequestAssignmentDto} - представление страницы обращений на заявки для перемещения между слоями, приложениями.
      */
     @GetMapping
     public ResponseEntity<PageDto<RequestAssignmentDto>> readAll(

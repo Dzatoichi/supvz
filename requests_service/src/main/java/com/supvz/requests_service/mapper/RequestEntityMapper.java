@@ -1,5 +1,6 @@
-package com.supvz.requests_service.mapper.entity;
+package com.supvz.requests_service.mapper;
 
+import com.supvz.requests_service.model.entity.enums.RequestStatus;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
@@ -85,6 +86,15 @@ public class RequestEntityMapper implements RequestMapper {
             request.setSubject(payload.subject());
         if (payload.description() != null)
             request.setDescription(payload.description());
+        return request;
+    }
+
+    /**
+     * Метод изменения статуса сущности заявки.
+     */
+    @Override
+    public Request setStatus(Request request, RequestStatus newStatus) {
+        request.setStatus(newStatus);
         return request;
     }
 }

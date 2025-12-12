@@ -1,11 +1,8 @@
 package com.supvz.requests_service.model.dto;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
-import com.supvz.requests_service.core.enums.RequestStatus;
-import lombok.Builder;
+import com.supvz.requests_service.model.entity.enums.AssignmentAction;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * ДТО-рекорд ответа мастера на запрос.

@@ -1,10 +1,19 @@
 package com.supvz.requests_service.util.specification;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
+import com.supvz.requests_service.model.entity.enums.AssignmentAction;
 import com.supvz.requests_service.model.entity.RequestAssignment;
 import org.springframework.data.jpa.domain.Specification;
 
+/**
+ * Спецификации для фильтрации сущностей {@link RequestAssignment}.
+ */
 public class RequestAssignmentSpecifications {
+    /**
+     * Создаёт спецификацию для фильтрации по идентификатору связанного запроса.
+     *
+     * @param requestId идентификатор запроса; если {@code null}, применяется пустое условие
+     * @return спецификация, соответствующая заданному {@code requestId}
+     */
     public static Specification<RequestAssignment> hasRequestId(Long requestId) {
         return (root, _, cb) -> {
             if (requestId == null) return cb.conjunction();
@@ -12,6 +21,12 @@ public class RequestAssignmentSpecifications {
         };
     }
 
+    /**
+     * Создаёт спецификацию для фильтрации по идентификатору мастера.
+     *
+     * @param handymanId идентификатор мастера; если {@code null}, возвращает {@code null}
+     * @return спецификация или {@code null}, если параметр не задан
+     */
     public static Specification<RequestAssignment> hasHandymanId(Long handymanId) {
         return (root, _, cb) -> {
             if (handymanId == null) return null;
@@ -19,6 +34,12 @@ public class RequestAssignmentSpecifications {
         };
     }
 
+    /**
+     * Создаёт спецификацию для фильтрации по типу действия.
+     *
+     * @param action тип действия; если {@code null}, применяется пустое условие
+     * @return спецификация, соответствующая заданному {@code action}
+     */
     public static Specification<RequestAssignment> hasAction(AssignmentAction action) {
         return (root, _, cb) -> {
             if (action == null) return cb.conjunction();

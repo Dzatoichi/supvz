@@ -1,4 +1,4 @@
-package com.supvz.requests_service.mapper.entity;
+package com.supvz.requests_service.mapper;
 
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;

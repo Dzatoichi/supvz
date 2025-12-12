@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,7 +59,7 @@ class RequestAssignmentControllerTests {
     void update__ReturnsOk() throws Exception {
         int assignmentIdMock = 1;
 
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null);
         RequestAssignmentDto dtoMock = new RequestAssignmentDto(1, 1, 1, null, null, null, null, null);
 
         when(service.update(assignmentIdMock, payloadMock)).thenReturn(dtoMock);
@@ -78,7 +77,7 @@ class RequestAssignmentControllerTests {
     void update__RequestAssignmentNotFound__ReturnsBadRequest() throws Exception {
         int assignmentIdMock = 1;
 
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null);
 
         when(service.update(assignmentIdMock, payloadMock)).thenThrow(new RequestAssignmentNotFoundException("test"));
 
@@ -94,7 +93,7 @@ class RequestAssignmentControllerTests {
     void update__InvalidPayloadComment__ReturnsBadRequest() throws Exception {
         int assignmentIdMock = 1;
 
-        RequestAssignmentUpdatePayload payload = new RequestAssignmentUpdatePayload(null, null, "  ");
+        RequestAssignmentUpdatePayload payload = new RequestAssignmentUpdatePayload(null, "  ");
 
         mvc.perform(patch(URI.formatted(assignmentIdMock))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,26 +102,4 @@ class RequestAssignmentControllerTests {
 
         verifyNoInteractions(service);
     }
-
-    @Test
-    void delete__ReturnsNoContent() throws Exception {
-        int assignmentIdMock = 1;
-
-        mvc.perform(delete(URI.formatted(assignmentIdMock))).andExpect(status().isNoContent());
-
-        verify(service, times(1)).delete(assignmentIdMock);
-    }
-
-    @Test
-    void delete__RequestNotFound__ReturnsBadRequest() throws Exception {
-        int assignmentIdMock = 1;
-
-        doThrow(new RequestAssignmentNotFoundException("messageMock")).when(service).delete(assignmentIdMock);
-
-        mvc.perform(delete(URI.formatted(assignmentIdMock)))
-                .andExpect(status().isBadRequest());
-
-        verify(service, times(1)).delete(assignmentIdMock);
-    }
-
 }

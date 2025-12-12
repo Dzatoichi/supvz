@@ -1,10 +1,12 @@
 package com.supvz.requests_service.service;
 
+import com.supvz.requests_service.model.entity.enums.RequestStatus;
+import com.supvz.requests_service.core.exception.RequestConflictException;
 import com.supvz.requests_service.core.exception.RequestNotFoundException;
 import com.supvz.requests_service.core.filter.RequestFilter;
 import com.supvz.requests_service.model.dto.*;
 import com.supvz.requests_service.model.entity.Request;
-import com.supvz.requests_service.mapper.entity.RequestMapper;
+import com.supvz.requests_service.mapper.RequestMapper;
 import com.supvz.requests_service.repo.RequestRepository;
 import com.supvz.requests_service.util.specification.RequestSpecifications;
 import jakarta.transaction.Transactional;
@@ -119,16 +121,74 @@ public class RequestEntityService implements RequestService {
         log.info("Заявка [{}] успешно удалена.", id);
     }
 
+//    /**
+//     * Получение сущности определенной заявки по ее идентификатору.
+//     *
+//     * @param id идентификатор заявки.
+//     * @return {@link Request} - сущность заявки.
+//     */
+//    @Override
+//    public Request get(long id) {
+//        log.debug("Получение сущности заявки [{}].", id);
+//        return repo.findById(id)
+//                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
+//    }
+
     /**
-     * Получение сущности определенной заявки по ее идентификатору.
+     * Взятие заявки в работу.
+     * <br/>
+     * То есть изменение статуса заявки на {@code RequestStatus.assigned}.
+     * <br/>
+     * Невозможно взять заявку в работу, если заявка уже выполнена или отклонена.
+     * <br/>
+     * То есть, если статус {@code RequestStatus.completed} или {@code RequestStatus.rejected}.
      *
-     * @param id идентификатор заявки.
-     * @return {@link Request} - сущность заявки.
+     * @param requestId идентификатор заявки.
+     * @return {@link Request} - сущность обновленной заявки.
      */
     @Override
-    public Request get(long id) {
-        log.debug("Получение сущности заявки [{}].", id);
-        return repo.findById(id)
-                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(id)));
+    public Request assign(long requestId) {
+        RequestStatus assignedStatus = RequestStatus.assigned;
+        log.debug("Изменение статуса заявки [{}] с {} на {}.", requestId, RequestStatus.pending, assignedStatus);
+        Request request = repo.findById(requestId)
+                .orElseThrow(() -> new RequestNotFoundException("Заявка [%S] не найдена.".formatted(requestId)));
+        checkConflict(request);
+        request = mapper.setStatus(request, assignedStatus);
+        request = repo.save(request);
+        return request;
+    }
+
+    private static void checkConflict(Request request) {
+        RequestStatus status = request.getStatus();
+        if (status == RequestStatus.rejected)
+            throw new RequestConflictException("Заявка [%s] отклонена, невозможно изменить статус работы заявки.".formatted(request.getId()));
+        if (status == RequestStatus.completed)
+            throw new RequestConflictException("Заявка [%s] уже выполнена, невозможно изменить статус работы заявки.".formatted(request.getId()));
+    }
+
+    /**
+     * Обновление статуса заявки.
+     * <br/>
+     * Невозможно обновить статус, если заявка уже выполнена или отклонена.
+     * <br/>
+     * То есть, если статус {@code RequestStatus.completed} или {@code RequestStatus.rejected}.
+     *
+     * @param request   сущность заявки.
+     * @param newStatus новый статус заявки.
+     */
+    @Override
+    @Transactional
+    public void setStatus(Request request, RequestStatus newStatus) {
+        RequestStatus requestStatus = request.getStatus();
+        Long requestId = request.getId();
+        if (requestStatus == newStatus) {
+            if (requestStatus == RequestStatus.assigned)
+                return;
+            throw new RequestConflictException("Заявка [%s] уже имеет данный статус [%s] работы.".formatted(requestId, requestStatus));
+        }
+        log.debug("Изменение статуса заявки [{}].", requestId);
+        checkConflict(request);
+        mapper.setStatus(request, newStatus);
+        log.info("Статус заявки [{}] успешно изменен. Новый статус [{}].", requestId, newStatus);
     }
 }

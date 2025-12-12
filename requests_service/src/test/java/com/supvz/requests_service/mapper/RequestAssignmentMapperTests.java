@@ -1,18 +1,13 @@
-package com.supvz.requests_service.mapper.entity;
+package com.supvz.requests_service.mapper;
 
-import com.supvz.requests_service.core.enums.AssignmentAction;
-import com.supvz.requests_service.mapper.action.ActionMapper;
+import com.supvz.requests_service.model.entity.enums.AssignmentAction;
 import com.supvz.requests_service.model.dto.PageDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentDto;
 import com.supvz.requests_service.model.dto.RequestAssignmentPayload;
 import com.supvz.requests_service.model.dto.RequestAssignmentUpdatePayload;
 import com.supvz.requests_service.model.entity.Request;
 import com.supvz.requests_service.model.entity.RequestAssignment;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
@@ -22,20 +17,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class RequestAssignmentMapperTest {
-    private RequestAssignmentEntityMapper target;
-    @Mock
-    private ActionMapper actionMapper;
-    @Mock
-    private AssignmentAction action;
-
-    @BeforeEach
-    public void setUp() {
-        List<ActionMapper> mappersList = List.of(actionMapper);
-        lenient().when(actionMapper.getType()).thenReturn(action);
-        target = new RequestAssignmentEntityMapper(mappersList);
-    }
+class RequestAssignmentMapperTests {
+    private final RequestAssignmentEntityMapper target = new RequestAssignmentEntityMapper();
 
     @Test
     void create__MapsPayloadToEntity() {
@@ -73,7 +56,7 @@ class RequestAssignmentMapperTest {
                 .comment(commentMock)
                 .build();
 
-        RequestAssignmentDto result = assertDoesNotThrow(() -> target.read(entityMock));;
+        RequestAssignmentDto result = assertDoesNotThrow(() -> target.read(entityMock));
 
         assertEquals(assignmentIdMock, result.id());
         assertEquals(requestIdMock, result.requestId());
@@ -109,7 +92,7 @@ class RequestAssignmentMapperTest {
     @Test
     void update__UpdatesNonNullFields() {
         AssignmentAction oldActionMock = mock(AssignmentAction.class);
-        long newHandymanMock = 2;
+        AssignmentAction newActionMock = mock(AssignmentAction.class);
         String newCommentMock = "newCommentMock";
         RequestAssignment entityMock = RequestAssignment.builder()
                 .id(1L)
@@ -117,31 +100,30 @@ class RequestAssignmentMapperTest {
                 .action(oldActionMock)
                 .comment("oldCommentMock")
                 .build();
-        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(action, newHandymanMock, newCommentMock);
-
-        when(actionMapper.map(entityMock)).thenReturn(entityMock);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(newActionMock, newCommentMock);
 
         RequestAssignment result = assertDoesNotThrow(() -> target.update(entityMock, payloadMock));
 
-        assertEquals(newHandymanMock, result.getHandymanId());
         assertEquals(newCommentMock, result.getComment());
+        assertEquals(newActionMock, result.getAction());
+        assertNotNull(result.getProcessedAt());
     }
 
     @Test
     void update__SkipsNullFields() {
         AssignmentAction actionMock = mock(AssignmentAction.class);
         String oldComment = "oldComment";
-        RequestAssignment assignment = RequestAssignment.builder()
+        RequestAssignment entityMock = RequestAssignment.builder()
                 .handymanId(1)
                 .action(actionMock)
                 .comment(oldComment)
                 .build();
 
-        RequestAssignmentUpdatePayload payload = new RequestAssignmentUpdatePayload(null, null, null);
+        RequestAssignmentUpdatePayload payloadMock = new RequestAssignmentUpdatePayload(null, null);
 
-        RequestAssignment updated = target.update(assignment, payload);
+        RequestAssignment updated = assertDoesNotThrow(() -> target.update(entityMock, payloadMock));
 
-        assertEquals(assignment.getHandymanId(), updated.getHandymanId());
+        assertEquals(entityMock.getHandymanId(), updated.getHandymanId());
         assertEquals(actionMock, updated.getAction());
         assertEquals(oldComment, updated.getComment());
     }
