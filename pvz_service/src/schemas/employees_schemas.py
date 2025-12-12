@@ -1,7 +1,7 @@
 import re
 from typing import List, Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.schemas.pvz_schemas import PVZRead
 
@@ -14,7 +14,7 @@ class EmployeeCreateRequestSchema(BaseModel):
     position_id: int
     position_source: Literal["system", "custom"] = "system"
 
-    name: str
+    name: str = Field(max_length=255)
     phone_number: str
 
     @field_validator("phone_number")

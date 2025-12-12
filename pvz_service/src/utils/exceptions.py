@@ -10,6 +10,10 @@ class PVZDeleteFailedException(Exception):
     pass
 
 
+class EmployeeAlreadyExistsException(Exception):
+    pass
+
+
 class EmployeeNotFoundException(Exception):
     pass
 
@@ -19,4 +23,16 @@ class EmployeeNotAllowedException(Exception):
 
 
 class NoEmployeesInPVZException(Exception):
+    pass
+
+
+class PVZGroupAlreadyExistsException(Exception):
+    pass
+
+
+class PVZGroupNotFoundException(Exception):
+    pass
+
+
+class PVZGroupFilterException(Exception):
     pass

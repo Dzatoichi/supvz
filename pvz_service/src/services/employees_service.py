@@ -1,4 +1,3 @@
-from fastapi import HTTPException, status
 from fastapi_pagination import Params
 from sqlalchemy import or_
 
@@ -8,6 +7,12 @@ from src.schemas.employees_schemas import (
     EmployeeCreateRequestSchema,
     EmployeeResponseSchema,
     EmployeeUpdateRequestSchema,
+)
+from src.utils.exceptions import (
+    EmployeeAlreadyExistsException,
+    EmployeeNotFoundException,
+    PVZAlreadyExistsException,
+    PVZNotFoundException,
 )
 
 
@@ -31,13 +36,11 @@ class EmployeesService:
 
         if existing:
             if existing.user_id == data.user_id:
-                message = "Employee with this user_id already exists"
+                raise EmployeeAlreadyExistsException("Сотрудник с таким user_id уже существует.")
             elif existing.phone_number == data.phone_number:
-                message = "Employee with this phone number already exists"
+                raise EmployeeAlreadyExistsException("Сотрудник с таким номером телефона уже существует.")
             else:
-                message = "Employee already exists"
-
-            raise HTTPException(status.HTTP_409_CONFLICT, message)
+                raise EmployeeAlreadyExistsException("Такой сотрудник уже существует.")
 
         payload = {
             "user_id": data.user_id,
@@ -62,7 +65,7 @@ class EmployeesService:
         employee = await repo.get_employee(user_id=user_id)
 
         if not employee:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Сотрудник не найден")
+            raise EmployeeNotFoundException("Сотрудник не найден.")
 
         return EmployeeResponseSchema.model_validate(employee)
 
@@ -83,8 +86,7 @@ class EmployeesService:
         )
 
         if not employees:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Сотрудники не найдены")
-
+            raise EmployeeNotFoundException("Сотрудники не найдены.")
         employees.items = [EmployeeResponseSchema.model_validate(emp) for emp in employees.items]
 
         return employees
@@ -100,7 +102,7 @@ class EmployeesService:
         updated_employee = await repo.update(user_id, **update_data)
 
         if not updated_employee:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
+            raise EmployeeNotFoundException("Сотрудник не найден.")
 
         return EmployeeResponseSchema.model_validate(updated_employee)
 
@@ -113,11 +115,9 @@ class EmployeesService:
         user = await repo.get_employee(user_id=user_id)
 
         if not user:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Employee not found")
+            raise EmployeeNotFoundException("Сотрудник не найден.")
 
-        success = await repo.delete(user_id=user_id)
-        if not success:
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to delete employee")
+        await repo.delete(user_id=user_id)
 
     async def assign_employee_to_other_pvz(
         self,
@@ -129,17 +129,17 @@ class EmployeesService:
         """Добавляет сотруднику ещё один ПВЗ."""
         employee = await employees_repo.get_employee(user_id=user_id)
         if not employee:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Employee not found")
+            raise EmployeeNotFoundException("Сотрудник не найден.")
 
         pvz = await pvz_repo.get_pvz(id=new_pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "PVZ not found")
+            raise PVZNotFoundException("ПВЗ не найден.")
 
-        if pvz not in employee.pvzs:
-            updated = await employees_repo.assign_to_pvz(user_id, pvz.id)
-            return EmployeeResponseSchema.model_validate(updated)
+        if pvz in employee.pvzs:
+            raise PVZAlreadyExistsException("Сотрудник уже привязан к этому пвз.")
 
-        return EmployeeResponseSchema.model_validate(employee)
+        updated = await employees_repo.assign_to_pvz(user_id, pvz.id)
+        return EmployeeResponseSchema.model_validate(updated)
 
     async def unassign_employee_from_pvz(
         self,
@@ -151,11 +151,11 @@ class EmployeesService:
         """Удаляет связь между сотрудником и конкретным ПВЗ."""
         employee = await employees_repo.get_employee(user_id=user_id)
         if not employee:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Employee not found")
+            raise EmployeeNotFoundException("Сотрудник не найден")
 
         pvz = await pvz_repo.get_pvz(id=pvz_id)
         if not pvz:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "PVZ not found")
+            raise PVZNotFoundException("ПВЗ не найден.")
 
         updated = await employees_repo.unassign_from_pvz(user_id, pvz.id)
         return EmployeeResponseSchema.model_validate(updated)

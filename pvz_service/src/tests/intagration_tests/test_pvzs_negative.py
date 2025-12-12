@@ -18,7 +18,7 @@ async def test_get_pvz_not_found(client):
 
     assert response.status_code == 404
     data = response.json()
-    assert data["detail"] == "ПВЗ с таким id не найдено"
+    assert data["error"] == "pvz_not_found"
 
 
 @pytest.mark.asyncio
@@ -67,23 +67,37 @@ async def test_create_pvz_duplicate_code(client, session):
 
     assert response.status_code == 409
     data = response.json()
-    assert data["detail"] == "ПВЗ с таким кодом уже существует"
+    assert data["error"] == "pvz_already_exists"
 
 
 @pytest.mark.asyncio
-async def test_create_pvz_validation_error(client):
+@pytest.mark.parametrize(
+    "payload, error_field",
+    [
+        ({}, "required"),
+        ({"type": "dhl"}, "input should be"),
+        ({"owner_id": "not-a-number"}, "valid integer"),
+        ({"code": None}, "string"),
+    ],
+)
+async def test_create_pvz_validation_error(client, payload, error_field):
     """
     Тест: Ошибка валидации данных (422 Unprocessable Entity).
     GET /pvzs/{pvz_id}/employees
-    Проверяет реакцию на отсутствие обязательных полей.
     """
-    invalid_payload = {}
+    base_payload = PVZFactory.build().model_dump(mode="json")
+    base_payload.update(payload)
 
-    response = await client.post("/pvzs/", json=invalid_payload)
+    final_payload = payload if payload == {} else base_payload
 
-    assert response.status_code == 422
+    response = await client.post("/pvzs/", json=final_payload)
+
     data = response.json()
-    assert "Field required" in data["detail"]
+    error_messages = data["detail"]
+
+    match_found = any(error_field.lower() in msg.lower() for msg in error_messages)
+
+    assert match_found
 
 
 @pytest.mark.asyncio
@@ -104,7 +118,7 @@ async def test_create_pvz_invalid_types(client):
     response = await client.post("/pvzs/", json=payload)
 
     assert response.status_code == 422
-    assert response.json()["detail"] == ["Input should be a valid integer, unable to parse string as an integer"]
+    assert response.json()["error"] == "validation_error"
 
 
 @pytest.mark.asyncio
@@ -120,11 +134,10 @@ async def test_get_employees_pvz_not_found(client):
 
 
 @pytest.mark.asyncio
-async def test_assign_group_not_found(client, session):
+async def test_assign_pvz_to_group_not_found(client, session):
     """
     Тест: Привязка ПВЗ к несуществующей группе (404).
     """
-    # Создаем ПВЗ, чтобы pvz_ids были валидными
     pvz = await PVZFactory.create_async(session)
     non_existent_group_id = 999999
 
@@ -133,4 +146,5 @@ async def test_assign_group_not_found(client, session):
     response = await client.patch("/pvzs/group_assignment", json=payload)
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Группа не найдена"
+    data = response.json()
+    assert data["error"] == "pvz_group_not_found"

@@ -4,11 +4,15 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.utils.exceptions import (
+    EmployeeAlreadyExistsException,
     EmployeeNotAllowedException,
     EmployeeNotFoundException,
     NoEmployeesInPVZException,
     PVZAlreadyExistsException,
     PVZDeleteFailedException,
+    PVZGroupAlreadyExistsException,
+    PVZGroupFilterException,
+    PVZGroupNotFoundException,
     PVZNotFoundException,
 )
 
@@ -58,6 +62,16 @@ def setup_exception_handlers(app: FastAPI):
             content={"error": "pvz_delete_failed", "detail": str(exc)},
         )
 
+    @app.exception_handler(EmployeeAlreadyExistsException)
+    async def employee_already_exists_handler(
+        request: Request,
+        exc: EmployeeAlreadyExistsException,
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "employee_already_exists", "detail": str(exc)},
+        )
+
     @app.exception_handler(EmployeeNotFoundException)
     async def employee_not_found_handler(
         request: Request,
@@ -86,6 +100,36 @@ def setup_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={"error": "no_employees_in_pvz", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PVZGroupAlreadyExistsException)
+    async def pvz_group_already_exists_handler(
+        request: Request,
+        exc: PVZGroupAlreadyExistsException,
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "pvz_group_already_exists", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PVZGroupNotFoundException)
+    async def pvz_group_not_found_handler(
+        request: Request,
+        exc: PVZGroupNotFoundException,
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "pvz_group_not_found", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PVZGroupFilterException)
+    async def pvz_group_filter_handler(
+        request: Request,
+        exc: PVZGroupFilterException,
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "pvz_group_filter", "detail": str(exc)},
         )
 
     @app.exception_handler(SQLAlchemyError)

@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
@@ -7,6 +7,7 @@ from src.schemas.pvz_group_schemas import (
     PVZGroupResponseSchema,
     PVZGroupUpdateSchema,
 )
+from src.utils.exceptions import PVZGroupAlreadyExistsException, PVZGroupFilterException, PVZGroupNotFoundException
 
 
 class PVZGroupsService:
@@ -21,10 +22,7 @@ class PVZGroupsService:
         """Создаёт новую группу ПВЗ"""
         existing_group = await repo.get_group(name=data.name)
         if existing_group:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Группа с таким именем уже существет",
-            )
+            raise PVZGroupAlreadyExistsException("Группа с таким именем уже существет")
 
         payload = data.model_dump()
         group = await repo.create(payload)
@@ -42,12 +40,12 @@ class PVZGroupsService:
 
         existing_group = await group_repo.get_by_id(id=group_id)
         if not existing_group:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Группы с таким id не существет",
-            )
+            raise PVZGroupNotFoundException("Группы с таким id не существет")
 
-        group = await group_repo.update(group_id, **data.model_dump(exclude_unset=True))
+        try:
+            group = await group_repo.update(group_id, **data.model_dump(exclude_unset=True))
+        except IntegrityError:
+            raise PVZGroupAlreadyExistsException("Группа с таким именем уже существует") from None
 
         if data.curator_id:
             await pvz_repo.update_pvzs_curator_by_group(group_id, data.curator_id)
@@ -69,20 +67,14 @@ class PVZGroupsService:
             return [PVZGroupResponseSchema.model_validate(g) for g in groups]
 
         if len(actual_params) > 1:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Используйте только один параметр для поиска.",
-            )
+            raise PVZGroupFilterException("Используйте только один параметр для поиска.")
 
         field_name, field_value = next(iter(actual_params.items()))
 
         groups = await repo.get_groups(**{field_name: field_value})
 
         if not groups:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Группы не найдены",
-            )
+            raise PVZGroupNotFoundException("Группы не найдены")
 
         return [PVZGroupResponseSchema.model_validate(g) for g in groups]
 
@@ -96,7 +88,7 @@ class PVZGroupsService:
         group = await repo.get_by_id(group_id)
 
         if not group:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Группа не найдена")
+            raise PVZGroupNotFoundException("Группа не найдена")
 
         return PVZGroupResponseSchema.model_validate(group)
 
@@ -109,10 +101,7 @@ class PVZGroupsService:
 
         existing_group = await repo.get_by_id(id=group_id)
         if not existing_group:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Группы с таким id не существет",
-            )
+            raise PVZGroupNotFoundException("Группы с таким id не существет")
 
         await repo.delete(id=group_id)
 
@@ -121,10 +110,7 @@ class PVZGroupsService:
 
         existing_group = await repo.get_by_id(id=group_id)
         if not existing_group:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Группы с таким id не существет",
-            )
+            raise PVZGroupNotFoundException("Группы с таким id не существет")
 
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():  # ← одна транзакция

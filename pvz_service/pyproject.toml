@@ -65,7 +65,7 @@ polyfactory = "^3.1.0"
 test-up = "docker compose up -d postgres_test"
 test = "pytest"
 test-down = "docker compose stop postgres_test"
-test-full = "task test-up && task test && task test-down"
+test-full = "python src/tests/run_tests.py"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
