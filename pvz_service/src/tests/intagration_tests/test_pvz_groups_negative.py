@@ -37,16 +37,17 @@ async def test_create_group_validation_error(client, payload, error_field):
 
 
 @pytest.mark.asyncio
-async def test_create_group_duplicate_name(client, session):
+async def test_create_group_duplicate(client, session):
     """
     Тест: Создание группы с неуникальным именем (409 Conflict).
-    Проверяет constraint unique=True поля name.
+    Проверяет constraint unique=True поля name+owner_id.
     """
     existing_name = "Unique Group Name"
+    existing_owner = 100
 
-    await GroupFactory.create_async(session, name=existing_name)
+    await GroupFactory.create_async(session, name=existing_name, owner_id=existing_owner)
 
-    payload_model = GroupFactory.build(name=existing_name)
+    payload_model = GroupFactory.build(name=existing_name, owner_id=existing_owner)
     payload = payload_model.model_dump(mode="json")
 
     response = await client.post("/pvz_groups", json=payload)

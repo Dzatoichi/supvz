@@ -83,8 +83,7 @@ async def test_update_group(client, session):
     update_payload = {"curator_id": new_curator.user_id, "name": "Updated Name Group"}
 
     response = await client.patch(f"/pvz_groups/{group.id}", json=update_payload)
-    if response.status_code != 200:
-        print(f"\nERROR BODY: {response.json()}\n")
+
     assert response.status_code == 200
 
     data = response.json()
