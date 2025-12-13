@@ -64,11 +64,12 @@ class AuthService:
                 token_type=TokenTypesEnum.register,
             )
             owner_id = register_token_payload.get("owner_id")
-            owner = await repo.get_by_id(id=owner_id)
+            owner = await user_repo.get_by_id(id=owner_id)
             if not owner:
                 raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
 
-            payload["role"] = register_token_payload.get("role")
+            position_id = register_token_payload.get("position_id")
+            position_source = register_token_payload.get("position_source")
         else:
             position_id = data.position_id
             position_source = data.position_source

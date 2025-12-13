@@ -31,7 +31,7 @@ class CustomPositionUpdateSchema(BaseModel):
     """Схема для обновления кастомной должности."""
 
     title: str | None = None
-    permissions_ids: list[int] | None = None
+    permission_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,6 +40,6 @@ class CustomPositionWithPermissionsReadSchema(CustomPositionBaseSchema):
     """Схема для чтения кастомной должности."""
 
     id: int
-    permissions_ids: list[int] | None = None
+    permission_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)

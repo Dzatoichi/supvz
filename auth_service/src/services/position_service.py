@@ -145,10 +145,10 @@ class PositionService:
                         session=session,
                     )
 
-                if data.permissions_ids is not None:
+                if data.permission_ids is not None:
                     final_permission_ids = await self.perm_dao.set_permissions_for_custom_position(
                         position_id=position_id,
-                        new_permission_ids=data.permissions_ids,
+                        new_permission_ids=data.permission_ids,
                         session=session,
                     )
                 else:
@@ -160,7 +160,7 @@ class PositionService:
                     id=current_position.id,
                     owner_id=current_position.owner_id,
                     title=current_position.title,
-                    permissions_ids=final_permission_ids,
+                    permission_ids=final_permission_ids,
                 )
 
     async def delete_position(self, position_id: int) -> None:

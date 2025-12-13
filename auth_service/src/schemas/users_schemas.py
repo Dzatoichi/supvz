@@ -69,7 +69,6 @@ class UserRegisterSchema(UserLoginSchema):
 
     position_id: int | None = None
     position_source: PositionSourceEnum | None = None
-    invite_token: str | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -92,8 +91,8 @@ class UserRegisterSchema(UserLoginSchema):
         if (self.position_id is None) != (self.position_source is None):
             raise ValueError("Необходимо указать и position_id, и position_source.")
 
-        if not self.invite_token and self.position_id is None:
-            raise ValueError("Необходимо указать либо 'invite_token', либо 'position_id' + 'position_source'.")
+        if not self.register_token and self.position_id is None:
+            raise ValueError("Необходимо указать либо 'register_token', либо 'position_id' + 'position_source'.")
 
         return self
 
