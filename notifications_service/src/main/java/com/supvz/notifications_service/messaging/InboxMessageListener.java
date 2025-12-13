@@ -6,11 +6,7 @@ import com.supvz.notifications_service.core.exception.InboxEventNotSerializedExc
 import com.supvz.notifications_service.service.initializer.InboxInitializer;
 import com.supvz.notifications_service.model.dto.InboxMessage;
 import com.supvz.notifications_service.model.entity.InboxEventType;
-import io.micrometer.tracing.Tracer;
-import io.micrometer.tracing.propagation.Propagator;
-import io.opentelemetry.context.Context;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +15,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,8 +28,6 @@ import java.util.stream.Collectors;
 public class InboxMessageListener {
     private final ObjectMapper objectMapper;
     private final Map<InboxEventType, InboxInitializer> initializers;
-    private final Tracer tracer;
-    private final Propagator propagator;
 
     /**
      * Конструктор.
@@ -43,15 +35,11 @@ public class InboxMessageListener {
     @Autowired
     public InboxMessageListener(
             ObjectMapper objectMapper,
-            List<InboxInitializer> initializerList,
-            Tracer tracer,
-            Propagator propagator
+            List<InboxInitializer> initializerList
     ) {
         this.objectMapper = objectMapper;
         this.initializers = initializerList.stream()
                 .collect(Collectors.toMap(InboxInitializer::getType, Function.identity()));
-        this.tracer = tracer;
-        this.propagator = propagator;
     }
 
     /**

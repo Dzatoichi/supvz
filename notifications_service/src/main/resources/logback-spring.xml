@@ -2,7 +2,8 @@
     <springProfile name="dev">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
-                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                <!-- Я понял. Паттерн, что указываю, работает лишь в моем сервисе. В агенте логи трейсы метрики другого паттерна, там задавать надо отдельно.-->
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} ---- [%msg] [trace_id=%X{traceId:-} | span_id=%X{spanId:-}]%n</pattern>
             </encoder>
         </appender>
         <root level="DEBUG">

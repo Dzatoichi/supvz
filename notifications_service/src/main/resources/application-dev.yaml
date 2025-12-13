@@ -3,7 +3,7 @@ spring:
     compose:
       enabled: true
       file:
-        - docker_build/dev/docker-compose.yaml
+        - infrastructure/dev/docker-compose.yaml
   jpa:
     show-sql: true
   mail:
@@ -68,15 +68,7 @@ app:
         batch-size: 50
         delay-ms: 10000
 
-
 management:
-  tracing:
-    enabled: true
-    sampling:
-      probability: 1.0
-    otlp:
-      endpoint: http://localhost:4318
-      protocol: http/protobuf
   metrics:
     tags:
       application: ${spring.application.name}

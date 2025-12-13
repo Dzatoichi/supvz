@@ -7,4 +7,4 @@ spring:
     change-log: migrations/db.changelog-master.yaml
 
 server:
-  port: 8003
+  port: ${SERVER_PORT}
