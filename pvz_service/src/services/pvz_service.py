@@ -13,6 +13,7 @@ from src.utils.exceptions import (
     NoEmployeesInPVZException,
     PVZAlreadyExistsException,
     PVZDeleteFailedException,
+    PVZGroupNotFoundException,
     PVZNotFoundException,
 )
 
@@ -75,7 +76,7 @@ class PVZService:
             type=pvz_update.type,
             address=pvz_update.address,
             owner_id=pvz_update.owner_id,
-            group=pvz_update.group,
+            group_id=pvz_update.group_id,
             curator_id=pvz_update.curator_id,
             created_at=pvz_update.created_at,
         )
@@ -179,13 +180,13 @@ class PVZService:
     ):
         group = await repo.get_group(id=group_id)
         if not group:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Группа не найдена")
+            raise PVZGroupNotFoundException("Группа не найдена")
 
         # Получаем все ПВЗ, которые хотим привязать
         pvzs = await pvz_repo.get_pvzs(PVZs.id.in_(pvz_ids))
 
         if len(pvzs) != len(pvz_ids):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Некоторые ПВЗ не существуют")
+            raise PVZAlreadyExistsException("Некоторые ПВЗ не существуют")
 
         # Проверяем, что у всех ПВЗ owner_id совпадает с owner_id группы
         for pvz in pvzs:

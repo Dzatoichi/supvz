@@ -31,9 +31,10 @@ class PVZGroupResponseSchema(PVZGroupBaseSchema):
     model_config = ConfigDict(from_attributes=True)
 
 
-class AssignPVZToGroupSchema(BaseModel):
+class PVZAssignmentSchema(BaseModel):
     """Схема для привязки ПВЗ к группе."""
 
+    group_id: int
     pvz_ids: list[int]
 
 
