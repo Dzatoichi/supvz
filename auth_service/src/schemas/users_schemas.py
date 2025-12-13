@@ -210,3 +210,10 @@ class UserRegisterEmployeeSchema(BaseModel):
     position_source: PositionSourceEnum = PositionSourceEnum.system
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserPermissionSchema(BaseModel):
+    """Вспомогательная схема для связи пользователя с правом."""
+
+    user_id: int
+    permission_id: int

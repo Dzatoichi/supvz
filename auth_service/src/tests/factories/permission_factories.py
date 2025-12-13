@@ -1,16 +1,17 @@
 from polyfactory import Use
 
 from src.models import Permissions
-from src.schemas.permissions_schemas import PermissionReadSchema
-from src.tests.factories.base_factories import AsyncPersistenceFactory, faker
+from src.schemas.permissions_schemas import PermissionBaseSchema
+from src.tests.factories.base_factories import AsyncPersistenceFactory
 
 
-class PermissionFactory(AsyncPersistenceFactory[Permissions]):
-    """Фабрика для создания права доступа."""
+class PermissionFactory(AsyncPersistenceFactory[PermissionBaseSchema]):
+    """
+    Фабрика прав доступа.
+    """
 
-    __model__ = PermissionReadSchema
+    __model__ = PermissionBaseSchema
     __model_cls__ = Permissions
 
-    # Генерируем уникальное имя права, например "user:create", "order:view"
-    code_name = Use(lambda: f"{faker.word()}:{faker.word()}_{faker.random_int()}")
-    description = Use(faker.sentence)
+    code_name = Use(lambda: f"permission:{id(object())}")
+    description = "Test permission"

@@ -2,14 +2,12 @@ import asyncio
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from src.database.base import Base, db_helper
 from src.main import app
 from src.settings.config import Settings
-from src.tests.factories.permission_factories import PermissionFactory
-from src.tests.factories.system_position_factories import SystemPositionFactory, SystemPositionPermissionLinkFactory
 
 test_settings = Settings(_env_file=".env.test")
 
@@ -43,18 +41,25 @@ async def session(engine):
     connection = await engine.connect()
     transaction = await connection.begin()
 
-    session = AsyncSession(
+    TestSessionLocal = async_sessionmaker(
         bind=connection,
         expire_on_commit=False,
-        join_transaction_mode="create_savepoint",
+        autoflush=False,
     )
 
-    async def mock_close():
-        pass
+    session = TestSessionLocal()
 
-    session.close = mock_close
+    session.begin = session.begin_nested
+
+    async def mock_commit():
+        await session.flush()
+
+    session.commit = mock_commit
 
     class MockSessionManager:
+        def __call__(self):
+            return self
+
         async def __aenter__(self):
             return session
 
@@ -62,7 +67,7 @@ async def session(engine):
             pass
 
     original_maker = db_helper.async_session_maker
-    db_helper.async_session_maker = lambda: MockSessionManager()
+    db_helper.async_session_maker = MockSessionManager()
 
     async def override_session_getter():
         yield session
@@ -74,6 +79,7 @@ async def session(engine):
     db_helper.async_session_maker = original_maker
     app.dependency_overrides.clear()
 
+    await session.close()
     await transaction.rollback()
     await connection.close()
 
@@ -88,22 +94,3 @@ async def client(session):
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
-
-
-@pytest.fixture
-async def system_position_with_permissions(session: AsyncSession):
-    async def _create(perms_count: int = 2):
-        position = await SystemPositionFactory.create_async(session)
-        perms = []
-        for _ in range(perms_count):
-            perm = await PermissionFactory.create_async(session)
-            perms.append(perm)
-            await SystemPositionPermissionLinkFactory.create_async(
-                session,
-                system_position_id=position.id,
-                permission_id=perm.id,
-            )
-        await session.flush()
-        return position, perms
-
-    return _create
