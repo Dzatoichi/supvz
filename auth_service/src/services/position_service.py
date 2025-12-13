@@ -4,6 +4,7 @@ from pydantic import TypeAdapter
 from src.dao.custom_positionsDAO import CustomPositionDAO
 from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.system_positionsDAO import SystemPositionDAO
+from src.dao.usersDAO import UsersDAO
 from src.schemas.custom_positions_schemas import (
     CustomPositionCreateSchema,
     CustomPositionUpdateSchema,
@@ -16,6 +17,7 @@ from src.schemas.system_positions_schemas import (
 from src.utils.exceptions import (
     PositionAlreadyExistsException,
     PositionNotFoundException,
+    UserNotFoundException,
 )
 
 
@@ -28,11 +30,13 @@ class PositionService:
         custom_position_dao: CustomPositionDAO,
         system_position_dao: SystemPositionDAO,
         permissions_dao: PermissionsDAO,
+        user_dao: UsersDAO,
     ):
         self.db_helper = db_helper
         self.custom_position_dao = custom_position_dao
         self.system_position_dao = system_position_dao
         self.perm_dao = permissions_dao
+        self.user_dao = user_dao
         self.adapter = TypeAdapter(PositionReadSchema)
 
     async def get_positions(
@@ -78,6 +82,10 @@ class PositionService:
         data: CustomPositionCreateSchema,
     ) -> PositionReadSchema:
         """Создает новую кастомную должность"""
+
+        existing_owner = await self.user_dao.get_by_id(id=data.owner_id)
+        if not existing_owner:
+            raise UserNotFoundException("Владельца с таким id не существует")
 
         payload = {
             "title": data.title,

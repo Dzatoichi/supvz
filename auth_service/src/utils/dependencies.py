@@ -79,13 +79,16 @@ def get_position_service(
     custom_position_dao: CustomPositionDAO = Depends(get_custom_position_dao),
     system_position_dao: SystemPositionDAO = Depends(get_system_position_dao),
     permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
+    user_dao: UsersDAO = Depends(get_users_dao),
 ) -> "PositionService":
     """Создает сервис для работы с должностями."""
+
     return PositionService(
         db_helper=db_helper,
         custom_position_dao=custom_position_dao,
         system_position_dao=system_position_dao,
         permissions_dao=permissions_dao,
+        user_dao=user_dao,
     )
 
 
