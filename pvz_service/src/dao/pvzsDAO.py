@@ -31,7 +31,7 @@ class PVZsDAO(BaseDAO[PVZs]):
             return result.scalar_one_or_none()
 
     @BaseDAO.with_exception
-    async def get_pvzs(self, *args, **kwargs) -> Optional[list[PVZs]]:
+    async def get_pvzs(self, params: Params, *args, **kwargs) -> Optional[list[PVZs]]:
         """
         Данный метод реализует поиск по любому аттрибуту,
         который будет указан в качестве аргумента функции.
@@ -43,8 +43,9 @@ class PVZsDAO(BaseDAO[PVZs]):
             if kwargs:
                 stmt = stmt.filter_by(**kwargs)
 
-            result = await session.execute(stmt)
-            return result.scalars().all()
+            stmt = stmt.order_by(self.model.id)
+
+            return await paginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def unassign_pvzs_from_group(self, group_id: int):
@@ -67,7 +68,7 @@ class PVZsDAO(BaseDAO[PVZs]):
                 )
                 .where(employee_pvz_association.c.pvz_id == pvz_id)
             )
-            return await paginate(session, stmt, params=params)
+            return await paginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def update_pvzs_curator_by_group(self, group_id: int, curator_id: int):

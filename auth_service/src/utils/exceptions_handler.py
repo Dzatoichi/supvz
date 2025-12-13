@@ -7,6 +7,10 @@ from src.utils.exceptions import (
     IncorrectPasswordException,
     InvalidTokenException,
     PermissionDeniedException,
+    PermissionsFilterException,
+    PermissionsNotFound,
+    PositionAlreadyExistsException,
+    PositionNotFoundException,
     TokenExpiredException,
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -188,6 +192,78 @@ def setup_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
             content={"error": "permission_denied", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PositionNotFoundException)
+    async def position_not_found_exception_handler(
+        request: Request,
+        exc: PositionNotFoundException,
+    ):
+        logger.error(
+            "PositionNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "position_not_found", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PositionAlreadyExistsException)
+    async def position_already_exists_exception_handler(
+        request: Request,
+        exc: PositionAlreadyExistsException,
+    ):
+        logger.error(
+            "PositionAlreadyExistsException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "position_already_exists", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PermissionsNotFound)
+    async def permissions_not_found_exception_handler(
+        request: Request,
+        exc: PermissionsNotFound,
+    ):
+        logger.error(
+            "PermissionsNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "permissions_not_found", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PermissionsFilterException)
+    async def permissions_filter_exception_handler(
+        request: Request,
+        exc: PermissionsFilterException,
+    ):
+        logger.error(
+            "PermissionsFilterException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "permissions_filter_exception", "detail": str(exc)},
         )
 
     @app.exception_handler(Exception)

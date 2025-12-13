@@ -3,8 +3,8 @@ from typing import Any
 
 import jwt
 
+from src.schemas.enums import PositionSourceEnum
 from src.schemas.tokens_schemas import TokenTypesEnum
-from src.schemas.users_schemas import UserRoleEnum
 from src.settings.config import settings
 
 
@@ -43,7 +43,8 @@ class TokenHandler:
         self,
         pvz_id: int,
         owner_id: int,
-        role: UserRoleEnum,
+        position_id: int,
+        position_source: PositionSourceEnum,
     ) -> tuple[Any, datetime | int | None]:
         """
         Метод шифрования register jwt токена с дополнительными данными.
@@ -56,7 +57,8 @@ class TokenHandler:
         payload = {
             "pvz_id": pvz_id,
             "owner_id": owner_id,
-            "role": role,
+            "position_id": position_id,
+            "position_source": position_source,
             "exp": datetime.now(timezone.utc) + expire_time,
         }
 

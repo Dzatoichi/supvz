@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, Params
 
+from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
+from src.schemas.permissions_schemas import PermissionReadSchema
 from src.schemas.users_schemas import (
+    StatusResponseSchema,
+    UpdateUserPermissionsSchema,
+    UpdateUsersPermissionsSchema,
     UserAuthRequestSchema,
     UserReadSchema,
     UserUpdateMeSchema,
@@ -13,6 +18,7 @@ from src.services.user_service import UserService
 from src.utils.dependencies import (
     get_access_token_from_cookie,
     get_jwt_tokens_service,
+    get_permissions_dao,
     get_user_service,
     get_users_dao,
 )
@@ -118,6 +124,39 @@ async def update_user(
         repo=repo,
     )
     return result
+
+
+@users_router.put("/{user_id}/permissions", status_code=200)
+async def update_permissions(
+    user_id: int,
+    data: UpdateUserPermissionsSchema,
+    user_service: UserService = Depends(get_user_service),
+    user_repo: UsersDAO = Depends(get_users_dao),
+    perm_repo: PermissionsDAO = Depends(get_permissions_dao),
+) -> list[PermissionReadSchema]:
+    """
+    Полностью перезаписывает права пользователя.
+    """
+
+    return await user_service.set_user_permissions(
+        user_id=user_id,
+        permission_ids=data.permission_ids,
+        user_repo=user_repo,
+        perm_repo=perm_repo,
+    )
+
+
+@users_router.put("/permissions/", response_model=StatusResponseSchema)
+async def update_users_permissions(
+    data: UpdateUsersPermissionsSchema,
+    user_service: UserService = Depends(get_user_service),
+    repo: UsersDAO = Depends(get_users_dao),
+) -> StatusResponseSchema:
+    """
+    Ручка для bulk update permissions у юзеров.
+    Старые права удаляются, новые назначаются.
+    """
+    return await user_service.update_users_permissions(data=data, repo=repo)
 
 
 @users_router.delete("/{user_id}", status_code=204)

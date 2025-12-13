@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 
 from src.core.security.permissions import PermissionEnum
+from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
@@ -17,6 +18,7 @@ from src.services.token_service import JWTTokensService, StatefulTokenService
 from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
+    get_permissions_dao,
     get_stateful_token_service,
     get_users_dao,
 )
@@ -26,33 +28,36 @@ auth_router = APIRouter(prefix="/auth", tags=["Authorization"])
 
 @auth_router.post("/register", response_model=UserReadSchema, status_code=201)
 async def register_user(
-    user_in: UserRegisterSchema,
+    data: UserRegisterSchema,
     auth_service: AuthService = Depends(get_auth_service),
-    repo: UsersDAO = Depends(get_users_dao),
+    user_repo: UsersDAO = Depends(get_users_dao),
+    perm_repo: PermissionsDAO = Depends(get_permissions_dao),
     token_service: JWTTokensService | None = Depends(get_jwt_tokens_service),
 ) -> UserReadSchema:
     """
     Ручка регистрации пользователя.
     POST [/auth/register]
     """
-    if user_in.register_token:
+    if data.register_token:
         user = await auth_service.register_user(
-            data=user_in,
-            repo=repo,
+            data=data,
+            user_repo=user_repo,
+            perm_repo=perm_repo,
             token_service=token_service,
         )
         return user
 
     user = await auth_service.register_user(
-        data=user_in,
-        repo=repo,
+        data=data,
+        user_repo=user_repo,
+        perm_repo=perm_repo,
         token_service=None,
     )
 
     return user
 
 
-@auth_router.post("/login", responses={200: {"description": "Succesful login"}})
+@auth_router.post("/login", responses={200: {"description": "Successfully login"}})
 async def login(
     response: Response,
     credentials: UserLoginSchema,

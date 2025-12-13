@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Literal
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -11,6 +11,8 @@ class EmployeeCreateRequestSchema(BaseModel):
 
     user_id: int
     owner_id: int
+    position_id: int
+    position_source: Literal["system", "custom"] = "system"
 
     name: str
     phone_number: str
@@ -33,6 +35,7 @@ class EmployeeResponseSchema(BaseModel):
 
     user_id: int
     owner_id: int
+    position_id: int
 
     name: str
     phone_number: str

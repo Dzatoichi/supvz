@@ -42,6 +42,8 @@ class EmployeesService:
         payload = {
             "user_id": data.user_id,
             "owner_id": data.owner_id,
+            "position_id": data.position_id,
+            "position_source": data.position_source,
             "phone_number": data.phone_number,
             "name": data.name,
             "pvzs": [],
@@ -68,6 +70,7 @@ class EmployeesService:
         self,
         owner_id: int,
         pvz_id: int | None,
+        position_id: int | None,
         repo: EmployeesDAO,
         params: Params,
     ) -> list[EmployeeResponseSchema]:
@@ -75,6 +78,7 @@ class EmployeesService:
         employees = await repo.get_employees_filtered(
             user_id=owner_id,
             pvz_id=pvz_id,
+            position_id=position_id,
             params=params,
         )
 

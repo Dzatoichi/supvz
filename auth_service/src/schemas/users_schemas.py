@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -11,23 +11,9 @@ from pydantic import (
     model_validator,
 )
 
-from src.core.security.permissions import PermissionEnum
-from src.core.security.permissions.role_permissions import get_permissions_for_role
+from src.schemas.enums import PositionSourceEnum
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
-
-
-class UserRoleEnum(str, Enum):
-    """
-    Перечисление ролей пользователя.
-    """
-
-    administrator = "administrator"
-    owner = "owner"
-    curator = "curator"
-    employee = "employee"
-    intern = "intern"
-    handyman = "handyman"
 
 
 class SubscriptionEnum(Enum):
@@ -38,6 +24,13 @@ class SubscriptionEnum(Enum):
     paid = "paid"
     test = "test"
     expired = "expired"
+
+
+class StatusResponseSchema(BaseModel):
+    """Схема для возврата текстового ответа."""
+
+    status: Literal["ok", "error"] = "ok"
+    message: str | None = None
 
 
 class UserBaseSchema(BaseModel):
@@ -74,6 +67,10 @@ class UserRegisterSchema(UserLoginSchema):
     confirm_password: str
     register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
 
+    position_id: int | None = None
+    position_source: PositionSourceEnum | None = None
+    invite_token: str | None = None
+
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
         """
@@ -81,6 +78,23 @@ class UserRegisterSchema(UserLoginSchema):
         """
         if self.password != self.confirm_password:
             raise ValueError("Passwords do not match")
+        return self
+
+    @model_validator(mode="after")
+    def validate_registration_fields(self) -> "UserRegisterSchema":
+        """
+        Проверка:
+        1) Если position_id указан, то обязательно position_source и наоборот.
+        2) Должен быть хотя бы один способ регистрации:
+           - invite_token или
+           - position_id + position_source
+        """
+        if (self.position_id is None) != (self.position_source is None):
+            raise ValueError("Необходимо указать и position_id, и position_source.")
+
+        if not self.invite_token and self.position_id is None:
+            raise ValueError("Необходимо указать либо 'invite_token', либо 'position_id' + 'position_source'.")
+
         return self
 
 
@@ -106,17 +120,10 @@ class UserReadSchema(UserBaseSchema):
     """
 
     id: int
-    role: UserRoleEnum
     subscription: SubscriptionEnum
-    permissions: list[PermissionEnum] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-    @model_validator(mode="after")
-    def set_permissions(self) -> "UserReadSchema":
-        self.permissions = get_permissions_for_role(self.role)
-        return self
 
 
 class UserAuthRequestSchema(BaseModel):
@@ -178,6 +185,21 @@ class UserForgotPasswordSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
+class UpdateUserPermissionsSchema(BaseModel):
+    permission_ids: list[int]
+
+
+class UpdateUsersPermissionsSchema(BaseModel):
+    """
+    Схема для обновления списка прав у всех юзеров,
+    которые подаются на вход
+    """
+
+    users: list[int]
+    new_permission_ids: list[int]
+
+
+# TODO: начать использовать position
 class UserRegisterEmployeeSchema(BaseModel):
     """
     Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
@@ -185,6 +207,7 @@ class UserRegisterEmployeeSchema(BaseModel):
 
     pvz_id: int
     owner_id: int
-    role: UserRoleEnum
+    position_id: int
+    position_source: PositionSourceEnum = PositionSourceEnum.system
 
     model_config = ConfigDict(from_attributes=True)

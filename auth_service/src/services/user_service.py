@@ -1,12 +1,16 @@
-from fastapi_pagination import Page, Params, paginate
+from fastapi_pagination import Page, Params
 
+from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
+from src.models.users.users import Users
+from src.schemas.permissions_schemas import PermissionReadSchema
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
+    StatusResponseSchema,
     SubscriptionEnum,
+    UpdateUsersPermissionsSchema,
     UserAuthRequestSchema,
     UserReadSchema,
-    UserRoleEnum,
     UserUpdateMeSchema,
     UserUpdateSchema,
 )
@@ -20,6 +24,9 @@ class UserService:
     Класс сервиса для работы с пользователями.
     """
 
+    def __init__(self, db_helper):
+        self.db_helper = db_helper
+
     async def set_paid_owner(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
         """
         Метод для обновления подписки с test на paid.
@@ -29,7 +36,7 @@ class UserService:
         if not user:
             raise UserNotFoundException("User not found")
 
-        if user.role != UserRoleEnum.owner:
+        if user.subscription != SubscriptionEnum.test:
             logger.error(
                 "Пользователю не удалось поменять подписку, т.к у него нет роли owner!",
                 user_id=user.id,
@@ -55,16 +62,15 @@ class UserService:
 
         return UserReadSchema.model_validate(user)
 
-    async def get_users(self, repo: UsersDAO, params: Params) -> Page[UserReadSchema]:
+    async def get_users(self, repo: UsersDAO, params: Params) -> Page[Users]:
         """Получает всех юзеров"""
 
-        users = await repo.get_all()
+        users = await repo.get_users(params=params)
 
-        users_page = paginate(users, params)
+        if users.total == 0:
+            raise UserNotFoundException("Users not found")
 
-        users_page.items = [UserReadSchema.model_validate(user) for user in users_page.items]
-
-        return users_page
+        return users
 
     async def update_user(
         self,
@@ -102,6 +108,49 @@ class UserService:
         )
 
         await repo.delete(user.id)
+
+    async def set_user_permissions(
+        self,
+        user_id: int,
+        permission_ids: list[int],
+        user_repo: UsersDAO,
+        perm_repo: PermissionsDAO,
+    ) -> list[PermissionReadSchema]:
+        """Обновляет список прав пользователя"""
+
+        async with self.db_helper.async_session_maker() as session:
+            async with session.begin():
+                await user_repo.update_user_permissions(
+                    session=session,
+                    user_id=user_id,
+                    new_permission_ids=permission_ids,
+                )
+
+                permissions = await perm_repo.get_user_permissions_without_pagination(
+                    session=session,
+                    user_id=user_id,
+                )
+
+                return [PermissionReadSchema.model_validate(p) for p in permissions]
+
+    async def update_users_permissions(
+        self,
+        data: UpdateUsersPermissionsSchema,
+        repo: UsersDAO,
+    ) -> StatusResponseSchema:
+        """
+        Обновляет права пользователей.
+        """
+
+        await repo.update_users_permissions(
+            user_ids=data.users,
+            permission_ids=data.new_permission_ids,
+        )
+
+        return StatusResponseSchema(
+            status="ok",
+            message=f"Права обновлены для {len(data.users)} пользователей.",
+        )
 
     async def get_me(
         self,

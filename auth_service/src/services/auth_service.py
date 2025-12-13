@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
 
 from fastapi import Response
+from pydantic import EmailStr
+from sqlalchemy.exc import IntegrityError
 
 from src.core.security.hash_helper import hash_helper
 from src.core.security.permissions import PermissionEnum, has_permission
+from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
 from src.schemas.tokens_schemas import TokenTypesEnum
 from src.schemas.users_schemas import (
@@ -17,6 +20,8 @@ from src.utils.exceptions import (
     IncorrectPasswordException,
     InvalidTokenException,
     PermissionDeniedException,
+    PermissionsNotFound,
+    PositionNotFoundException,
     TokenExpiredException,
     UserAlreadyExistsException,
     UserNotFoundException,
@@ -28,18 +33,23 @@ class AuthService:
     Класс сервиса аутентификации.
     """
 
+    def __init__(self, db_helper):
+        self.db_helper = db_helper
+
     async def register_user(
         self,
         data: UserRegisterSchema,
-        repo: UsersDAO,
+        user_repo: UsersDAO,
+        perm_repo: PermissionsDAO,
         token_service: JWTTokensService | None = None,
     ) -> UserReadSchema:
         """
         Метод регистрации пользователя.
         """
-        user = await repo.get_user_by_email(email=data.email)
-        if user:
-            raise UserAlreadyExistsException("User already exists")
+
+        existing_user = await user_repo.get_user_by_email(email=data.email)
+        if existing_user:
+            raise UserAlreadyExistsException("Данный пользователь уже существует.")
 
         hashed_password = hash_helper.hash(plain_str=data.password)
         payload = {
@@ -47,6 +57,7 @@ class AuthService:
             "hashed_password": hashed_password,
         }
 
+        # TODO: переделать под должности, исправить
         if data.register_token:
             register_token_payload = await token_service.validate_token(
                 token=data.register_token,
@@ -58,8 +69,44 @@ class AuthService:
                 raise UserNotFoundException(f"Владелец с user_id={owner_id} не найден")
 
             payload["role"] = register_token_payload.get("role")
+        else:
+            position_id = data.position_id
+            position_source = data.position_source
 
-        return await repo.create(payload=payload)
+        if position_id and position_source:
+            if position_source == "system":
+                perm_ids = await perm_repo.get_permissions_ids_by_system_position(position_id=position_id)
+            elif position_source == "custom":
+                perm_ids = await perm_repo.get_permissions_ids_by_custom_position(position_id=position_id)
+            else:
+                raise PositionNotFoundException("Не определен position source для нахождения прав доступа.")
+        else:
+            perm_ids = []
+
+        if not perm_ids:
+            raise PermissionsNotFound("Никаких прав доступа для этой должности не найдено.")
+
+        async with self.db_helper.async_session_maker() as session:
+            async with session.begin():
+                try:
+                    user = await user_repo.create_user(
+                        payload=payload,
+                        session=session,
+                    )
+
+                except IntegrityError as e:
+                    raise UserAlreadyExistsException("User already exists") from e
+
+                if perm_ids:
+                    await user_repo.assign_permissions(
+                        user_id=user.id,
+                        permissions=perm_ids,
+                        session=session,
+                    )
+
+                result = UserReadSchema.model_validate(user)
+
+        return result
 
     async def login_user(
         self,
@@ -119,7 +166,7 @@ class AuthService:
     # TODO: доделать после реализации notification service
     async def forgot_password(
         self,
-        user_email: str,
+        user_email: EmailStr,
         repo: UsersDAO,
         token_service: StatefulTokenService,
     ) -> str:
@@ -172,7 +219,8 @@ class AuthService:
             token_type=TokenTypesEnum.register,
             pvz_id=employee_data.pvz_id,
             owner_id=employee_data.owner_id,
-            role=employee_data.role,
+            position_id=employee_data.position_id,
+            position_source=employee_data.position_source,
         )
         return {"register_token": register_token}
 
