@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: notifications_db
     ports:
       - "5432:5432"
+
   dev-mb:
     image: rabbitmq:4-management-alpine
     container_name: dev-mb
@@ -21,13 +22,15 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-  dev-prom:
-    image: prom/prometheus:latest
-    container_name: dev-prom
-    volumes:
-      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
-    ports:
-      - "9090:9090"
+
+#  dev-prom:
+#    image: prom/prometheus:latest
+#    container_name: dev-prom
+#    volumes:
+#      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+#    ports:
+#      - "9090:9090"
+
   dev-alloy:
     image: grafana/alloy:latest
     container_name: dev-alloy
@@ -47,9 +50,23 @@ services:
       - "9080:9080"
       - "4317:4317"
       - "4318:4318"
-    depends_on:
-      dev-tempo:
-        condition: service_started
+#    depends_on:
+#      dev-tempo:
+#        condition: service_started
+
+#  dev-loki:
+#    image: grafana/loki:2.9.2
+#    container_name: dev-loki
+#    user: root
+#    volumes:
+#      - ./loki/loki-config.yml:/etc/loki/loki-config.yaml:ro
+#      - loki_chunks:/loki/chunks
+#      - loki_index:/loki/index
+#      - loki_rules:/loki/rules
+#    command: -config.file=/etc/loki/loki-config.yaml
+#    ports:
+#      - "3100:3100"
+
   dev-tempo:
     image: grafana/tempo:2.9.0
     container_name: dev-tempo
@@ -59,6 +76,7 @@ services:
     command: [ "-config.file=/etc/tempo/tempo.yaml" ]
     ports:
       - "3200:3200"
+
   dev-grafana:
     image: grafana/grafana:latest
     container_name: dev-grafana
@@ -72,3 +90,6 @@ services:
 
 volumes:
   tempo_data:
+  loki_chunks:
+  loki_index:
+  loki_rules:

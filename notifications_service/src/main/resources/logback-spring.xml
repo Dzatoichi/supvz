@@ -1,46 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <springProfile name="dev">
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder>
-                <!-- Я понял. Паттерн, что указываю, работает лишь в моем сервисе. В агенте логи трейсы метрики другого паттерна, там задавать надо отдельно.-->
-                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} ---- [%msg] [trace_id=%X{traceId:-} | span_id=%X{spanId:-}]%n</pattern>
-            </encoder>
-        </appender>
-        <root level="DEBUG">
-            <appender-ref ref="CONSOLE"/>
-        </root>
-    </springProfile>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} trace_id=%X{trace_id} span_id=%X{span_id} trace_flags=%X{trace_flags} %msg%n</pattern>
+        </encoder>
+    </appender>
 
-    <springProfile name="!dev">
-        <appender name="LOKI" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-                <providers>
-                    <timestamp>
-                        <fieldName>time</fieldName>
-                    </timestamp>
-                    <logLevel>
-                        <fieldName>level</fieldName>
-                    </logLevel>
-                    <loggerName>
-                        <fieldName>logger</fieldName>
-                    </loggerName>
-                    <threadName/>
-                    <message/>
-                    <stackTrace>
-                        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-                            <maxDepthPerThrowable>30</maxDepthPerThrowable>
-                        </throwableConverter>
-                    </stackTrace>
-                </providers>
-                <mdc>
-                    <include>event_id</include>
-                    <include>trace_id</include>
-                    <include>span_id</include>
-                </mdc>
-            </encoder>
-        </appender>
-        <root level="INFO">
-            <appender-ref ref="LOKI"/>
-        </root>
-    </springProfile>
+    <!-- Just wrap your logging appender, for example ConsoleAppender, with OpenTelemetryAppender -->
+    <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+        <appender-ref ref="CONSOLE"/>
+    </appender>
+
+    <!-- Use the wrapped "OTEL" appender instead of the original "CONSOLE" one -->
+    <root level="INFO">
+        <appender-ref ref="OTEL"/>
+    </root>
+
 </configuration>
