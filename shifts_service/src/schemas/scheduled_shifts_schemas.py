@@ -4,6 +4,10 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ScheduledShiftBaseSchema(BaseModel):
+    """
+    Базовая схема смены с валидацией дат ее начала и конца
+    """
+
     starts_at: datetime
     ends_at: datetime
 
@@ -12,7 +16,7 @@ class ScheduledShiftBaseSchema(BaseModel):
     def validate_dates(cls, ends_at: datetime, info):
         starts_at = info.data.get("starts_at")
         if starts_at and ends_at < starts_at:
-            raise ValueError("ends_at must be later than starts_at")
+            raise ValueError("дата ends_at должна быть позже starts_at")
         return ends_at
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)

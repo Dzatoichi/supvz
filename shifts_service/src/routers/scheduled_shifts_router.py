@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from fastapi_pagination import Page, Params
 
 from src.dao.ScheduledShiftsDAO import ScheduledShiftsDAO
@@ -12,10 +12,16 @@ from src.schemas.scheduled_shifts_schemas import (
 from src.services.scheduled_shifts_service import ScheduledShiftsService
 from src.utils.dependencies import get_scheduled_shifts_dao, get_scheduled_shifts_service
 
-scheduled_shifts_router = APIRouter(prefix="/scheduled_shifts", tags=["scheduled_shifts"])
+scheduled_shifts_router = APIRouter(
+    prefix="/scheduled_shifts",
+    tags=["Scheduled Shifts"],
+)
 
 
-@scheduled_shifts_router.post("/", response_model=ScheduledShiftReadSchema)
+@scheduled_shifts_router.post(
+    "/",
+    response_model=ScheduledShiftReadSchema,
+)
 async def create_scheduled_shift(
     scheduled_shift: ScheduledShiftCreateSchema,
     scheduled_shifts_service: ScheduledShiftsService = Depends(get_scheduled_shifts_service),
@@ -26,11 +32,17 @@ async def create_scheduled_shift(
     POST [/scheduled_shifts]
     """
 
-    result = await scheduled_shifts_service.create_scheduled_shift(scheduled_shift, repo)
+    result = await scheduled_shifts_service.create_scheduled_shift(
+        scheduled_shift=scheduled_shift,
+        repo=repo,
+    )
     return result
 
 
-@scheduled_shifts_router.get("/", response_model=Page[ScheduledShiftReadSchema])
+@scheduled_shifts_router.get(
+    "/",
+    response_model=Page[ScheduledShiftReadSchema],
+)
 async def get_scheduled_shifts(
     user_id: int = Query(None, description="ID пользователя создавшего смену"),
     pvz_id: int = Query(None, description="ID ПВЗ"),
@@ -62,7 +74,10 @@ async def get_scheduled_shifts(
     return result
 
 
-@scheduled_shifts_router.get("/{scheduled_shift_id}", response_model=ScheduledShiftReadSchema)
+@scheduled_shifts_router.get(
+    "/{scheduled_shift_id}",
+    response_model=ScheduledShiftReadSchema,
+)
 async def get_scheduled_shift(
     scheduled_shift_id: int,
     scheduled_shift_service: ScheduledShiftsService = Depends(get_scheduled_shifts_service),
@@ -74,12 +89,16 @@ async def get_scheduled_shift(
     """
 
     scheduled_shift = await scheduled_shift_service.get_scheduled_shift_by_id(
-        scheduled_shift_id=scheduled_shift_id, repo=repo
+        scheduled_shift_id=scheduled_shift_id,
+        repo=repo,
     )
     return scheduled_shift
 
 
-@scheduled_shifts_router.patch("/{scheduled_shift_id}", response_model=ScheduledShiftReadSchema)
+@scheduled_shifts_router.patch(
+    "/{scheduled_shift_id}",
+    response_model=ScheduledShiftReadSchema,
+)
 async def update_scheduled_shift(
     scheduled_shift_id: int,
     scheduled_shift: ScheduledShiftUpdateSchema,
@@ -92,12 +111,17 @@ async def update_scheduled_shift(
     """
 
     result = await scheduled_shifts_service.update_scheduled_shift(
-        scheduled_shift_id=scheduled_shift_id, updated_data=scheduled_shift, repo=repo
+        scheduled_shift_id=scheduled_shift_id,
+        updated_data=scheduled_shift,
+        repo=repo,
     )
     return result
 
 
-@scheduled_shifts_router.delete("/{scheduled_shift_id}")
+@scheduled_shifts_router.delete(
+    "/{scheduled_shift_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_scheduled_shift(
     scheduled_shift_id: int,
     scheduled_shifts_service: ScheduledShiftsService = Depends(get_scheduled_shifts_service),
@@ -108,5 +132,8 @@ async def delete_scheduled_shift(
     DELETE [/scheduled_shifts/{scheduled_shift_id}]
     """
 
-    result = await scheduled_shifts_service.delete_scheduled_shift(scheduled_shift_id=scheduled_shift_id, repo=repo)
+    result = await scheduled_shifts_service.delete_scheduled_shift(
+        scheduled_shift_id=scheduled_shift_id,
+        repo=repo,
+    )
     return result

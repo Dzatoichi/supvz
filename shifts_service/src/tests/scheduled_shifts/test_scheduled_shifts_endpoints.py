@@ -10,6 +10,7 @@ from src.main import app
 from src.schemas.scheduled_shifts_schemas import ScheduledShiftReadSchema
 from src.services.scheduled_shifts_service import ScheduledShiftsService
 from src.utils.dependencies import get_scheduled_shifts_dao, get_scheduled_shifts_service
+from src.utils.exceptions import ScheduledShiftNotFoundException  # Добавьте этот импорт
 
 pytestmark = pytest.mark.anyio
 
@@ -74,8 +75,9 @@ async def test_create_scheduled_shift_success(client):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["pvz_id"] == 1
-    assert data["user_id"] == 1
+    assert data["pvz_id"] == shift_data["pvz_id"]
+    assert data["user_id"] == shift_data["user_id"]
+    # Исправьте проверку: используйте значения по умолчанию
     assert data["status"] == "scheduled"
     assert data["completed"] is False
     assert data["paid"] is False
@@ -112,7 +114,7 @@ async def test_delete_scheduled_shift_success(client):
     """Тест: DELETE /scheduled_shifts/{id} должен успешно удалить смену."""
     response = client.delete("/scheduled_shifts/1")
 
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 async def test_create_shift_with_invalid_dates(client):
@@ -202,9 +204,9 @@ async def test_update_scheduled_shift_success():
 
         assert response.status_code == 200
         data = response.json()
-        assert data["completed"] is True
-        assert data["status"] == "completed"
-        assert data["paid"] is True
+        assert data["completed"] == update_data["completed"]
+        assert data["status"] == update_data["status"]
+        assert data["paid"] == update_data["paid"]
     finally:
         # Восстанавливаем оригинальные зависимости
         app.dependency_overrides.clear()
@@ -247,9 +249,9 @@ async def test_update_scheduled_shift_partial_success():
 
         assert response.status_code == 200
         data = response.json()
-        assert data["completed"] is True
-        assert data["status"] == "scheduled"  # Осталось прежним
-        assert data["paid"] is False  # Осталось прежним
+        assert data["completed"] == update_data["completed"]
+        assert data["status"] == updated_shift.status  # Осталось прежним
+        assert data["paid"] == updated_shift.paid  # Осталось прежним
     finally:
         # Восстанавливаем оригинальные зависимости
         app.dependency_overrides.clear()
@@ -259,9 +261,9 @@ async def test_get_scheduled_shift_by_id_not_found():
     """Тест: GET /scheduled_shifts/{id} должен вернуть 404, если смена не найдена."""
     # Создаем новый мок сервиса
     mock_service = AsyncMock(spec=ScheduledShiftsService)
-    mock_service.get_scheduled_shift_by_id.side_effect = HTTPException(
-        status_code=404, detail="Scheduled shift not found"
-    )
+    mock_service.get_scheduled_shift_by_id.side_effect = ScheduledShiftNotFoundException(
+        "Смена не найдена"
+    )  # Исправлено
 
     # Мок репозитория
     mock_repo = AsyncMock()
@@ -275,7 +277,7 @@ async def test_get_scheduled_shift_by_id_not_found():
         response = client.get("/scheduled_shifts/999")
         assert response.status_code == 404
         data = response.json()
-        assert data["detail"] == "Scheduled shift not found"
+        assert data["detail"] == "Смена не найдена"  # Сообщение должно совпадать
     finally:
         # Восстанавливаем оригинальные зависимости
         app.dependency_overrides.clear()
@@ -285,7 +287,7 @@ async def test_delete_scheduled_shift_not_found():
     """Тест: DELETE /scheduled_shifts/{id} должен вернуть 404, если смена не найдена."""
     # Создаем новый мок сервиса
     mock_service = AsyncMock(spec=ScheduledShiftsService)
-    mock_service.delete_scheduled_shift.side_effect = HTTPException(status_code=404, detail="Scheduled shift not found")
+    mock_service.delete_scheduled_shift.side_effect = ScheduledShiftNotFoundException("Смена не найдена")  # Исправлено
 
     # Мок репозитория
     mock_repo = AsyncMock()
@@ -299,7 +301,7 @@ async def test_delete_scheduled_shift_not_found():
         response = client.delete("/scheduled_shifts/999")
         assert response.status_code == 404
         data = response.json()
-        assert data["detail"] == "Scheduled shift not found"
+        assert data["detail"] == "Смена не найдена"  # Сообщение должно совпадать
     finally:
         # Восстанавливаем оригинальные зависимости
         app.dependency_overrides.clear()
@@ -327,6 +329,7 @@ async def test_get_scheduled_shifts_404_on_empty_filtered_results():
     """
     # Создаем новый мок сервиса
     mock_service = AsyncMock(spec=ScheduledShiftsService)
+    # Исправьте на правильное исключение или HTTPException с правильным сообщением
     mock_service.get_scheduled_shifts.side_effect = HTTPException(status_code=404, detail="Смены не найдены")
 
     # Мок репозитория

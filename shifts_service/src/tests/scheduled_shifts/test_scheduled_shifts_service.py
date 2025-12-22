@@ -365,7 +365,7 @@ class TestScheduledShiftsService:
             await service.update_scheduled_shift(1, update_data, mock_repo)
 
         assert exc_info.value.status_code == 400
-        assert "Невалидные параметры смены" in str(exc_info.value.detail)
+        assert "Невалидные параметры схемы" in str(exc_info.value.detail)
 
     async def test_delete_scheduled_shift_success(self):
         """
@@ -398,6 +398,6 @@ class TestScheduledShiftsService:
             await service.delete_scheduled_shift(999, mock_repo)
 
         assert exc_info.value.status_code == 404
-        assert "Scheduled shift not found" in str(exc_info.value.detail)
+        assert "Смена не найдена" in str(exc_info.value.detail)
 
         mock_repo.delete.assert_not_called()

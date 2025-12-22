@@ -7,6 +7,12 @@ from src.database.base import Base
 
 
 class ScheduledShifts(Base):
+    """
+    Табличка для смен,
+    которые определяются заранее куратором,
+    овнером или кто бы то ни был из главных ролей пвз.
+    """
+
     __tablename__ = "scheduled_shifts"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from fastapi_pagination import Page, Params
 
 from src.dao import ScheduledShiftsDAO
@@ -9,6 +9,7 @@ from src.schemas.scheduled_shifts_schemas import (
     ScheduledShiftReadSchema,
     ScheduledShiftUpdateSchema,
 )
+from src.utils.exceptions import ScheduledShiftNotFoundException, ScheduledShiftValidationException
 from src.utils.logger_settings import logger
 
 
@@ -18,7 +19,9 @@ class ScheduledShiftsService:
     """
 
     async def create_scheduled_shift(
-        self, scheduled_shift_data: ScheduledShiftCreateSchema, repo: ScheduledShiftsDAO
+        self,
+        scheduled_shift_data: ScheduledShiftCreateSchema,
+        repo: ScheduledShiftsDAO,
     ) -> ScheduledShiftReadSchema:
         """
         Создание запланированной схемы
@@ -65,7 +68,9 @@ class ScheduledShiftsService:
         return scheduled_shifts
 
     async def get_scheduled_shift_by_id(
-        self, scheduled_shift_id: int, repo: ScheduledShiftsDAO
+        self,
+        scheduled_shift_id: int,
+        repo: ScheduledShiftsDAO,
     ) -> ScheduledShiftReadSchema:
         """
         Получение запланированной смены по ID
@@ -73,12 +78,15 @@ class ScheduledShiftsService:
 
         scheduled_shift = await repo.get_by_id(scheduled_shift_id)
         if not scheduled_shift:
-            raise HTTPException(status_code=404, detail="Смена не найдена")
+            raise ScheduledShiftNotFoundException("Смена не найдена")
 
         return ScheduledShiftReadSchema.model_validate(scheduled_shift)
 
     async def update_scheduled_shift(
-        self, scheduled_shift_id: int, updated_data: ScheduledShiftUpdateSchema, repo: ScheduledShiftsDAO
+        self,
+        scheduled_shift_id: int,
+        updated_data: ScheduledShiftUpdateSchema,
+        repo: ScheduledShiftsDAO,
     ) -> ScheduledShiftReadSchema:
         """
         Обновляет данные запланированной схемы
@@ -86,23 +94,12 @@ class ScheduledShiftsService:
 
         update_scheduled_shift = await repo.get_by_id(scheduled_shift_id)
         if not update_scheduled_shift:
-            raise HTTPException(status_code=404, detail="Смена не найдена")
-
+            raise ScheduledShiftNotFoundException("Смена не найдена")
         update_fields = {}
-        if updated_data.pvz_id is not None:
-            update_fields["pvz_id"] = updated_data.pvz_id
-        if updated_data.user_id is not None:
-            update_fields["user_id"] = updated_data.user_id
-        if updated_data.starts_at is not None:
-            update_fields["starts_at"] = updated_data.starts_at
-        if updated_data.ends_at is not None:
-            update_fields["ends_at"] = updated_data.ends_at
-        if updated_data.completed is not None:
-            update_fields["completed"] = updated_data.completed
-        if updated_data.status is not None:
-            update_fields["status"] = updated_data.status
-        if updated_data.paid is not None:
-            update_fields["paid"] = updated_data.paid
+        updated_data_dict = dict(updated_data)
+        for updated_field_name, updated_field_value in updated_data_dict.items():
+            if updated_field_value is not None:
+                update_fields[updated_field_name] = updated_field_value
 
         updated_scheduled_shift = await repo.update(id=scheduled_shift_id, **update_fields)
 
@@ -113,20 +110,25 @@ class ScheduledShiftsService:
             )
             return ScheduledShiftReadSchema.model_validate(updated_scheduled_shift)
         else:
-            raise HTTPException(status_code=400, detail="Невалидные параметры смены")
+            raise ScheduledShiftValidationException("Невалидные параметры схемы")
 
-    async def delete_scheduled_shift(self, scheduled_shift_id: int, repo: ScheduledShiftsDAO) -> None:
+    async def delete_scheduled_shift(
+        self,
+        scheduled_shift_id: int,
+        repo: ScheduledShiftsDAO,
+    ) -> None:
         """
         Удаление запланированной смены
         """
 
         scheduled_shift = await repo.get_by_id(scheduled_shift_id)
         if not scheduled_shift:
-            raise HTTPException(status_code=404, detail="Scheduled shift not found")
+            raise ScheduledShiftNotFoundException("Смена не найдена")
 
+        success = await repo.delete(scheduled_shift.id)
+        if not success:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
         logger.info(
             "Запланированная смена id={scheduled_shift_id} успешно удалена!",
             scheduled_shift_id=scheduled_shift.id,
         )
-
-        await repo.delete(scheduled_shift.id)
