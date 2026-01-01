@@ -1,3 +1,5 @@
+import uuid
+
 from polyfactory import Use
 
 from src.models import Permissions
@@ -13,5 +15,5 @@ class PermissionFactory(AsyncPersistenceFactory[PermissionBaseSchema]):
     __model__ = PermissionBaseSchema
     __model_cls__ = Permissions
 
-    code_name = Use(lambda: f"permission:{id(object())}")
+    code_name = Use(lambda: f"permission:{uuid.uuid4().hex}")
     description = "Test permission"

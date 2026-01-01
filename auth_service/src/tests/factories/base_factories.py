@@ -4,11 +4,13 @@
 
 from typing import Generic, TypeVar
 
+from faker import Faker
 from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 T = TypeVar("T", bound=BaseModel)
+faker = Faker()
 
 
 class AsyncPersistenceFactory(ModelFactory[T], Generic[T]):

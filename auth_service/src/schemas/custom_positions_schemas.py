@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.schemas.enums import PositionSourceEnum
 
@@ -8,7 +8,7 @@ from src.schemas.enums import PositionSourceEnum
 class CustomPositionBaseSchema(BaseModel):
     """Базовая схема кастомной должности."""
 
-    title: str
+    title: str = Field(..., min_length=1)
     owner_id: int
 
 

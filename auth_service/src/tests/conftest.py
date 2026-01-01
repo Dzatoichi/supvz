@@ -8,6 +8,8 @@ from sqlalchemy.pool import NullPool
 from src.database.base import Base, db_helper
 from src.main import app
 from src.settings.config import Settings
+from src.tests.fixtures.permissions import *  # noqa: F403
+from src.tests.fixtures.positions import *  # noqa: F403
 
 test_settings = Settings(_env_file=".env.test")
 

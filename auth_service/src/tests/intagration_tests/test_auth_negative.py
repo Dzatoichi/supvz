@@ -17,6 +17,8 @@ from src.tests.factories.user_factories import (
     UserPermissionFactory,
 )
 
+AUTH_URL = "/auth"
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -27,7 +29,7 @@ from src.tests.factories.user_factories import (
         ({"email": ""}, 422, "empty_email"),
         ({"password": ""}, 422, "empty_password"),
     ],
-    ids=lambda x: x if isinstance(x, str) else None,
+    ids=["invalid_email_format", "weak_password", "empty_email", "empty_password"],
 )
 async def test_register_validation_errors(
     client: AsyncClient,
@@ -47,7 +49,7 @@ async def test_register_validation_errors(
 
     base_payload.update(payload_override)
 
-    response = await client.post("/auth/register", json=base_payload)
+    response = await client.post(f"{AUTH_URL}/register", json=base_payload)
 
     assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
 
@@ -68,7 +70,7 @@ async def test_register_duplicate_email(
         position_source=PositionSourceEnum.system,
     ).model_dump(mode="json")
 
-    response = await client.post("/auth/register", json=payload)
+    response = await client.post(f"{AUTH_URL}/register", json=payload)
 
     assert response.status_code == 409
 
@@ -114,7 +116,7 @@ async def test_register_business_logic_errors(
 
     base_payload.update(payload_override)
 
-    response = await client.post("/auth/register", json=base_payload)
+    response = await client.post(f"{AUTH_URL}/register", json=base_payload)
 
     if isinstance(expected_status, tuple):
         assert response.status_code in expected_status, f"Не удалось найти кейс: {description}"
@@ -145,7 +147,7 @@ async def test_login_errors_no_user_required(
 
     payload = {"email": email, "password": password}
 
-    response = await client.post("/auth/login", json=payload)
+    response = await client.post(f"{AUTH_URL}/login", json=payload)
 
     assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
     assert "access_token" not in response.cookies
@@ -175,7 +177,7 @@ async def test_login_errors_with_user(
         password=password,
     ).model_dump(mode="json")
 
-    response = await client.post("/auth/login", json=payload)
+    response = await client.post(f"{AUTH_URL}/login", json=payload)
 
     if isinstance(expected_status, tuple):
         assert response.status_code in expected_status, f"Не удалось найти кейс: {description}"
@@ -205,7 +207,7 @@ async def test_refresh_token_errors(
     if cookie_value is not None:
         client.cookies.set("refresh_token", cookie_value)
 
-    response = await client.post("/auth/refresh_token")
+    response = await client.post(f"{AUTH_URL}/refresh_token")
 
     assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
 
@@ -220,7 +222,7 @@ async def test_refresh_token_with_access_token_instead(
     user = await UserFactory.create_async(session)
 
     login_response = await client.post(
-        "/auth/login",
+        f"{AUTH_URL}/login",
         json=UserLoginFactory.build(
             email=user.email,
             password=DEFAULT_PASSWORD,
@@ -231,7 +233,7 @@ async def test_refresh_token_with_access_token_instead(
     access_token = login_response.cookies.get("access_token")
     client.cookies.set("refresh_token", access_token)
 
-    response = await client.post("/auth/refresh_token")
+    response = await client.post(f"{AUTH_URL}/refresh_token")
 
     assert response.status_code == 401
 
@@ -264,7 +266,7 @@ async def test_generate_register_token_errors(
         pvz_id=1,
     ).model_dump(mode="json")
 
-    response = await client.post("/auth/generate_register_token", json=payload)
+    response = await client.post(f"{AUTH_URL}/generate_register_token", json=payload)
 
     assert response.status_code == expected_status
 
@@ -290,7 +292,7 @@ async def test_forgot_password_errors(
 
     payload = {"email": email}
 
-    response = await client.post("/auth/forgot_password", json=payload)
+    response = await client.post(f"{AUTH_URL}/forgot_password", json=payload)
 
     assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
 
@@ -304,7 +306,7 @@ async def test_reset_password_invalid_token(
 
     payload = ResetPasswordFactory.build(token="invalid.reset.token").model_dump(mode="json")
 
-    response = await client.post("/auth/reset_password", json=payload)
+    response = await client.post(f"{AUTH_URL}/reset_password", json=payload)
 
     assert response.status_code in (400, 401)
 
@@ -356,7 +358,7 @@ async def test_reset_password_with_mocked_token(
         "confirm_new_password": new_password,
     }
 
-    response = await client.post("/auth/reset_password", json=payload)
+    response = await client.post(f"{AUTH_URL}/reset_password", json=payload)
 
     if isinstance(expected_status, tuple):
         assert response.status_code in expected_status, f"Не удалось найти кейс: {description}"
@@ -372,7 +374,7 @@ async def test_authorize_without_login(
     """Тест: Авторизация без логина."""
 
     response = await client.post(
-        "/auth/authorize",
+        f"{AUTH_URL}/authorize",
         params={"permission": "dashboard:view"},
     )
 
@@ -389,14 +391,14 @@ async def test_authorize_missing_permission_param(
     user = await UserFactory.create_async(session)
 
     await client.post(
-        "/auth/login",
+        f"{AUTH_URL}/login",
         json=UserLoginFactory.build(
             email=user.email,
             password=DEFAULT_PASSWORD,
         ).model_dump(mode="json"),
     )
 
-    response = await client.post("/auth/authorize")
+    response = await client.post(f"{AUTH_URL}/authorize")
 
     assert response.status_code == 422
 
@@ -435,7 +437,7 @@ async def test_authorize_permission_denied(
         )
 
     await client.post(
-        "/auth/login",
+        f"{AUTH_URL}/login",
         json=UserLoginFactory.build(
             email=user.email,
             password=DEFAULT_PASSWORD,
@@ -443,7 +445,7 @@ async def test_authorize_permission_denied(
     )
 
     response = await client.post(
-        "/auth/authorize",
+        f"{AUTH_URL}/authorize",
         params={"permission": required_permission},
     )
 
@@ -471,14 +473,14 @@ async def test_logout_scenarios(
     if is_logged_in:
         user = await UserFactory.create_async(session)
         await client.post(
-            "/auth/login",
+            f"{AUTH_URL}/login",
             json=UserLoginFactory.build(
                 email=user.email,
                 password=DEFAULT_PASSWORD,
             ).model_dump(mode="json"),
         )
 
-    response = await client.post("/auth/logout")
+    response = await client.post(f"{AUTH_URL}/logout")
 
     if isinstance(expected_status, tuple):
         assert response.status_code in expected_status, f"Не удалось найти кейс: {description}"
@@ -496,15 +498,15 @@ async def test_double_logout_idempotency(
     user = await UserFactory.create_async(session)
 
     await client.post(
-        "/auth/login",
+        f"{AUTH_URL}/login",
         json=UserLoginFactory.build(
             email=user.email,
             password=DEFAULT_PASSWORD,
         ).model_dump(mode="json"),
     )
 
-    response1 = await client.post("/auth/logout")
+    response1 = await client.post(f"{AUTH_URL}/logout")
     assert response1.status_code == 200
 
-    response2 = await client.post("/auth/logout")
+    response2 = await client.post(f"{AUTH_URL}/logout")
     assert response2.status_code in (200, 401)

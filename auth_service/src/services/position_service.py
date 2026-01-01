@@ -108,10 +108,10 @@ class PositionService:
                     session=session,
                 )
 
-                if data.permissions:
+                if data.permission_ids:
                     await self.perm_dao.add_permissions_to_custom_position(
                         position_id=position.id,
-                        permission_ids=data.permissions,
+                        permission_ids=data.permission_ids,
                         session=session,
                     )
 
@@ -153,7 +153,7 @@ class PositionService:
                     )
                 else:
                     final_permission_ids = await self.perm_dao.get_permissions_ids_by_custom_position(
-                        position_id=position_id,
+                        custom_position_id=position_id,
                     )
 
                 return CustomPositionWithPermissionsReadSchema(
