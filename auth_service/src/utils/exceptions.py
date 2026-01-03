@@ -10,6 +10,18 @@ class UserNotFoundException(Exception):
     pass
 
 
+class UserUnauthorizedException(Exception):
+    """Пользователь неавторизован."""
+
+    pass
+
+
+class EmailAlreadyExistException(Exception):
+    """Данный email уже существует."""
+
+    pass
+
+
 class IncorrectPasswordException(Exception):
     """Неверный пароль."""
 
@@ -51,7 +63,7 @@ class PositionAlreadyExistsException(Exception):
 
 
 class PermissionsNotFound(Exception):
-    """Должность не найдена."""
+    """Права доступа не найдены."""
 
     pass
 

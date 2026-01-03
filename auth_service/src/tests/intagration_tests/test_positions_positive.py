@@ -119,7 +119,7 @@ async def test_create_custom_position(
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == payload["title"]
-    assert data["id"] == payload["id"]
+    assert data["owner_id"] == payload["owner_id"]
 
 
 @pytest.mark.asyncio

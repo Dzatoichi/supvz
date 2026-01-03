@@ -1,5 +1,6 @@
 import bcrypt
 from polyfactory import Use
+from polyfactory.factories.pydantic_factory import ModelFactory
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.user_permissions.user_permissions import UserPermissions
@@ -8,11 +9,14 @@ from src.schemas.enums import PositionSourceEnum
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
     SubscriptionEnum,
+    UpdateUserPermissionsSchema,
+    UpdateUsersPermissionsSchema,
     UserForgotPasswordSchema,
     UserLoginSchema,
     UserPermissionSchema,
     UserRegisterEmployeeSchema,
     UserRegisterSchema,
+    UserUpdateSchema,
 )
 from src.tests.factories.base_factories import AsyncPersistenceFactory
 
@@ -126,3 +130,34 @@ class UserPermissionFactory(AsyncPersistenceFactory[UserPermissionSchema]):
 
     user_id = 0
     permission_id = 0
+
+
+class UserUpdatePayloadFactory(ModelFactory[UserUpdateSchema]):
+    """
+    Фабрика для PATCH /users/{user_id}
+    Схема содержит только email.
+    """
+
+    __model__ = UserUpdateSchema
+
+
+class UpdateUserPermissionsPayloadFactory(ModelFactory[UpdateUserPermissionsSchema]):
+    """
+    Фабрика для PUT /users/{user_id}/permissions
+    """
+
+    __model__ = UpdateUserPermissionsSchema
+
+    permission_ids = Use(lambda: [])
+
+
+class UpdateUsersPermissionsPayloadFactory(ModelFactory[UpdateUsersPermissionsSchema]):
+    """
+    Фабрика для PUT /users/permissions/ (bulk update)
+    Структура: users - список ID юзеров, new_permission_ids - список ID прав
+    """
+
+    __model__ = UpdateUsersPermissionsSchema
+
+    users = Use(lambda: [])
+    new_permission_ids = Use(lambda: [])

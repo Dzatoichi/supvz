@@ -1,3 +1,4 @@
+import builtins
 from datetime import datetime
 from enum import Enum
 from typing import Annotated, Literal
@@ -130,7 +131,7 @@ class UserAuthRequestSchema(BaseModel):
     Схема для принятия авторизационного запроса(токена).
     """
 
-    access_token: str
+    access_token: Annotated[builtins.str, StringConstraints(min_length=8, max_length=4096)]
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -198,7 +199,6 @@ class UpdateUsersPermissionsSchema(BaseModel):
     new_permission_ids: list[int]
 
 
-# TODO: начать использовать position
 class UserRegisterEmployeeSchema(BaseModel):
     """
     Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
