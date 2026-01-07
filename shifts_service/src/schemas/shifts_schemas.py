@@ -16,6 +16,13 @@ class ShiftCreateSchema(BaseModel):
     started_at: datetime | None = None
     ended_at: datetime | None = None
 
+    @field_validator("started_at", "ended_at")
+    @classmethod
+    def remove_timezone(cls, v: datetime | None) -> datetime | None:
+        if v is not None and v.tzinfo is not None:
+            return v.replace(tzinfo=None)
+        return v
+
     @field_validator("ended_at")
     @classmethod
     def validate_ended_at(cls, v: datetime | None, info) -> datetime | None:
@@ -29,6 +36,13 @@ class ShiftUpdateSchema(BaseModel):
     scheduled_shift_id: int | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
+
+    @field_validator("started_at", "ended_at")
+    @classmethod
+    def remove_timezone(cls, v: datetime | None) -> datetime | None:
+        if v is not None and v.tzinfo is not None:
+            return v.replace(tzinfo=None)
+        return v
 
     @field_validator("ended_at")
     @classmethod
@@ -57,3 +71,10 @@ class ShiftFilterSchema(BaseModel):
     ended_at_from: datetime | None = None
     ended_at_to: datetime | None = None
     is_active: bool | None = None
+
+    @field_validator("started_at_from", "started_at_to", "ended_at_from", "ended_at_to")
+    @classmethod
+    def remove_timezone(cls, v: datetime | None) -> datetime | None:
+        if v is not None and v.tzinfo is not None:
+            return v.replace(tzinfo=None)
+        return v

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Integer, func
+from sqlalchemy import DateTime, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database.base import Base
@@ -11,7 +11,7 @@ class Shift(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     scheduled_shift_id: Mapped[int] = mapped_column(
-        BigInteger,
+        Integer,
         # ForeignKey("scheduled_shifts.id", ondelete="CASCADE"),
         nullable=False,
     )

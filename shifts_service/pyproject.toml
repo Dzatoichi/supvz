@@ -19,7 +19,8 @@ dependencies = [
     "pytest (>=9.0.1,<10.0.0)",
     "pre-commit (>=4.4.0,<5.0.0)",
     "asyncpg (>=0.30.0,<0.31.0)",
-    "fastapi-pagination (>=0.15.4,<0.16.0)"
+    "fastapi-pagination (>=0.15.4,<0.16.0)",
+    "polyfactory (>=3.2.0,<4.0.0)"
 ]
 
 
@@ -60,3 +61,25 @@ exclude = [
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "C4"]
 ignore = ["E501", "F821", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "--strict-markers -W ignore::DeprecationWarning"
+norecursedirs = [
+    ".git",
+    ".venv",
+    "venv",
+    ".pytest_cache",
+    "__pycache__",
+    "pg_data",
+    "logs",
+    "migrations",
+    "nginx",
+    ".ruff_cache",
+    "node_modules"
+]
