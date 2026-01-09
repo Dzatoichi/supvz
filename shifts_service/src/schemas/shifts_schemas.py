@@ -58,8 +58,6 @@ class ShiftReadSchema(BaseModel):
     scheduled_shift_id: int
     started_at: datetime
     ended_at: datetime | None
-    created_at: datetime
-    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -7,17 +7,22 @@ from src.schemas.shifts_schemas import (
     ShiftReadSchema,
     ShiftUpdateSchema,
 )
-from src.utils.custom_exceptions import ShiftNotFoundException
+from src.utils.exceptions import ShiftNotFoundException
 
 
-class ShiftService:
+class ShiftsService:
+    """Сервис для бизнес-логики работы со сменами."""
+
     def __init__(self, dao: ShiftsDAO):
+        """Инициализация сервиса."""
         self.dao = dao
 
     async def create_shift(self, data: ShiftCreateSchema) -> ShiftReadSchema:
+        """Создание смены."""
         return await self.dao.create_shift(data)
 
     async def get_shift_by_id(self, shift_id: int) -> ShiftReadSchema:
+        """Получение смены по ID."""
         shift = await self.dao.get_shift_by_id(shift_id)
         if not shift:
             raise ShiftNotFoundException()
@@ -28,6 +33,7 @@ class ShiftService:
         params: Params,
         filters: ShiftFilterSchema | None = None,
     ) -> Page[ShiftReadSchema]:
+        """Получение списка смен."""
         return await self.dao.get_shifts_paginated(params=params, filters=filters)
 
     async def update_shift(
@@ -35,6 +41,7 @@ class ShiftService:
         shift_id: int,
         data: ShiftUpdateSchema,
     ) -> ShiftReadSchema:
+        """Обновление смены."""
         existing = await self.dao.get_shift_by_id(shift_id)
         if not existing:
             raise ShiftNotFoundException()
@@ -44,6 +51,7 @@ class ShiftService:
         return updated
 
     async def delete_shift(self, shift_id: int) -> bool:
+        """Удаление смены."""
         existing = await self.dao.get_shift_by_id(shift_id)
         if not existing:
             raise ShiftNotFoundException()
