@@ -19,8 +19,16 @@ from src.utils.logger_settings import logger
 
 
 def setup_exception_handlers(app: FastAPI):
+    """
+    Функция настройки глобальных обработчиков исключений для приложения.
+    """
+
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
+        """
+        Функция обработчика стандартных HTTP-исключений.
+        """
+
         logger.error(
             "HTTPException",
             method=request.method,
@@ -37,7 +45,9 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
-
+        """
+        Функция обработчика ошибок валидации входящих данных.
+        """
         errors = exc.errors()
         details = []
         for err in errors:
@@ -46,7 +56,7 @@ def setup_exception_handlers(app: FastAPI):
             else:
                 details.append(str(err.get("msg")))
 
-        logger.error(
+        logger.warning(
             "ValidationError",
             method=request.method,
             path=request.url.path,
@@ -61,7 +71,9 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(SQLAlchemyError)
     async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
-
+        """
+        Функция обработчика ошибок SQLAlchemy.
+        """
         logger.error(
             "Database error",
             method=request.method,
