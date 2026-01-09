@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.shiftsDAO import ShiftsDAO
 from src.database.base import db_helper
-from src.services.shift_service import ShiftService
+from src.services.shifts_service import ShiftsService
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -27,5 +27,5 @@ def get_shifts_dao(
 
 def get_shift_service(
     dao: ShiftsDAO = Depends(get_shifts_dao),
-) -> ShiftService:
-    return ShiftService(dao=dao)
+) -> ShiftsService:
+    return ShiftsService(dao=dao)
