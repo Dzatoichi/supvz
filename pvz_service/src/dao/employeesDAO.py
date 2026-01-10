@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi_pagination import Params
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import apaginate
 from sqlalchemy import select, update
 
 from src.dao.baseDAO import BaseDAO
@@ -100,5 +100,5 @@ class EmployeesDAO(BaseDAO[Employees]):
                 stmt = stmt.where(self.model.pvzs.any(id=pvz_id))
             if position_id is not None:
                 stmt = stmt.where(self.model.position_id == position_id)
-            # paginate добавит LIMIT и OFFSET прямо в SQL-запрос
-            return await paginate(session, stmt, params=params)
+            # apaginate добавит LIMIT и OFFSET прямо в SQL-запрос
+            return await apaginate(session, stmt, params=params)

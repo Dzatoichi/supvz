@@ -183,13 +183,16 @@ class PVZService:
             raise PVZGroupNotFoundException("Группа не найдена")
 
         # Получаем все ПВЗ, которые хотим привязать
-        pvzs = await pvz_repo.get_pvzs(PVZs.id.in_(pvz_ids))
+        pvzs = await pvz_repo.get_pvzs(
+            Params(size=len(pvz_ids)),
+            PVZs.id.in_(pvz_ids),
+        )
 
-        if len(pvzs) != len(pvz_ids):
+        if len(pvzs.items) != len(pvz_ids):
             raise PVZAlreadyExistsException("Некоторые ПВЗ не существуют")
 
         # Проверяем, что у всех ПВЗ owner_id совпадает с owner_id группы
-        for pvz in pvzs:
+        for pvz in pvzs.items:
             if pvz.owner_id != group.owner_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

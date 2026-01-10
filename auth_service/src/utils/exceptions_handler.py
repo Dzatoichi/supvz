@@ -85,7 +85,7 @@ def setup_exception_handlers(app: FastAPI):
         )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": "database_error", "detail": str(exc)},
+            content={"error": "database_error", "detail": "DB operation failed"},
         )
 
     @app.exception_handler(UserAlreadyExistsException)

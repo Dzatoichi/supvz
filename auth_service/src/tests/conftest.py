@@ -7,25 +7,11 @@ from sqlalchemy.pool import NullPool
 
 from src.database.base import Base, db_helper
 from src.main import app
-from src.settings.config import Settings, settings
-from src.tests.fixtures.permissions import *  # noqa: F403
-from src.tests.fixtures.positions import *  # noqa: F403
+from src.settings.config import Settings
+from src.tests.fixtures.permissions import *
+from src.tests.fixtures.positions import *  
 
 test_settings = Settings(_env_file=".env.test")
-
-
-@pytest.fixture(scope="session", autouse=True)
-def set_test_settings():
-    """
-    Эта фикстура запускается один раз перед всеми тестами.
-    Она подменяет секреты на фиксированные значения.
-    """
-
-    settings.JWT_ACCESS_SECRET_KEY = "test_access_secret"
-    settings.JWT_REFRESH_SECRET_KEY = "test_refresh_secret"
-    settings.JWT_REGISTER_SECRET_KEY = "test_register_secret"
-    settings.JWT_ALGORITHM = "HS256"
-
 
 @pytest.fixture(scope="session")
 def event_loop():

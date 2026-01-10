@@ -72,10 +72,10 @@ class EmployeesService:
     async def get_employees_filtered(
         self,
         owner_id: int,
-        pvz_id: int | None,
-        position_id: int | None,
         repo: EmployeesDAO,
         params: Params,
+        pvz_id: int | None = None,
+        position_id: int | None = None,
     ) -> list[EmployeeResponseSchema]:
         """Возвращает список сотрудников владельца, при необходимости фильтрует по ПВЗ."""
         employees = await repo.get_employees_filtered(

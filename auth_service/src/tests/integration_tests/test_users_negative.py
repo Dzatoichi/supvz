@@ -393,3 +393,34 @@ async def test_get_me_user_deleted(
     response = await client.get(f"{USERS_URL}/me")
 
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_update_me_user_deleted(
+    client: AsyncClient,
+    session: AsyncSession,
+):
+    """
+    Тест: Токен валиден, но пользователь удален из БД.
+    PATCH /users/me
+
+    Сценарий:
+    1. Создаем пользователя и генерируем токен.
+    2. Удаляем пользователя из БД физически.
+    3. Пытаемся обновить профиль по токену.
+    4. Проверяем статус 401 Unauthorized.
+    """
+    user = await UserFactory.create_async(session)
+    token = create_test_auth_token(user.id)
+
+    await session.delete(user)
+    await session.commit()
+
+    client.cookies.set("access_token", token)
+    payload = {
+        "email": "should_not_update@example.com",
+    }
+
+    response = await client.patch(f"{USERS_URL}/me", json=payload)
+
+    assert response.status_code == 404

@@ -9,11 +9,11 @@ class HashHelper:
     """
 
     def hash(self, plain_str: str) -> str:
-        """Hash a password using bcrypt"""
+        """Метод хеширования строк"""
         return bcrypt.hashpw(plain_str.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        """Verify a password against its hash"""
+        """Проверяет пароль по его хешу"""
         return bcrypt.checkpw(
             plain_password.encode("utf-8"),
             hashed_password.encode("utf-8"),

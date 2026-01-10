@@ -308,14 +308,14 @@ async def test_reset_password_invalid_token(
 
     response = await client.post(f"{AUTH_URL}/reset_password", json=payload)
 
-    assert response.status_code in (400, 401)
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "token_used, token_expired, new_password, expected_status, description",
     [
-        (False, True, "ValidPassword123!", (400, 401), "expired_token"),
+        (False, True, "ValidPassword123!", 401, "expired_token"),
         (True, False, "ValidPassword123!", 401, "used_token"),
         (False, False, "123", 422, "weak_password"),
         (False, False, "", 422, "empty_password"),
@@ -360,10 +360,7 @@ async def test_reset_password_with_mocked_token(
 
     response = await client.post(f"{AUTH_URL}/reset_password", json=payload)
 
-    if isinstance(expected_status, tuple):
-        assert response.status_code in expected_status, f"Не удалось найти кейс: {description}"
-    else:
-        assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
+    assert response.status_code == expected_status
 
 
 @pytest.mark.asyncio
@@ -456,7 +453,7 @@ async def test_authorize_permission_denied(
 @pytest.mark.parametrize(
     "is_logged_in, expected_status, description",
     [
-        (False, (200, 401), "logout_without_login"),
+        (False, 401, "logout_without_login"),
         (True, 200, "normal_logout"),
     ],
     ids=["without_login", "normal"],
@@ -482,10 +479,7 @@ async def test_logout_scenarios(
 
     response = await client.post(f"{AUTH_URL}/logout")
 
-    if isinstance(expected_status, tuple):
-        assert response.status_code in expected_status, f"Не удалось найти кейс: {description}"
-    else:
-        assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
+    assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
 
 
 @pytest.mark.asyncio
@@ -509,4 +503,4 @@ async def test_double_logout_idempotency(
     assert response1.status_code == 200
 
     response2 = await client.post(f"{AUTH_URL}/logout")
-    assert response2.status_code in (200, 401)
+    assert response2.status_code == 401

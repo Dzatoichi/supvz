@@ -233,3 +233,28 @@ async def test_get_me_success(
     data = response.json()
     assert data["id"] == user.id
     assert data["email"] == user.email
+
+
+@pytest.mark.asyncio
+async def test_update_me_success(
+    client: AsyncClient,
+    session: AsyncSession,
+):
+    """
+    Тест: Успешное обновление данных текущего пользователя (PATCH /users/me).
+    """
+    user = await UserFactory.create_async(session)
+    token = create_test_auth_token(user_id=user.id)
+    client.cookies.set("access_token", token)
+
+    new_email = "updated_email@example.com"
+    payload = {
+        "email": new_email,
+    }
+
+    response = await client.patch(f"{USERS_URL}/me", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == user.id
+    assert data["email"] == new_email

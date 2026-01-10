@@ -62,7 +62,9 @@ exclude = [
     # Дополнительные исключения
     "**/.git/**",
     "**/.mypy_cache/**",
-    "**/.pytest_cache/**"
+    "**/.pytest_cache/**",
+    # Pytest
+    "**/conftest.py",
 ]
 
 [tool.ruff.lint]
