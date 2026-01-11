@@ -1,3 +1,4 @@
+import builtins
 from datetime import datetime
 from enum import Enum
 from typing import Annotated, Literal
@@ -69,7 +70,6 @@ class UserRegisterSchema(UserLoginSchema):
 
     position_id: int | None = None
     position_source: PositionSourceEnum | None = None
-    invite_token: str | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -92,8 +92,8 @@ class UserRegisterSchema(UserLoginSchema):
         if (self.position_id is None) != (self.position_source is None):
             raise ValueError("Необходимо указать и position_id, и position_source.")
 
-        if not self.invite_token and self.position_id is None:
-            raise ValueError("Необходимо указать либо 'invite_token', либо 'position_id' + 'position_source'.")
+        if not self.register_token and self.position_id is None:
+            raise ValueError("Необходимо указать либо 'register_token', либо 'position_id' + 'position_source'.")
 
         return self
 
@@ -131,7 +131,7 @@ class UserAuthRequestSchema(BaseModel):
     Схема для принятия авторизационного запроса(токена).
     """
 
-    access_token: str
+    access_token: Annotated[builtins.str, StringConstraints(min_length=8, max_length=4096)]
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -199,7 +199,6 @@ class UpdateUsersPermissionsSchema(BaseModel):
     new_permission_ids: list[int]
 
 
-# TODO: начать использовать position
 class UserRegisterEmployeeSchema(BaseModel):
     """
     Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
@@ -211,3 +210,10 @@ class UserRegisterEmployeeSchema(BaseModel):
     position_source: PositionSourceEnum = PositionSourceEnum.system
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserPermissionSchema(BaseModel):
+    """Вспомогательная схема для связи пользователя с правом."""
+
+    user_id: int
+    permission_id: int

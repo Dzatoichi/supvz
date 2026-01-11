@@ -108,10 +108,10 @@ class PositionService:
                     session=session,
                 )
 
-                if data.permissions:
+                if data.permission_ids:
                     await self.perm_dao.add_permissions_to_custom_position(
                         position_id=position.id,
-                        permission_ids=data.permissions,
+                        permission_ids=data.permission_ids,
                         session=session,
                     )
 
@@ -145,22 +145,22 @@ class PositionService:
                         session=session,
                     )
 
-                if data.permissions_ids is not None:
+                if data.permission_ids is not None:
                     final_permission_ids = await self.perm_dao.set_permissions_for_custom_position(
                         position_id=position_id,
-                        new_permission_ids=data.permissions_ids,
+                        new_permission_ids=data.permission_ids,
                         session=session,
                     )
                 else:
                     final_permission_ids = await self.perm_dao.get_permissions_ids_by_custom_position(
-                        position_id=position_id,
+                        custom_position_id=position_id,
                     )
 
                 return CustomPositionWithPermissionsReadSchema(
                     id=current_position.id,
                     owner_id=current_position.owner_id,
                     title=current_position.title,
-                    permissions_ids=final_permission_ids,
+                    permission_ids=final_permission_ids,
                 )
 
     async def delete_position(self, position_id: int) -> None:

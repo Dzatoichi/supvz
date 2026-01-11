@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -31,6 +32,7 @@ class TokenHandler:
         payload = {
             "user_id": user_id,
             "exp": datetime.now(timezone.utc) + expire_time,
+            "jti": str(uuid.uuid4()),
         }
         token = jwt.encode(
             payload=payload,

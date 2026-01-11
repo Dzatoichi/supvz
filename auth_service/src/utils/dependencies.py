@@ -55,11 +55,22 @@ def get_stateful_token_service(
     return StatefulTokenService(dao=dao)
 
 
-def get_auth_service() -> "AuthService":  # type: ignore
+def get_auth_service(
+    custom_repo: CustomPositionDAO = Depends(get_custom_position_dao),
+    system_repo: SystemPositionDAO = Depends(get_system_position_dao),
+    user_repo: UsersDAO = Depends(get_users_dao),
+    perm_repo: PermissionsDAO = Depends(get_permissions_dao),
+) -> "AuthService":  # type: ignore
     """Создаёт сервис для работы с авторизацией."""
     from src.services.auth_service import AuthService
 
-    return AuthService(db_helper=db_helper)
+    return AuthService(
+        db_helper=db_helper,
+        custom_repo=custom_repo,
+        system_repo=system_repo,
+        user_repo=user_repo,
+        permission_repo=perm_repo,
+    )
 
 
 def get_user_service() -> "UserService":

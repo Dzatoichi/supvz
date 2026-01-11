@@ -55,9 +55,7 @@ async def create_custom_position(
 ) -> PositionReadSchema:
     """Ручка для создания кастомной должности"""
 
-    position = await position_service.create_position(data=data)
-
-    return PositionReadSchema.model_validate(position)
+    return await position_service.create_position(data=data)
 
 
 @positions_router.patch("/{position_id}", response_model=CustomPositionWithPermissionsReadSchema)

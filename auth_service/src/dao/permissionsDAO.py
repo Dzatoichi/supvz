@@ -1,5 +1,5 @@
 from fastapi_pagination import Page, Params
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import apaginate
 from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,7 +33,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
 
             stmt = stmt.order_by(self.model.id.desc())
 
-            return await paginate(session, stmt, params)
+            return await apaginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def get_permissions_ids_by_system_position(self, position_id: int) -> list[int]:
@@ -70,7 +70,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
                 .join(SystemPositionPermissions, Permissions.id == SystemPositionPermissions.permission_id)
                 .where(SystemPositionPermissions.system_position_id == position_id)
             )
-            return await paginate(session, stmt, params)
+            return await apaginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def get_permissions_by_custom_position(self, position_id: int, params: Params) -> Page[Permissions]:
@@ -81,7 +81,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
                 .join(CustomPositionPermissions, Permissions.id == CustomPositionPermissions.permission_id)
                 .where(CustomPositionPermissions.custom_position_id == position_id)
             )
-            return await paginate(session, stmt, params)
+            return await apaginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def add_permissions_to_custom_position(
@@ -96,7 +96,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
 
         # Формируем список словарей для вставки
         stmt = insert(CustomPositionPermissions).values(
-            [{"position_id": position_id, "permission_id": p_id} for p_id in permission_ids]
+            [{"custom_position_id": position_id, "permission_id": p_id} for p_id in permission_ids]
         )
 
         await session.execute(stmt)
@@ -115,7 +115,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
         )
 
         stmt = insert(CustomPositionPermissions).values(
-            [{"position_id": position_id, "permission_id": p} for p in new_permission_ids]
+            [{"custom_position_id": position_id, "permission_id": p} for p in new_permission_ids]
         )
         await session.execute(stmt)
 
@@ -126,7 +126,7 @@ class PermissionsDAO(BaseDAO[Permissions]):
 
         async with self._get_session() as session:
             stmt = select(Permissions).join(UserPermissions).where(UserPermissions.user_id == user_id)
-            return await paginate(session, stmt, params)
+            return await apaginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def get_user_permissions_without_pagination(

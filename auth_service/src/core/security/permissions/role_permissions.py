@@ -178,7 +178,7 @@ SUBSCRIPTION_PERMISSIONS = {
 }
 
 
-def get_permissions_for_role(role: str, subscription: Optional[str] = None) -> list[PermissionEnum]:
+def get_permissions_for_user(role: str, subscription: Optional[str] = None) -> list[PermissionEnum]:
     """Получить permissions для роли с учетом подписки."""
     base_permissions = ROLE_PERMISSIONS.get(role, [])
 
@@ -188,7 +188,7 @@ def get_permissions_for_role(role: str, subscription: Optional[str] = None) -> l
     return base_permissions
 
 
-def has_permission(role: str, permission: PermissionEnum, subscription: Optional[str] = None) -> bool:
+def has_permission(permission: PermissionEnum, subscription: Optional[str] = None) -> bool:
     """Проверить наличие permission у роли с учетом подписки."""
-    user_permissions = get_permissions_for_role(role, subscription)
+    user_permissions = get_permissions_for_user(subscription)
     return permission in user_permissions

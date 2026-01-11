@@ -127,7 +127,7 @@ class JWTTokensService:
             return token_payload
 
         if token_type == TokenTypesEnum.register:
-            required_fields = ["pvz_id", "owner_id", "role"]
+            required_fields = ["pvz_id", "owner_id"]
             for field in required_fields:
                 if field not in token_payload:
                     raise InvalidTokenException(f"Missing required field: {field}")

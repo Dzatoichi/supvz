@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi_pagination import Page, Params
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import apaginate
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,7 +34,7 @@ class CustomPositionDAO(BaseDAO[CustomPositions]):
 
             stmt = stmt.order_by(self.model.id.desc())
 
-            return await paginate(session, stmt, params)
+            return await apaginate(session, stmt, params)
 
     @BaseDAO.with_exception
     async def get_position(self, *args, session: AsyncSession, **kwargs) -> CustomPositions | None:

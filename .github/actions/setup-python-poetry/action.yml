@@ -9,7 +9,7 @@ runs:
       with:
         python-version: '3.11'
 
-    - name: Install Poetry
+    - name: Install Poetry  
       shell: bash
       run: |
         pipx install poetry==2.0.0 --python python

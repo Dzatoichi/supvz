@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.schemas.enums import PositionSourceEnum
 
@@ -8,7 +8,7 @@ from src.schemas.enums import PositionSourceEnum
 class CustomPositionBaseSchema(BaseModel):
     """Базовая схема кастомной должности."""
 
-    title: str
+    title: str = Field(..., min_length=1)
     owner_id: int
 
 
@@ -31,7 +31,7 @@ class CustomPositionUpdateSchema(BaseModel):
     """Схема для обновления кастомной должности."""
 
     title: str | None = None
-    permissions_ids: list[int] | None = None
+    permission_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,6 +40,6 @@ class CustomPositionWithPermissionsReadSchema(CustomPositionBaseSchema):
     """Схема для чтения кастомной должности."""
 
     id: int
-    permissions_ids: list[int] | None = None
+    permission_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)

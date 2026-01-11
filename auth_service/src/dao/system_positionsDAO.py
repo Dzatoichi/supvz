@@ -1,5 +1,5 @@
 from fastapi_pagination import Page, Params
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import apaginate
 from sqlalchemy import select
 
 from src.dao.baseDAO import BaseDAO
@@ -25,4 +25,4 @@ class SystemPositionDAO(BaseDAO[SystemPositions]):
         async with self._get_session() as session:
             stmt = select(self.model).order_by(self.model.id.desc())
 
-            return await paginate(session, stmt, params)
+            return await apaginate(session, stmt, params)

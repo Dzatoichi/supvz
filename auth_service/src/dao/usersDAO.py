@@ -1,5 +1,5 @@
 from fastapi_pagination import Page, Params
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.ext.sqlalchemy import apaginate
 from pydantic import EmailStr
 from sqlalchemy import delete, insert, select
 from sqlalchemy.exc import NoResultFound
@@ -27,6 +27,17 @@ class UsersDAO(BaseDAO[Users]):
             stmt = select(self.model).where(self.model.email == email)
             res = await session.execute(stmt)
             return res.scalars().first()
+
+    @BaseDAO.with_exception
+    async def get_users_by_ids(self, user_ids: list[int]) -> list[Users]:
+        """
+        Получает список пользователей по списку их ID одним запросом.
+        WHERE id IN (...)
+        """
+        async with self._get_session() as session:
+            stmt = select(self.model).where(self.model.id.in_(user_ids))
+            res = await session.execute(stmt)
+            return list(res.scalars().all())
 
     @BaseDAO.with_exception
     async def set_password(self, user_id: int, hashed_password: str) -> bool:
@@ -80,7 +91,7 @@ class UsersDAO(BaseDAO[Users]):
 
             stmt = stmt.order_by(self.model.id.desc())
 
-            return await paginate(session, stmt, params)
+            return await apaginate(session, stmt, params)
 
     async def update_users_permissions(self, user_ids: list[int], permission_ids: list[int]) -> None:
         """

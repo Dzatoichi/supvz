@@ -1,4 +1,5 @@
 from fastapi_pagination import Page, Params
+from sqlalchemy.exc import IntegrityError
 
 from src.dao.permissionsDAO import PermissionsDAO
 from src.dao.usersDAO import UsersDAO
@@ -15,7 +16,13 @@ from src.schemas.users_schemas import (
     UserUpdateSchema,
 )
 from src.services.token_service import JWTTokensService
-from src.utils.exceptions import PermissionDeniedException, UserNotFoundException
+from src.utils.exceptions import (
+    EmailAlreadyExistException,
+    PermissionDeniedException,
+    PermissionsNotFound,
+    UserNotFoundException,
+    UserUnauthorizedException,
+)
 from src.utils.logger_settings import logger
 
 
@@ -84,10 +91,13 @@ class UserService:
         if not update_user:
             raise UserNotFoundException("User not found")
 
-        updated_user = await repo.update(
-            update_user.id,
-            email=user.email,
-        )
+        try:
+            updated_user = await repo.update(
+                update_user.id,
+                email=user.email,
+            )
+        except IntegrityError as e:
+            raise EmailAlreadyExistException("На данный email уже привязан аккаунт.") from e
 
         logger.info(
             "Информация о пользователе id={user_id} успешно обновлена!",
@@ -118,13 +128,20 @@ class UserService:
     ) -> list[PermissionReadSchema]:
         """Обновляет список прав пользователя"""
 
+        user = await user_repo.get_by_id(id=user_id)
+        if not user:
+            raise UserNotFoundException("Пользователь с таким id не найден.")
+
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
-                await user_repo.update_user_permissions(
-                    session=session,
-                    user_id=user_id,
-                    new_permission_ids=permission_ids,
-                )
+                try:
+                    await user_repo.update_user_permissions(
+                        session=session,
+                        user_id=user_id,
+                        new_permission_ids=permission_ids,
+                    )
+                except IntegrityError as e:
+                    raise PermissionsNotFound("Права доступа из списка не найдены.") from e
 
                 permissions = await perm_repo.get_user_permissions_without_pagination(
                     session=session,
@@ -142,10 +159,21 @@ class UserService:
         Обновляет права пользователей.
         """
 
-        await repo.update_users_permissions(
-            user_ids=data.users,
-            permission_ids=data.new_permission_ids,
-        )
+        found_users = await repo.get_users_by_ids(user_ids=data.users)
+        found_ids = {user.id for user in found_users}
+        requested_ids = set(data.users)
+
+        missing_ids = requested_ids - found_ids
+        if missing_ids:
+            raise UserNotFoundException(f"Пользователи с id {list(missing_ids)} не найдены.")
+
+        try:
+            await repo.update_users_permissions(
+                user_ids=data.users,
+                permission_ids=data.new_permission_ids,
+            )
+        except IntegrityError as e:
+            raise PermissionsNotFound("Права доступа из списка не найдены.") from e
 
         return StatusResponseSchema(
             status="ok",
@@ -165,6 +193,8 @@ class UserService:
         token_payload = await token_service.validate_token(token=token.access_token, token_type=TokenTypesEnum.access)
         user_id = token_payload.get("user_id")
         user = await repo.get_by_id(user_id)
+        if not user:
+            raise UserUnauthorizedException("Пользователь не найден или удален.")
         return UserReadSchema.model_validate(user)
 
     async def update_me(
