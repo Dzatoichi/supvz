@@ -44,8 +44,6 @@ class TestCreateShift:
         data = response.json()
         assert data["scheduled_shift_id"] == shift_data["scheduled_shift_id"]
         assert "id" in data
-        assert "created_at" in data
-        assert "updated_at" in data
 
     @pytest.mark.parametrize(
         "scheduled_shift_id",

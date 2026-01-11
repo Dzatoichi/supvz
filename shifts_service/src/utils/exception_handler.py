@@ -46,6 +46,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ShiftValidationException)
     async def shift_validation_exception_handler(request: Request, exc: ShiftValidationException):
+        """Обработчик ошибки: ошибка валидации смены."""
         logger.error(
             "ShiftValidationException",
             method=request.method,
@@ -60,6 +61,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
+        """Обработчик стандартных HTTP-исключений."""
         logger.error(
             "HTTPException",
             method=request.method,
@@ -76,6 +78,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        """Обработчик ошибок валидации запросов."""
         errors = exc.errors()
         details = []
         for err in errors:
@@ -99,6 +102,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(SQLAlchemyError)
     async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+        """Обработчик ошибок базы данных."""
         logger.error(
             "Database error",
             method=request.method,
@@ -113,6 +117,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
+        """Обработчик неожиданных ошибок."""
         logger.exception(
             "Unexpected error",
             method=request.method,
