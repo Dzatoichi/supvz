@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 class ShiftBaseSchema(BaseModel):
     """Базовая схема смены."""
+
     scheduled_shift_id: int
     started_at: datetime | None = None
     ended_at: datetime | None = None
@@ -14,6 +15,7 @@ class ShiftBaseSchema(BaseModel):
 
 class ShiftCreateSchema(BaseModel):
     """Схема создания смены."""
+
     scheduled_shift_id: int
     started_at: datetime | None = None
     ended_at: datetime | None = None
@@ -38,6 +40,7 @@ class ShiftCreateSchema(BaseModel):
 
 class ShiftUpdateSchema(BaseModel):
     """Схема обновления смены."""
+
     scheduled_shift_id: int | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
@@ -62,6 +65,7 @@ class ShiftUpdateSchema(BaseModel):
 
 class ShiftReadSchema(BaseModel):
     """Схема чтения смены."""
+
     id: int
     scheduled_shift_id: int
     started_at: datetime
@@ -72,6 +76,7 @@ class ShiftReadSchema(BaseModel):
 
 class ShiftFilterSchema(BaseModel):
     """Схема фильтрации смен."""
+
     scheduled_shift_id: int | None = None
     started_at_from: datetime | None = None
     started_at_to: datetime | None = None
