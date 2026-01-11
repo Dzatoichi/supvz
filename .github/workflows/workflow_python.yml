@@ -26,6 +26,8 @@ jobs:
               - 'auth_service/**'
             pvz_service:
               - 'pvz_service/**'
+            shifts_service:
+              - 'shifts_service/**'
 
   lint:
     needs: changes
