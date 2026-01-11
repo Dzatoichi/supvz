@@ -3,7 +3,7 @@ name = "auth-service"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Egor Alexandrov",email = "dibilarts@gmail.com"},
+    { name = "Egor Alexandrov", email = "dibilarts@gmail.com" },
 ]
 requires-python = ">=3.11,<3.12"
 dependencies = [
@@ -26,6 +26,8 @@ dependencies = [
     "fastapi-pagination (>=0.14.3,<0.15.0)",
 ]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -42,19 +44,16 @@ exclude = [
     "**/venv/**",
     "**/env/**",
     "**/site-packages/**",
-
     # Миграции
     "**/migrations/**",
     "**/alembic/versions/**",
     "**/db/migrations/**",
-
     # Сгенерированные файлы
     "**/build/**",
     "**/dist/**",
     "**/__pycache__/**",
     "**/*.pyc",
     "**/*.pyo",
-
     # Дополнительные исключения
     "**/.git/**",
     "**/.mypy_cache/**",
