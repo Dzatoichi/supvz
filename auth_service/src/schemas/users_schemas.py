@@ -68,9 +68,6 @@ class UserRegisterSchema(UserLoginSchema):
     confirm_password: str
     register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
 
-    position_id: int | None = None
-    position_source: PositionSourceEnum | None = None
-
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
         """
@@ -78,23 +75,6 @@ class UserRegisterSchema(UserLoginSchema):
         """
         if self.password != self.confirm_password:
             raise ValueError("Passwords do not match")
-        return self
-
-    @model_validator(mode="after")
-    def validate_registration_fields(self) -> "UserRegisterSchema":
-        """
-        Проверка:
-        1) Если position_id указан, то обязательно position_source и наоборот.
-        2) Должен быть хотя бы один способ регистрации:
-           - invite_token или
-           - position_id + position_source
-        """
-        if (self.position_id is None) != (self.position_source is None):
-            raise ValueError("Необходимо указать и position_id, и position_source.")
-
-        if not self.register_token and self.position_id is None:
-            raise ValueError("Необходимо указать либо 'register_token', либо 'position_id' + 'position_source'.")
-
         return self
 
 
@@ -186,6 +166,9 @@ class UserForgotPasswordSchema(BaseModel):
 
 
 class UpdateUserPermissionsSchema(BaseModel):
+    """
+    Схема для обновления списка прав пользователя
+    """
     permission_ids: list[int]
 
 

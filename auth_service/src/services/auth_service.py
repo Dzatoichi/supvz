@@ -68,7 +68,6 @@ class AuthService:
             "hashed_password": hashed_password,
         }
 
-        # TODO: переделать под должности, исправить
         if data.register_token:
             register_token_payload = await token_service.validate_token(
                 token=data.register_token,
@@ -81,19 +80,18 @@ class AuthService:
 
             position_id = register_token_payload.get("position_id")
             position_source = register_token_payload.get("position_source")
-        else:
-            position_id = data.position_id
-            position_source = data.position_source
 
-        if position_id and position_source:
-            if position_source == "system":
-                perm_ids = await self.permission_repo.get_permissions_ids_by_system_position(position_id=position_id)
-            elif position_source == "custom":
-                perm_ids = await self.permission_repo.get_permissions_ids_by_custom_position(position_id=position_id)
+            if position_id and position_source:
+                if position_source == "system":
+                    perm_ids = await self.permission_repo.get_permissions_ids_by_system_position(position_id=position_id)
+                elif position_source == "custom":
+                    perm_ids = await self.permission_repo.get_permissions_ids_by_custom_position(position_id=position_id)
+                else:
+                    raise PositionNotFoundException("Не определен position source для нахождения прав доступа.")
             else:
-                raise PositionNotFoundException("Не определен position source для нахождения прав доступа.")
+                perm_ids = []
         else:
-            perm_ids = []
+            perm_ids = await self.permission_repo.get_owner_permissions_ids()
 
         if not perm_ids:
             raise PermissionsNotFound("Никаких прав доступа для этой должности не найдено.")
