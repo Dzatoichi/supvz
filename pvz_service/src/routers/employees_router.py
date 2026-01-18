@@ -11,6 +11,7 @@ from src.schemas.employees_schemas import (
 )
 from src.services.employees_service import EmployeesService
 from src.utils.dependencies import (
+    CurrentUserDep,
     get_employees_repo,
     get_employees_service,
     get_pvz_repo,
@@ -22,16 +23,21 @@ employees_router = APIRouter(prefix="/employees", tags=["Employees"])
 @employees_router.get("/{user_id}", response_model=EmployeeResponseSchema)
 async def get_employee(
     user_id: int,
+    current_user: CurrentUserDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
     """Возвращает одного сотрудника по его user_id."""
-    return await employee_service.get_employee_by_user_id(user_id=user_id, repo=repo)
+    return await employee_service.get_employee_by_user_id(
+        user_id=user_id,
+        current_user_id=current_user.id,
+        repo=repo,
+    )
 
 
 @employees_router.get("", response_model=Page[EmployeeResponseSchema])
 async def get_employees(
-    user_id: int = Query(..., description="ID владельца"),
+    current_user: CurrentUserDep,
     pvz_id: int | None = Query(default=None, description="ID ПВЗ для фильтрации сотрудников"),
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
@@ -42,7 +48,7 @@ async def get_employees(
     Можно также указать ID ПВЗ для фильтрации сотрудников конкретного ПВЗ.
     """
     return await employee_service.get_employees_filtered(
-        owner_id=user_id,
+        current_user_id=current_user.id,
         pvz_id=pvz_id,
         repo=repo,
         params=params,
@@ -55,13 +61,18 @@ async def get_employees(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_employee(
+    current_user: CurrentUserDep,
     payload: EmployeeCreateRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
     """Создаёт нового сотрудника."""
 
-    employee = await employee_service.create_employee(data=payload, repo=repo)
+    employee = await employee_service.create_employee(
+        data=payload,
+        current_user_id=current_user.id,
+        repo=repo,
+    )
     return employee
 
 
@@ -72,6 +83,7 @@ async def create_employee(
 async def update_employee(
     user_id: int,
     payload: EmployeeUpdateRequestSchema,
+    current_user: CurrentUserDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):
@@ -80,6 +92,7 @@ async def update_employee(
     updated_employee = await employee_service.update_employee(
         user_id=user_id,
         data=payload,
+        current_user_id=current_user.id,
         repo=repo,
     )
 
@@ -92,6 +105,7 @@ async def update_employee(
 )
 async def assign_employee_to_pvz(
     user_id: int,
+    current_user: CurrentUserDep,
     pvz_in: TransferRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
     employees_repo: EmployeesDAO = Depends(get_employees_repo),
@@ -101,6 +115,7 @@ async def assign_employee_to_pvz(
 
     return await employee_service.assign_employee_to_other_pvz(
         user_id=user_id,
+        current_user_id=current_user.id,
         new_pvz_id=pvz_in.new_pvz_id,
         employees_repo=employees_repo,
         pvz_repo=pvz_repo,
@@ -114,6 +129,7 @@ async def assign_employee_to_pvz(
 async def unassign_employee_from_pvz(
     user_id: int,
     pvz_id: int,
+    current_user: CurrentUserDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     employees_repo: EmployeesDAO = Depends(get_employees_repo),
     pvz_repo: PVZsDAO = Depends(get_pvz_repo),
@@ -122,6 +138,7 @@ async def unassign_employee_from_pvz(
 
     return await employee_service.unassign_employee_from_pvz(
         user_id=user_id,
+        current_user_id=current_user.id,
         pvz_id=pvz_id,
         employees_repo=employees_repo,
         pvz_repo=pvz_repo,
@@ -134,9 +151,14 @@ async def unassign_employee_from_pvz(
 )
 async def delete_employee(
     user_id: int,
+    current_user: CurrentUserDep,
     repo: EmployeesDAO = Depends(get_employees_repo),
     employee_service: EmployeesService = Depends(get_employees_service),
 ):
     """Удаляет сотрудника по его user_id."""
 
-    await employee_service.delete_employee(user_id=user_id, repo=repo)
+    await employee_service.delete_employee(
+        user_id=user_id,
+        current_user_id=current_user.id,
+        repo=repo,
+    )

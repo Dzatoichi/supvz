@@ -9,8 +9,7 @@ from src.schemas.pvz_schemas import PVZRead
 class EmployeeCreateRequestSchema(BaseModel):
     """Схема запроса для создания нового сотрудника."""
 
-    user_id: int
-    owner_id: int
+    user_id: int | None = None
     position_id: int
     position_source: Literal["system", "custom"] = "system"
 
@@ -68,3 +67,9 @@ class TransferRequestSchema(BaseModel):
     """Схема запроса для перевода сотрудника в другой ПВЗ."""
 
     new_pvz_id: int
+
+
+class InternalUserSchema(BaseModel):
+    """Контекст пользователя, полученный от оркестратора."""
+
+    id: int

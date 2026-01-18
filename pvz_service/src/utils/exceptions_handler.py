@@ -4,9 +4,11 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.utils.exceptions import (
+    AccessDeniedException,
     EmployeeAlreadyExistsException,
     EmployeeNotAllowedException,
     EmployeeNotFoundException,
+    InvalidInternalApiKeyException,
     NoEmployeesInPVZException,
     PVZAlreadyExistsException,
     PVZDeleteFailedException,
@@ -132,11 +134,31 @@ def setup_exception_handlers(app: FastAPI):
             content={"error": "pvz_group_filter", "detail": str(exc)},
         )
 
+    @app.exception_handler(InvalidInternalApiKeyException)
+    async def invalid_internal_api_key_handler(
+        request: Request,
+        exc: InvalidInternalApiKeyException,
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"error": "invalid_internal_api_key", "detail": str(exc)},
+        )
+
+    @app.exception_handler(AccessDeniedException)
+    async def access_denied_handler(
+        request: Request,
+        exc: AccessDeniedException,
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"error": "access_denied", "detail": str(exc)},
+        )
+
     @app.exception_handler(SQLAlchemyError)
     async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": "database_error", "detail": "DB operation failed"},
+            content={"error": "database_error", "detail": str(exc)},
         )
 
     @app.exception_handler(Exception)

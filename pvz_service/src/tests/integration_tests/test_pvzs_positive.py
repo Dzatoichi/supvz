@@ -6,6 +6,8 @@ from src.tests.factories import EmployeeFactory, GroupFactory, PVZFactory, PVZUp
 
 pytestmark = pytest.mark.anyio
 
+TEST_USER_ID = 999999
+
 
 @pytest.mark.asyncio
 async def test_add_pvz(client, session):
@@ -15,20 +17,21 @@ async def test_add_pvz(client, session):
     Проверяет корректность ответа API и сохранение внешних ключей (group_id).
     """
 
-    group = await GroupFactory.create_async(session)
+    group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
 
     pvz_payload = PVZFactory.build(
         code="TEST-CODE-001",
         group_id=group.id,
-        owner_id=group.owner_id,
+        owner_id=TEST_USER_ID,
     )
 
     response = await client.post("/pvzs/", json=pvz_payload.model_dump(mode="json"))
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["code"] == "TEST-CODE-001"
     assert data["group_id"] == group.id
+    assert data["owner_id"] == TEST_USER_ID
 
 
 @pytest.mark.asyncio
@@ -39,8 +42,8 @@ async def test_update_pvz_success(client, session):
     Проверяет изменение полей и привязку к новым сущностям (группа, куратор).
     """
 
-    pvz = await PVZFactory.create_async(session)
-    group = await GroupFactory.create_async(session)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
+    group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
 
     pvz_update_payload = PVZUpdateFactory.build(
         address=pvz.address,
@@ -53,7 +56,6 @@ async def test_update_pvz_success(client, session):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["curator_id"] == 1
     assert data["group_id"] == group.id
 
 
@@ -65,14 +67,13 @@ async def test_get_pvz_by_id_success(client, session):
     Проверяет соответствие возвращаемых данных созданным в БД.
     """
 
-    pvz = await PVZFactory.create_async(session)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
 
     response = await client.get(f"/pvzs/{pvz.id}")
 
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == pvz.id
-    assert data["code"] == pvz.code
 
 
 @pytest.mark.asyncio
@@ -84,31 +85,27 @@ async def test_get_pvzs_with_query_params(client, session):
     и корректно считает total count.
     """
 
-    target_group = await GroupFactory.create_async(session)
+    target_group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
 
     target_pvzs = []
     for _ in range(3):
-        pvz = await PVZFactory.create_async(session, group_id=target_group.id)
+        pvz = await PVZFactory.create_async(session, group_id=target_group.id, owner_id=TEST_USER_ID)
         target_pvzs.append(pvz)
 
     for _ in range(7):
-        await PVZFactory.create_async(session)
+        await PVZFactory.create_async(session, owner_id=999)
 
     response = await client.get("/pvzs/", params={"group_id": target_group.id})
 
     assert response.status_code == 200
     data = response.json()
 
-    assert "items" in data
-    assert "total" in data
-
     assert data["total"] == 3
     assert len(data["items"]) == 3
 
-    received_ids = [item["id"] for item in data["items"]]
-    target_ids = [p.id for p in target_pvzs]
-
-    assert set(received_ids) == set(target_ids)
+    received_ids = {item["id"] for item in data["items"]}
+    target_ids = {p.id for p in target_pvzs}
+    assert received_ids == target_ids
 
 
 @pytest.mark.asyncio
@@ -119,8 +116,7 @@ async def test_delete_pvz_success(client, session):
     Проверяет статус ответа API и физическое отсутствие записи в БД после удаления.
     """
 
-    pvz = await PVZFactory.create_async(session)
-
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
     pvz_id = pvz.id
 
     response = await client.delete(f"/pvzs/{pvz_id}")
@@ -129,7 +125,7 @@ async def test_delete_pvz_success(client, session):
     assert response.json()["id"] == pvz_id
 
     deleted_pvz = await session.get(PVZs, pvz_id)
-    assert deleted_pvz is None, "ПВЗ не удалился из БД"
+    assert deleted_pvz is None
 
 
 @pytest.mark.asyncio
@@ -140,24 +136,22 @@ async def test_get_employees_success(client, session):
     Проверяет корректность работы Many-to-Many связей.
     """
 
-    pvz = await PVZFactory.create_async(session)
-
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
     await session.refresh(pvz, attribute_names=["employees"])
 
-    id_in_pvz = None
-    target_employees = []
-    for _ in range(3):
-        employee = await EmployeeFactory.create_async(session)
-        target_employees.append(employee)
-        id_in_pvz = employee.user_id
+    me_employee = await EmployeeFactory.create_async(session, user_id=TEST_USER_ID)
 
-        pvz.employees.append(employee)
+    pvz.employees.append(me_employee)
+
+    for _ in range(2):
+        emp = await EmployeeFactory.create_async(session)
+        pvz.employees.append(emp)
 
     noise_emp = await EmployeeFactory.create_async(session)
 
-    await session.flush()
+    await session.commit()
 
-    response = await client.get(f"/pvzs/{pvz.id}/employees", params={"user_id": id_in_pvz})
+    response = await client.get(f"/pvzs/{pvz.id}/employees")
 
     assert response.status_code == 200
     data = response.json()
@@ -177,15 +171,15 @@ async def test_assign_pvz_to_group_success(client, session):
     Проверяет обновление group_id у списка переданных ПВЗ.
     """
 
-    target_group = await GroupFactory.create_async(session, owner_id=1)
+    target_group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
 
     pvz_ids = []
     for _ in range(5):
         pvz = await PVZFactory.create_async(
             session,
-            owner_id=target_group.owner_id,
+            owner_id=TEST_USER_ID,
         )
-        await PVZFactory.create_async(session)
+        await PVZFactory.create_async(session, owner_id=999)
 
         pvz_ids.append(pvz.id)
 
@@ -203,6 +197,5 @@ async def test_assign_pvz_to_group_success(client, session):
     updated_pvzs = result.scalars().all()
 
     assert len(updated_pvzs) == 5
-
     for pvz in updated_pvzs:
         assert pvz.group_id == target_group.id

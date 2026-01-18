@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import apaginate
-from sqlalchemy import select, update
+from sqlalchemy import exists, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO
@@ -89,6 +89,7 @@ class PVZsDAO(BaseDAO[PVZs]):
             await session.execute(stmt)
             await session.commit()
 
+    @BaseDAO.with_exception
     async def set_curator_for_group(
         self,
         group_id: int,
@@ -97,3 +98,16 @@ class PVZsDAO(BaseDAO[PVZs]):
     ):
         stmt = update(self.model).where(self.model.group_id == group_id).values(curator_id=curator_id)
         await session.execute(stmt)
+
+    @BaseDAO.with_exception
+    async def is_owner(self, pvz_id: int, owner_id: int) -> bool:
+        """Проверяет, владеет ли owner_id данным ПВЗ."""
+        async with self._get_session() as session:
+            stmt = select(
+                exists().where(
+                    self.model.id == pvz_id,
+                    self.model.owner_id == owner_id,
+                )
+            )
+            result = await session.execute(stmt)
+            return result.scalar()

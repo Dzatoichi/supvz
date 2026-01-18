@@ -14,6 +14,9 @@ from src.schemas.pvz_schemas import PVZAdd, PVZUpdate
 
 T = TypeVar("T", bound=BaseModel)
 
+# ID тестового пользователя-владельца
+TEST_OWNER_ID = 999999
+
 
 class AsyncPersistenceFactory(ModelFactory[T], Generic[T]):
     """
@@ -21,6 +24,7 @@ class AsyncPersistenceFactory(ModelFactory[T], Generic[T]):
     """
 
     __is_base_factory__ = True
+    __default_owner_id__: int = TEST_OWNER_ID
 
     @classmethod
     async def create_async(cls, session: AsyncSession, **kwargs):
@@ -29,6 +33,12 @@ class AsyncPersistenceFactory(ModelFactory[T], Generic[T]):
         """
         data = cls.build(**kwargs)
         data_dict = data.model_dump(mode="json")
+
+        if "owner_id" not in data_dict:
+            data_dict["owner_id"] = kwargs.get(
+                "owner_id",
+                cls.__default_owner_id__,
+            )
 
         # cls.__model_cls__ - ссылка на SQLAlchemy модель
         db_obj = cls.__model_cls__(**data_dict)
@@ -42,7 +52,7 @@ class GroupFactory(AsyncPersistenceFactory[PVZGroupCreateSchema]):
     __model__ = PVZGroupCreateSchema
     __model_cls__ = PVZGroups
 
-    owner_id = 0
+    owner_id = TEST_OWNER_ID
 
 
 class EmployeeFactory(AsyncPersistenceFactory[EmployeeCreateRequestSchema]):

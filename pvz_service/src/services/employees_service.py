@@ -9,6 +9,7 @@ from src.schemas.employees_schemas import (
     EmployeeUpdateRequestSchema,
 )
 from src.utils.exceptions import (
+    AccessDeniedException,
     EmployeeAlreadyExistsException,
     EmployeeNotFoundException,
     PVZAlreadyExistsException,
@@ -21,9 +22,38 @@ class EmployeesService:
     Сервис для работы с сотрудниками и их привязкой к ПВЗ.
     """
 
+    async def _check_employee_access(
+        self,
+        employee_user_id: int,
+        current_user_id: int,
+        repo: EmployeesDAO,
+    ) -> None:
+        """Проверяет доступ к сотруднику. Выбрасывает исключение если нет доступа."""
+        is_owner = await repo.is_owner(employee_user_id=employee_user_id, owner_id=current_user_id)
+        if not is_owner:
+            exists = await repo.exists(user_id=employee_user_id)
+            if not exists:
+                raise EmployeeNotFoundException("Сотрудник не найден.")
+            raise AccessDeniedException("Нет доступа к данному сотруднику.")
+
+    async def _check_pvz_access(
+        self,
+        pvz_id: int,
+        current_user_id: int,
+        pvz_repo: PVZsDAO,
+    ) -> None:
+        """Проверяет доступ к ПВЗ."""
+        is_owner = await pvz_repo.is_owner(pvz_id=pvz_id, owner_id=current_user_id)
+        if not is_owner:
+            pvz = await pvz_repo.get_pvz(id=pvz_id)
+            if not pvz:
+                raise PVZNotFoundException("ПВЗ не найден.")
+            raise AccessDeniedException("Нет доступа к данному ПВЗ.")
+
     async def create_employee(
         self,
         data: EmployeeCreateRequestSchema,
+        current_user_id: int,
         repo: EmployeesDAO,
     ) -> EmployeeResponseSchema:
         """Создаёт нового сотрудника."""
@@ -44,7 +74,7 @@ class EmployeesService:
 
         payload = {
             "user_id": data.user_id,
-            "owner_id": data.owner_id,
+            "owner_id": current_user_id,
             "position_id": data.position_id,
             "position_source": data.position_source,
             "phone_number": data.phone_number,
@@ -59,9 +89,13 @@ class EmployeesService:
     async def get_employee_by_user_id(
         self,
         user_id: int,
+        current_user_id: int,
         repo: EmployeesDAO,
     ) -> EmployeeResponseSchema:
         """Возвращает одного сотрудника по user_id."""
+
+        await self._check_employee_access(user_id, current_user_id, repo)
+
         employee = await repo.get_employee(user_id=user_id)
 
         if not employee:
@@ -71,15 +105,16 @@ class EmployeesService:
 
     async def get_employees_filtered(
         self,
-        owner_id: int,
+        current_user_id: int,
         repo: EmployeesDAO,
         params: Params,
         pvz_id: int | None = None,
         position_id: int | None = None,
     ) -> list[EmployeeResponseSchema]:
         """Возвращает список сотрудников владельца, при необходимости фильтрует по ПВЗ."""
+
         employees = await repo.get_employees_filtered(
-            user_id=owner_id,
+            owner_id=current_user_id,
             pvz_id=pvz_id,
             position_id=position_id,
             params=params,
@@ -95,9 +130,13 @@ class EmployeesService:
         self,
         user_id: int,
         data: EmployeeUpdateRequestSchema,
+        current_user_id: int,
         repo: EmployeesDAO,
     ) -> EmployeeResponseSchema:
         """Обновляет данные сотрудника."""
+
+        await self._check_employee_access(user_id, current_user_id, repo)
+
         update_data = data.model_dump(exclude_unset=True)
         updated_employee = await repo.update(user_id, **update_data)
 
@@ -109,9 +148,11 @@ class EmployeesService:
     async def delete_employee(
         self,
         user_id: int,
+        current_user_id: int,
         repo: EmployeesDAO,
     ) -> None:
         """Удаляет сотрудника и возвращает его данные."""
+        await self._check_employee_access(user_id, current_user_id, repo)
         user = await repo.get_employee(user_id=user_id)
 
         if not user:
@@ -123,10 +164,15 @@ class EmployeesService:
         self,
         user_id: int,
         new_pvz_id: int,
+        current_user_id: int,
         employees_repo: EmployeesDAO,
         pvz_repo: PVZsDAO,
     ) -> EmployeeResponseSchema:
         """Добавляет сотруднику ещё один ПВЗ."""
+
+        await self._check_employee_access(user_id, current_user_id, employees_repo)
+        await self._check_pvz_access(new_pvz_id, current_user_id, pvz_repo)
+
         employee = await employees_repo.get_employee(user_id=user_id)
         if not employee:
             raise EmployeeNotFoundException("Сотрудник не найден.")
@@ -145,10 +191,15 @@ class EmployeesService:
         self,
         user_id: int,
         pvz_id: int,
+        current_user_id: int,
         employees_repo: EmployeesDAO,
         pvz_repo: PVZsDAO,
     ) -> EmployeeResponseSchema:
         """Удаляет связь между сотрудником и конкретным ПВЗ."""
+
+        await self._check_employee_access(user_id, current_user_id, employees_repo)
+        await self._check_pvz_access(pvz_id, current_user_id, pvz_repo)
+
         employee = await employees_repo.get_employee(user_id=user_id)
         if not employee:
             raise EmployeeNotFoundException("Сотрудник не найден")

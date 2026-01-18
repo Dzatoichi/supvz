@@ -27,6 +27,7 @@ class PVZAdd(BaseModel):
 class PVZUpdate(BaseModel):
     address: str
     owner_id: int
+    type: PVZType | None = None
     curator_id: int | None = None
     group_id: int | None = None
 
