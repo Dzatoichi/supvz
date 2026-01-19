@@ -34,7 +34,6 @@ class EmployeesService:
     async def create_employee(
         self,
         data: EmployeeCreateRequestSchema,
-        current_user_id: int,
         repo: EmployeesDAO,
     ) -> EmployeeResponseSchema:
         """Создаёт нового сотрудника."""
@@ -55,7 +54,7 @@ class EmployeesService:
 
         payload = {
             "user_id": data.user_id,
-            "owner_id": current_user_id,
+            "owner_id": data.owner_id,
             "position_id": data.position_id,
             "position_source": data.position_source,
             "phone_number": data.phone_number,

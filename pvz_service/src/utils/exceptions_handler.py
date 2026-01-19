@@ -158,7 +158,7 @@ def setup_exception_handlers(app: FastAPI):
     async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": "database_error", "detail": str(exc)},
+            content={"error": "database_error", "detail": "DB Operational Error"},
         )
 
     @app.exception_handler(Exception)

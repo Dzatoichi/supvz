@@ -6,7 +6,7 @@ class EmployeeAccessPolicy:
     def __init__(self, repo: EmployeesDAO):
         self.repo = repo
 
-    async def check_owner_or_responsible(
+    async def check_employee_access(
         self,
         employee_user_id: int,
         current_user_id: int,
@@ -18,11 +18,3 @@ class EmployeeAccessPolicy:
 
         if employee.owner_id != current_user_id:
             raise AccessDeniedException("Нет доступа к сотруднику")
-
-    async def check_employee_access(
-        self,
-        employee_user_id: int,
-        current_user_id: int,
-    ) -> None:
-        """Универсальная проверка доступа сотрудника."""
-        await self.check_owner_or_responsible(employee_user_id, current_user_id)

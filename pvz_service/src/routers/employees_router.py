@@ -61,7 +61,6 @@ async def get_employees(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_employee(
-    current_user: CurrentUserDep,
     payload: EmployeeCreateRequestSchema,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
@@ -70,7 +69,6 @@ async def create_employee(
 
     employee = await employee_service.create_employee(
         data=payload,
-        current_user_id=current_user.id,
         repo=repo,
     )
     return employee

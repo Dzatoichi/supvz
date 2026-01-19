@@ -88,7 +88,7 @@ async def test_assign_employee_to_non_existent_pvz(client, session):
     Тест: Привязка сотрудника к несуществующему ПВЗ (404).
     POST /employees/{user_id}/assign
     """
-    employee = await EmployeeFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
     non_existent_pvz_id = 999999
 
     payload = {"new_pvz_id": non_existent_pvz_id}

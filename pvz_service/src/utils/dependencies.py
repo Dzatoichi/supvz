@@ -94,7 +94,7 @@ async def verify_internal_request(
     """Проверяет что запрос от доверенного сервиса."""
 
     if x_api_key != settings.INTERNAL_API_KEY:
-        raise InvalidInternalApiKeyException("Invalid internal API key")
+        raise InvalidInternalApiKeyException("Недопустимый внутренний ключ API")
 
 
 async def get_current_user(

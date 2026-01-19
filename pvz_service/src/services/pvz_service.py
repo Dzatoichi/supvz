@@ -69,7 +69,7 @@ class PVZService:
         await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
         # Если меняем группу, проверяем права на новую группу
-        if data.group_id is not None and data.group_id != 0:
+        if data.group_id:
             group = await group_repo.get_group(id=data.group_id)
             if not group:
                 raise PVZGroupNotFoundException("Группа не найдена")

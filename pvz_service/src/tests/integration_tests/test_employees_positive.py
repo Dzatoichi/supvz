@@ -19,7 +19,7 @@ async def test_create_employee(client, session):
     """
 
     payload_model = EmployeeFactory.build()
-    payload = payload_model.model_dump(mode="json", exclude={"owner_id", "id", "user_id"})
+    payload = payload_model.model_dump(mode="json", exclude={"id", "user_id"})
 
     response = await client.post("/employees", json=payload)
 

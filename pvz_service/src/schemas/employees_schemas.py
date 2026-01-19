@@ -9,6 +9,7 @@ from src.schemas.pvz_schemas import PVZRead
 class EmployeeCreateRequestSchema(BaseModel):
     """Схема запроса для создания нового сотрудника."""
 
+    owner_id: int
     user_id: int | None = None
     position_id: int
     position_source: Literal["system", "custom"] = "system"
