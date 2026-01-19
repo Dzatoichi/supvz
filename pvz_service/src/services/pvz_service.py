@@ -4,6 +4,7 @@ from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.models.pvzs.PVZs import PVZs
+from src.policies.pvz_policy import PVZAccessPolicy
 from src.schemas.employees_schemas import EmployeeResponseSchema
 from src.schemas.pvz_schemas import PVZAdd, PVZRead, PVZUpdate
 from src.utils.exceptions import (
@@ -23,19 +24,11 @@ class PVZService:
     Сервис для работы с ПВЗ.
     """
 
-    async def _check_pvz_access(
+    def __init__(
         self,
-        pvz_id: int,
-        current_user_id: int,
-        repo: PVZsDAO,
-    ) -> None:
-        """Проверяет, является ли пользователь владельцем ПВЗ."""
-        is_owner = await repo.is_owner(pvz_id=pvz_id, owner_id=current_user_id)
-        if not is_owner:
-            pvz = await repo.get_pvz(id=pvz_id)
-            if not pvz:
-                raise PVZNotFoundException("ПВЗ не найден.")
-            raise AccessDeniedException("Нет доступа к данному ПВЗ.")
+        pvz_policy: PVZAccessPolicy,
+    ):
+        self.pvz_policy = pvz_policy
 
     async def add_pvz(
         self,
@@ -48,8 +41,6 @@ class PVZService:
         if pvz:
             raise PVZAlreadyExistsException("ПВЗ с таким кодом уже существует")
 
-        data.owner_id = current_user_id
-
         # Если указан group_id, проверяем владельца
         if data.group_id == 0:
             data.group_id = None
@@ -61,7 +52,10 @@ class PVZService:
             if group.owner_id != current_user_id:
                 raise AccessDeniedException("Нельзя привязать ПВЗ к чужой группе.")
 
-        pvz_add = await repo.create(data.model_dump())
+        payload = data.model_dump()
+        payload["owner_id"] = current_user_id
+        pvz_add = await repo.create(payload)
+
         return PVZRead.model_validate(pvz_add, from_attributes=True)
 
     async def update_pvz_by_id(
@@ -72,7 +66,7 @@ class PVZService:
         repo: PVZsDAO,
         group_repo: PVZGroupsDAO,
     ) -> PVZRead:
-        await self._check_pvz_access(pvz_id, current_user_id, repo)
+        await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
         # Если меняем группу, проверяем права на новую группу
         if data.group_id is not None and data.group_id != 0:
@@ -84,7 +78,7 @@ class PVZService:
 
         payload = {
             "address": data.address,
-            "curator_id": data.curator_id,
+            "responsible_id": data.responsible_id,
             "group_id": data.group_id,
             "type": data.type,
         }
@@ -99,7 +93,7 @@ class PVZService:
         current_user_id: int,
         repo: PVZsDAO,
     ) -> PVZRead:
-        await self._check_pvz_access(pvz_id, current_user_id, repo)
+        await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
         pvz = await repo.get_pvz(id=pvz_id)
         if not pvz:
@@ -140,7 +134,7 @@ class PVZService:
         current_user_id: int,
         repo: PVZsDAO,
     ) -> PVZRead:
-        await self._check_pvz_access(pvz_id, current_user_id, repo)
+        await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
         pvz = await repo.get_pvz(id=pvz_id)
 
@@ -151,7 +145,7 @@ class PVZService:
             "address": pvz.address,
             "owner_id": pvz.owner_id,
             "group_id": pvz.group_id,
-            "curator_id": pvz.curator_id,
+            "responsible_id": pvz.responsible_id,
             "created_at": pvz.created_at,
         }
 

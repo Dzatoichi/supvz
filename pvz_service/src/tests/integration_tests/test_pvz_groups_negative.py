@@ -1,5 +1,7 @@
 import pytest
+from httpx import ASGITransport, AsyncClient
 
+from src.main import app
 from src.tests.factories import GroupFactory
 
 pytestmark = pytest.mark.anyio
@@ -10,7 +12,7 @@ pytestmark = pytest.mark.anyio
     "payload, error_field",
     [
         ({}, "required"),
-        ({"owner_id": "boss"}, "valid integer"),
+        ({"responsible_id": "boss"}, "valid integer"),
         ({"name": None}, "string"),
     ],
 )
@@ -37,24 +39,31 @@ async def test_create_group_validation_error(client, payload, error_field):
 
 
 @pytest.mark.asyncio
-async def test_create_group_duplicate(client, session):
+async def test_create_group_duplicate(session, make_auth_headers):
     """
     Тест: Создание группы с неуникальным именем (409 Conflict).
-    Проверяет constraint unique=True поля name+owner_id.
+    Сценарий:
+    1. Создаем группу для пользователя user_id=100.
+    2. Авторизуемся как user_id=100.
+    3. Пытаемся создать группу с тем же именем.
+    4. Ожидаем 409.
     """
-    existing_name = "Unique Group Name"
-    existing_owner = 100
+    target_owner_id = 100
+    duplicate_name = "Unique Group Name"
 
-    await GroupFactory.create_async(session, name=existing_name, owner_id=existing_owner)
+    await GroupFactory.create_async(session, name=duplicate_name, owner_id=target_owner_id)
 
-    payload_model = GroupFactory.build(name=existing_name, owner_id=existing_owner)
-    payload = payload_model.model_dump(mode="json")
+    payload = {"name": duplicate_name}
 
-    response = await client.post("/pvz_groups", json=payload)
+    headers = make_auth_headers(target_owner_id)
+    transport = ASGITransport(app=app)
 
-    assert response.status_code == 409
-    data = response.json()
-    assert data["detail"] == "Группа с таким именем уже существет"
+    async with AsyncClient(transport=transport, base_url="http://test", headers=headers) as ac:
+        response = await ac.post("/pvz_groups", json=payload)
+
+        assert response.status_code == 409
+        data = response.json()
+        assert data["detail"] == "Группа с таким именем уже существует"
 
 
 @pytest.mark.asyncio
@@ -105,14 +114,14 @@ async def test_update_group_conflict_name(client, session):
 
 
 @pytest.mark.asyncio
-async def test_assign_curator_group_not_found(client):
+async def test_assign_responsible_group_not_found(client):
     """
     Тест: Назначение куратора несуществующей группе (404).
-    PATCH /pvz_groups/{group_id}/curator
+    PATCH /pvz_groups/{group_id}/responsible
     """
     non_existent_id = 999999
 
-    response = await client.patch(f"/pvz_groups/{non_existent_id}/curator", params={"curator_id": 1})
+    response = await client.patch(f"/pvz_groups/{non_existent_id}/responsible", params={"responsible_id": 1})
 
     assert response.status_code == 404
 

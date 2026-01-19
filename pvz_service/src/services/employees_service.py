@@ -3,13 +3,14 @@ from sqlalchemy import or_
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzsDAO import PVZsDAO
+from src.policies.employee_policy import EmployeeAccessPolicy
+from src.policies.pvz_policy import PVZAccessPolicy
 from src.schemas.employees_schemas import (
     EmployeeCreateRequestSchema,
     EmployeeResponseSchema,
     EmployeeUpdateRequestSchema,
 )
 from src.utils.exceptions import (
-    AccessDeniedException,
     EmployeeAlreadyExistsException,
     EmployeeNotFoundException,
     PVZAlreadyExistsException,
@@ -22,33 +23,13 @@ class EmployeesService:
     Сервис для работы с сотрудниками и их привязкой к ПВЗ.
     """
 
-    async def _check_employee_access(
+    def __init__(
         self,
-        employee_user_id: int,
-        current_user_id: int,
-        repo: EmployeesDAO,
-    ) -> None:
-        """Проверяет доступ к сотруднику. Выбрасывает исключение если нет доступа."""
-        is_owner = await repo.is_owner(employee_user_id=employee_user_id, owner_id=current_user_id)
-        if not is_owner:
-            exists = await repo.exists(user_id=employee_user_id)
-            if not exists:
-                raise EmployeeNotFoundException("Сотрудник не найден.")
-            raise AccessDeniedException("Нет доступа к данному сотруднику.")
-
-    async def _check_pvz_access(
-        self,
-        pvz_id: int,
-        current_user_id: int,
-        pvz_repo: PVZsDAO,
-    ) -> None:
-        """Проверяет доступ к ПВЗ."""
-        is_owner = await pvz_repo.is_owner(pvz_id=pvz_id, owner_id=current_user_id)
-        if not is_owner:
-            pvz = await pvz_repo.get_pvz(id=pvz_id)
-            if not pvz:
-                raise PVZNotFoundException("ПВЗ не найден.")
-            raise AccessDeniedException("Нет доступа к данному ПВЗ.")
+        employee_policy: EmployeeAccessPolicy,
+        pvz_policy: PVZAccessPolicy,
+    ):
+        self.employee_policy = employee_policy
+        self.pvz_policy = pvz_policy
 
     async def create_employee(
         self,
@@ -94,7 +75,7 @@ class EmployeesService:
     ) -> EmployeeResponseSchema:
         """Возвращает одного сотрудника по user_id."""
 
-        await self._check_employee_access(user_id, current_user_id, repo)
+        await self.employee_policy.check_employee_access(user_id, current_user_id)
 
         employee = await repo.get_employee(user_id=user_id)
 
@@ -135,7 +116,7 @@ class EmployeesService:
     ) -> EmployeeResponseSchema:
         """Обновляет данные сотрудника."""
 
-        await self._check_employee_access(user_id, current_user_id, repo)
+        await self.employee_policy.check_employee_access(user_id, current_user_id)
 
         update_data = data.model_dump(exclude_unset=True)
         updated_employee = await repo.update(user_id, **update_data)
@@ -152,7 +133,8 @@ class EmployeesService:
         repo: EmployeesDAO,
     ) -> None:
         """Удаляет сотрудника и возвращает его данные."""
-        await self._check_employee_access(user_id, current_user_id, repo)
+        await self.employee_policy.check_employee_access(user_id, current_user_id)
+
         user = await repo.get_employee(user_id=user_id)
 
         if not user:
@@ -170,8 +152,8 @@ class EmployeesService:
     ) -> EmployeeResponseSchema:
         """Добавляет сотруднику ещё один ПВЗ."""
 
-        await self._check_employee_access(user_id, current_user_id, employees_repo)
-        await self._check_pvz_access(new_pvz_id, current_user_id, pvz_repo)
+        await self.employee_policy.check_employee_access(user_id, current_user_id)
+        await self.pvz_policy.check_pvz_access(new_pvz_id, current_user_id)
 
         employee = await employees_repo.get_employee(user_id=user_id)
         if not employee:
@@ -197,8 +179,8 @@ class EmployeesService:
     ) -> EmployeeResponseSchema:
         """Удаляет связь между сотрудником и конкретным ПВЗ."""
 
-        await self._check_employee_access(user_id, current_user_id, employees_repo)
-        await self._check_pvz_access(pvz_id, current_user_id, pvz_repo)
+        await self.employee_policy.check_employee_access(user_id, current_user_id)
+        await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
         employee = await employees_repo.get_employee(user_id=user_id)
         if not employee:

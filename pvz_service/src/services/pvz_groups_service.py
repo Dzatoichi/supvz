@@ -2,30 +2,51 @@ from sqlalchemy.exc import IntegrityError
 
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
+from src.policies.pvz_group_policy import PVZGroupAccessPolicy
 from src.schemas.pvz_group_schemas import (
     PVZGroupCreateSchema,
     PVZGroupResponseSchema,
     PVZGroupUpdateSchema,
 )
-from src.utils.exceptions import PVZGroupAlreadyExistsException, PVZGroupFilterException, PVZGroupNotFoundException
+from src.utils.exceptions import (
+    PVZGroupAlreadyExistsException,
+    PVZGroupFilterException,
+    PVZGroupNotFoundException,
+)
 
 
 class PVZGroupsService:
-    def __init__(self, db_helper):
+    """
+    Сервис для работы с группами ПВЗ.
+    """
+
+    def __init__(
+        self,
+        db_helper,
+        group_policy: PVZGroupAccessPolicy,
+        group_repo: PVZGroupsDAO,
+        pvz_repo: PVZsDAO,
+    ):
         self.db_helper = db_helper
+        self.group_policy = group_policy
+        self.group_repo = group_repo
+        self.pvz_repo = pvz_repo
 
     async def create_group(
         self,
         data: PVZGroupCreateSchema,
-        repo: PVZGroupsDAO,
+        current_user_id: int,
     ):
         """Создаёт новую группу ПВЗ"""
-        existing_group = await repo.get_group(name=data.name, owner_id=data.owner_id)
+
+        existing_group = await self.group_repo.get_group(name=data.name, owner_id=current_user_id)
         if existing_group:
-            raise PVZGroupAlreadyExistsException("Группа с таким именем уже существет")
+            raise PVZGroupAlreadyExistsException("Группа с таким именем уже существует")
 
         payload = data.model_dump()
-        group = await repo.create(payload)
+        payload["owner_id"] = current_user_id
+
+        group = await self.group_repo.create(payload)
 
         return PVZGroupResponseSchema.model_validate(group)
 
@@ -33,37 +54,37 @@ class PVZGroupsService:
         self,
         group_id: int,
         data: PVZGroupUpdateSchema,
-        pvz_repo: PVZsDAO,
-        group_repo: PVZGroupsDAO,
+        current_user_id: int,
     ):
         """Обновляет данные группы ПВЗ и кураторство для ПВЗ при необходимости."""
 
-        existing_group = await group_repo.get_by_id(id=group_id)
+        await self.group_policy.check_group_access(group_id, current_user_id)
+
+        existing_group = await self.group_repo.get_by_id(id=group_id)
         if not existing_group:
             raise PVZGroupNotFoundException("Группы с таким id не существет")
 
         try:
-            group = await group_repo.update(group_id, **data.model_dump(exclude_unset=True))
+            group = await self.group_repo.update(group_id, **data.model_dump(exclude_unset=True))
         except IntegrityError:
             raise PVZGroupAlreadyExistsException("Группа с таким именем уже существует") from None
 
-        if data.curator_id:
-            await pvz_repo.update_pvzs_curator_by_group(group_id, data.curator_id)
+        if data.responsible_id:
+            await self.pvz_repo.update_pvzs_responsible_by_group(group_id, data.responsible_id)
 
         return PVZGroupResponseSchema.model_validate(group)
 
     async def get_groups(
         self,
         params: dict,
-        repo: PVZGroupsDAO,
     ) -> list[PVZGroupResponseSchema] | PVZGroupResponseSchema:
-        """Возвращает группы по owner_id или curator_id."""
+        """Возвращает группы по owner_id или responsible_id."""
 
         actual_params = {key: value for key, value in params.items() if value is not None}
 
         # Если не передали ни одного параметра — вернуть все группы
         if len(actual_params) == 0:
-            groups = await repo.get_all()
+            groups = await self.group_repo.get_all()
             return [PVZGroupResponseSchema.model_validate(g) for g in groups]
 
         if len(actual_params) > 1:
@@ -71,7 +92,7 @@ class PVZGroupsService:
 
         field_name, field_value = next(iter(actual_params.items()))
 
-        groups = await repo.get_groups(**{field_name: field_value})
+        groups = await self.group_repo.get_groups(**{field_name: field_value})
 
         if not groups:
             raise PVZGroupNotFoundException("Группы не найдены")
@@ -80,12 +101,14 @@ class PVZGroupsService:
 
     async def get_group_with_pvzs(
         self,
-        group_id,
-        repo: PVZGroupsDAO,
+        group_id: int,
+        current_user_id: int,
     ):
         """Возвращает одну группу ПВЗ по ID с информацией о ПВЗ."""
 
-        group = await repo.get_by_id(group_id)
+        await self.group_policy.check_group_access(group_id, current_user_id)
+
+        group = await self.group_repo.get_by_id(group_id)
 
         if not group:
             raise PVZGroupNotFoundException("Группа не найдена")
@@ -94,27 +117,36 @@ class PVZGroupsService:
 
     async def delete_group(
         self,
-        group_id,
-        repo: PVZGroupsDAO,
+        group_id: int,
+        current_user_id: int,
     ):
         """Удаляет группу ПВЗ."""
 
-        existing_group = await repo.get_by_id(id=group_id)
+        await self.group_policy.check_group_access(group_id, current_user_id)
+
+        existing_group = await self.group_repo.get_by_id(id=group_id)
         if not existing_group:
             raise PVZGroupNotFoundException("Группы с таким id не существет")
 
-        await repo.delete(id=group_id)
+        await self.group_repo.delete(id=group_id)
 
-    async def assign_curator(self, group_id: int, curator_id: int, repo: PVZGroupsDAO, pvz_repo: PVZsDAO):
+    async def assign_responsible(
+        self,
+        group_id: int,
+        responsible_id: int,
+        current_user_id: int,
+    ):
         """Привязывает куратора к группе, а также ко всем пвз состоящим в этой группе"""
 
-        existing_group = await repo.get_by_id(id=group_id)
+        await self.group_policy.check_group_access(group_id, current_user_id)
+
+        existing_group = await self.group_repo.get_by_id(id=group_id)
         if not existing_group:
             raise PVZGroupNotFoundException("Группы с таким id не существет")
 
         async with self.db_helper.async_session_maker() as session:
-            async with session.begin():  # ← одна транзакция
-                await repo.set_curator(group_id, curator_id, session)
-                await pvz_repo.set_curator_for_group(group_id, curator_id, session)
+            async with session.begin():
+                await self.group_repo.set_responsible(group_id, responsible_id, session)
+                await self.pvz_repo.set_responsible_for_group(group_id, responsible_id, session)
 
         return {"detail": "Куратор успешно назначен и применён ко всем ПВЗ группы"}

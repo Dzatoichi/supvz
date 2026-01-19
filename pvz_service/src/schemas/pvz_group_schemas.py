@@ -7,13 +7,13 @@ class PVZGroupBaseSchema(BaseModel):
     """Базовая схема группы ПВЗ с общими полями."""
 
     name: str
-    curator_id: Optional[int] = None
+    responsible_id: Optional[int] = None
 
 
 class PVZGroupCreateSchema(PVZGroupBaseSchema):
-    """Схема для создания группы ПВЗ. Содержит обязательный owner_id."""
+    """Схема для создания группы ПВЗ."""
 
-    owner_id: int
+    pass
 
 
 class PVZGroupUpdateSchema(PVZGroupBaseSchema):
