@@ -31,15 +31,24 @@ class UserService:
     Класс сервиса для работы с пользователями.
     """
 
-    def __init__(self, db_helper):
+    def __init__(
+        self,
+        db_helper,
+        users_dao: UsersDAO,
+        permissions_dao: PermissionsDAO,
+        token_service: JWTTokensService,
+    ):
         self.db_helper = db_helper
+        self.users_repo = users_dao
+        self.permissions_repo = permissions_dao
+        self.token_service = token_service
 
-    async def set_paid_owner(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
+    async def set_paid_owner(self, user_id: int) -> UserReadSchema:
         """
         Метод для обновления подписки с test на paid.
         """
 
-        user = await repo.get_by_id(user_id)
+        user = await self.users_repo.get_by_id(user_id)
         if not user:
             raise UserNotFoundException("User not found")
 
@@ -51,7 +60,7 @@ class UserService:
 
             raise PermissionDeniedException("User is not owner")
 
-        updated_user = await repo.update(id=user_id, subscription=SubscriptionEnum.paid)
+        updated_user = await self.users_repo.update(id=user_id, subscription=SubscriptionEnum.paid)
 
         logger.info(
             "Пользователю успешно поменяна подписка!",
@@ -60,19 +69,19 @@ class UserService:
 
         return UserReadSchema.model_validate(updated_user)
 
-    async def get_user_by_id(self, user_id: int, repo: UsersDAO) -> UserReadSchema:
+    async def get_user_by_id(self, user_id: int) -> UserReadSchema:
         """Получает юзера по id"""
 
-        user = await repo.get_by_id(user_id)
+        user = await self.users_repo.get_by_id(user_id)
         if not user:
             raise UserNotFoundException("User not found")
 
         return UserReadSchema.model_validate(user)
 
-    async def get_users(self, repo: UsersDAO, params: Params) -> Page[Users]:
+    async def get_users(self, params: Params) -> Page[Users]:
         """Получает всех юзеров"""
 
-        users = await repo.get_users(params=params)
+        users = await self.users_repo.get_users(params=params)
 
         if users.total == 0:
             raise UserNotFoundException("Users not found")
@@ -83,16 +92,15 @@ class UserService:
         self,
         user_id: int,
         user: UserUpdateSchema,
-        repo: UsersDAO,
     ) -> UserReadSchema:
         """Обновляет данные пользователя"""
 
-        update_user = await repo.get_by_id(id=user_id)
+        update_user = await self.users_repo.get_by_id(id=user_id)
         if not update_user:
             raise UserNotFoundException("User not found")
 
         try:
-            updated_user = await repo.update(
+            updated_user = await self.users_repo.update(
                 update_user.id,
                 email=user.email,
             )
@@ -105,10 +113,10 @@ class UserService:
         )
         return updated_user
 
-    async def delete_user(self, user_id: int, repo: UsersDAO):
+    async def delete_user(self, user_id: int):
         """Удаляет пользователя по id"""
 
-        user = await repo.get_by_id(user_id)
+        user = await self.users_repo.get_by_id(user_id)
         if not user:
             raise UserNotFoundException("User not found")
 
@@ -117,25 +125,23 @@ class UserService:
             user_id=user.id,
         )
 
-        await repo.delete(user.id)
+        await self.users_repo.delete(user.id)
 
     async def set_user_permissions(
         self,
         user_id: int,
         permission_ids: list[int],
-        user_repo: UsersDAO,
-        perm_repo: PermissionsDAO,
     ) -> list[PermissionReadSchema]:
         """Обновляет список прав пользователя"""
 
-        user = await user_repo.get_by_id(id=user_id)
+        user = await self.users_repo.get_by_id(id=user_id)
         if not user:
             raise UserNotFoundException("Пользователь с таким id не найден.")
 
         async with self.db_helper.async_session_maker() as session:
             async with session.begin():
                 try:
-                    await user_repo.update_user_permissions(
+                    await self.users_repo.update_user_permissions(
                         session=session,
                         user_id=user_id,
                         new_permission_ids=permission_ids,
@@ -143,7 +149,7 @@ class UserService:
                 except IntegrityError as e:
                     raise PermissionsNotFound("Права доступа из списка не найдены.") from e
 
-                permissions = await perm_repo.get_user_permissions_without_pagination(
+                permissions = await self.permissions_repo.get_user_permissions_without_pagination(
                     session=session,
                     user_id=user_id,
                 )
@@ -153,13 +159,12 @@ class UserService:
     async def update_users_permissions(
         self,
         data: UpdateUsersPermissionsSchema,
-        repo: UsersDAO,
     ) -> StatusResponseSchema:
         """
         Обновляет права пользователей.
         """
 
-        found_users = await repo.get_users_by_ids(user_ids=data.users)
+        found_users = await self.users_repo.get_users_by_ids(user_ids=data.users)
         found_ids = {user.id for user in found_users}
         requested_ids = set(data.users)
 
@@ -168,7 +173,7 @@ class UserService:
             raise UserNotFoundException(f"Пользователи с id {list(missing_ids)} не найдены.")
 
         try:
-            await repo.update_users_permissions(
+            await self.users_repo.update_users_permissions(
                 user_ids=data.users,
                 permission_ids=data.new_permission_ids,
             )
@@ -183,16 +188,16 @@ class UserService:
     async def get_me(
         self,
         token: UserAuthRequestSchema,
-        repo: UsersDAO,
-        token_service: JWTTokensService,
     ) -> UserReadSchema:
         """
         Получает данные о пользователе по access token
         """
 
-        token_payload = await token_service.validate_token(token=token.access_token, token_type=TokenTypesEnum.access)
+        token_payload = await self.token_service.validate_token(
+            token=token.access_token, token_type=TokenTypesEnum.access
+        )
         user_id = token_payload.get("user_id")
-        user = await repo.get_by_id(user_id)
+        user = await self.users_repo.get_by_id(user_id)
         if not user:
             raise UserUnauthorizedException("Пользователь не найден или удален.")
         return UserReadSchema.model_validate(user)
@@ -200,24 +205,22 @@ class UserService:
     async def update_me(
         self,
         token: UserAuthRequestSchema,
-        token_service: JWTTokensService,
         user_data: UserUpdateMeSchema,
-        repo: UsersDAO,
     ) -> UserReadSchema:
         """
         Обновление собственных данных пользователя с помощью access token
         """
 
-        token_payload = await token_service.validate_token(
+        token_payload = await self.token_service.validate_token(
             token.access_token,
             TokenTypesEnum.access,
         )
 
-        user = await repo.get_by_id(token_payload.get("user_id"))
+        user = await self.users_repo.get_by_id(token_payload.get("user_id"))
         if not user:
             raise UserNotFoundException("User not found")
 
-        updated_user = await repo.update(
+        updated_user = await self.users_repo.update(
             id=user.id,
             email=user_data.email,
         )

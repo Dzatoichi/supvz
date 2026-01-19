@@ -76,52 +76,26 @@ async def test_register_duplicate_email(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "payload_override, expected_status, description",
-    [
-        (
-            {"position_id": 99999, "position_source": PositionSourceEnum.system.value},
-            404,
-            "nonexistent_position",
-        ),
-        (
-            {"position_id": None, "position_source": None, "register_token": None},
-            422,
-            "no_position_no_token",
-        ),
-        (
-            {"position_id": None, "position_source": None, "register_token": "invalid.fake.token"},
-            (400, 401),
-            "invalid_register_token",
-        ),
-    ],
-    ids=["nonexistent_position", "no_position_no_token", "invalid_register_token"],
-)
 async def test_register_business_logic_errors(
     client: AsyncClient,
     session: AsyncSession,
-    payload_override: dict,
-    expected_status: int | tuple,
-    description: str,
 ):
     """Тест: Ошибки бизнес-логики при регистрации."""
+    payload_override = {"register_token": "invalid.fake.token"}
+    expected_status = 401
+    description = "invalid_register_token"
 
     base_payload = {
         "email": "test@example.com",
         "password": "TestPassword123!",
         "confirm_password": "TestPassword123!",
-        "first_name": "Test",
-        "last_name": "User",
     }
 
     base_payload.update(payload_override)
 
     response = await client.post(f"{AUTH_URL}/register", json=base_payload)
 
-    if isinstance(expected_status, tuple):
-        assert response.status_code in expected_status, f"Не удалось найти кейс: {description}"
-    else:
-        assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
+    assert response.status_code == expected_status, f"Не удалось найти кейс: {description}"
 
 
 @pytest.mark.asyncio

@@ -9,7 +9,6 @@ from sqlalchemy.orm import selectinload
 
 from src.models.position_permissions.system_position_permissions import SystemPositionPermissions
 from src.models.users.users import Users
-from src.schemas.enums import PositionSourceEnum
 from src.tests.factories.permission_factories import PermissionFactory
 from src.tests.factories.system_position_factories import SystemPositionFactory
 from src.tests.factories.user_factories import (
@@ -29,21 +28,13 @@ async def test_register_user_system_position(
     session,
 ):
     """
-    Тест: Успешная регистрация через position_id + position_source.
+    Тест: Успешная регистрация без токена
     POST /auth/register
-
-    Сценарий:
-    1. В БД заранее создается системная должность и право.
-    2. Отправляем запрос на регистрацию с ID этой должности.
-    3. Проверяем, что пользователь создан и возвращен корректный ответ.
     """
-    position = await SystemPositionFactory.create_with_permissions(session)
+    await SystemPositionFactory.create_with_permissions(session=session, title="owner")
 
-    payload_schema = UserFactory.build(
-        position_id=position.id,
-        position_source=PositionSourceEnum.system,
-    )
-    payload = payload_schema.model_dump(mode="json")
+    payload_schema = UserFactory.build()
+    payload = payload_schema.model_dump(mode="json", exclude={"register_token"})
 
     response = await client.post("/auth/register", json=payload)
 

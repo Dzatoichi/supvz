@@ -73,17 +73,26 @@ def get_auth_service(
     )
 
 
-def get_user_service() -> "UserService":
-    """Создает сервис для работы с пользователями."""
-    return UserService(db_helper=db_helper)
-
-
 def get_jwt_tokens_service(
     repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
 ) -> JWTTokensService:
     """Создаёт сервис для работы с JWT токенами."""
 
     return JWTTokensService(repo=repo)
+
+
+def get_user_service(
+    users_dao: UsersDAO = Depends(get_users_dao),
+    permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+) -> "UserService":
+    """Создает сервис для работы с пользователями."""
+    return UserService(
+        db_helper=db_helper,
+        users_dao=users_dao,
+        permissions_dao=permissions_dao,
+        token_service=token_service,
+    )
 
 
 def get_position_service(

@@ -39,7 +39,7 @@ DEFINED_POSITIONS = {
         "orders:process",
         "finance:view",
     ],
-    "Владелец сети": [
+    "owner": [
         "analytics:view_global",
         "analytics:view_pvz",
         "pvz:create",

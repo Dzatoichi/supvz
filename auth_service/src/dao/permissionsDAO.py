@@ -9,6 +9,7 @@ from src.models.position_permissions.custom_position_permissions import CustomPo
 from src.models.position_permissions.system_position_permissions import (
     SystemPositionPermissions,
 )
+from src.models.positions.system_positions import SystemPositions
 from src.models.user_permissions.user_permissions import UserPermissions
 
 
@@ -43,6 +44,21 @@ class PermissionsDAO(BaseDAO[Permissions]):
         async with self._get_session() as session:
             stmt = select(SystemPositionPermissions.permission_id).where(
                 SystemPositionPermissions.system_position_id == position_id
+            )
+
+            result = await session.execute(stmt)
+            return result.scalars().all()
+
+    @BaseDAO.with_exception
+    async def get_owner_permissions_ids(self) -> list[int]:
+        """
+        Возвращает список ID прав (permission_id) стандартной должности owner.
+        """
+        async with self._get_session() as session:
+            stmt = (
+                select(SystemPositionPermissions.permission_id)
+                .join(SystemPositionPermissions.position)
+                .where(SystemPositions.title == "owner")
             )
 
             result = await session.execute(stmt)
