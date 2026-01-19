@@ -169,6 +169,7 @@ class UpdateUserPermissionsSchema(BaseModel):
     """
     Схема для обновления списка прав пользователя
     """
+
     permission_ids: list[int]
 
 

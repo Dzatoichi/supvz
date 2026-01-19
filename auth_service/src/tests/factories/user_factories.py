@@ -52,9 +52,6 @@ class UserFactory(AsyncPersistenceFactory[UserRegisterSchema]):
 
     password = DEFAULT_PASSWORD
     confirm_password = DEFAULT_PASSWORD
-    register_token = None
-    position_id = 1
-    position_source = PositionSourceEnum.system
 
     @classmethod
     async def create_async(cls, session: AsyncSession, **kwargs) -> Users:

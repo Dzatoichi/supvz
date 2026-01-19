@@ -83,9 +83,13 @@ class AuthService:
 
             if position_id and position_source:
                 if position_source == "system":
-                    perm_ids = await self.permission_repo.get_permissions_ids_by_system_position(position_id=position_id)
+                    perm_ids = await self.permission_repo.get_permissions_ids_by_system_position(
+                        position_id=position_id,
+                    )
                 elif position_source == "custom":
-                    perm_ids = await self.permission_repo.get_permissions_ids_by_custom_position(position_id=position_id)
+                    perm_ids = await self.permission_repo.get_permissions_ids_by_custom_position(
+                        position_id=position_id,
+                    )
                 else:
                     raise PositionNotFoundException("Не определен position source для нахождения прав доступа.")
             else:
