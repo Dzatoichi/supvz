@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import apaginate
-from sqlalchemy import exists, or_, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO
@@ -102,19 +102,3 @@ class PVZsDAO(BaseDAO[PVZs]):
     ):
         stmt = update(self.model).where(self.model.group_id == group_id).values(responsible_id=responsible_id)
         await session.execute(stmt)
-
-    @BaseDAO.with_exception
-    async def is_owner_or_responsible(self, pvz_id: int, user_id: int) -> bool:
-        """Проверяет, является ли пользователь владельцем или ответственным за ПВЗ."""
-        async with self._get_session() as session:
-            stmt = select(
-                exists().where(
-                    (self.model.id == pvz_id)
-                    & or_(
-                        self.model.owner_id == user_id,
-                        self.model.responsible_id == user_id,
-                    )
-                )
-            )
-            result = await session.execute(stmt)
-            return bool(result.scalar())

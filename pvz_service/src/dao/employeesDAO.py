@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import apaginate
-from sqlalchemy import exists, select, update
+from sqlalchemy import select, update
 
 from src.dao.baseDAO import BaseDAO
 from src.models.employees.employees import Employees
@@ -100,19 +100,3 @@ class EmployeesDAO(BaseDAO[Employees]):
                 stmt = stmt.where(self.model.position_id == position_id)
             # apaginate добавит LIMIT и OFFSET прямо в SQL-запрос
             return await apaginate(session, stmt, params=params)
-
-    @BaseDAO.with_exception
-    async def is_owner(self, employee_user_id: int, owner_id: int) -> bool:
-        """Проверяет, владеет ли owner_id данным сотрудником."""
-        async with self._get_session() as session:
-            stmt = select(exists().where((self.model.user_id == employee_user_id) & (self.model.owner_id == owner_id)))
-            result = await session.execute(stmt)
-            return result.scalar()
-
-    @BaseDAO.with_exception
-    async def exists(self, user_id: int) -> bool:
-        """Проверяет существование сотрудника."""
-        async with self._get_session() as session:
-            stmt = select(exists().where(self.model.user_id == user_id))
-            result = await session.execute(stmt)
-            return result.scalar()
