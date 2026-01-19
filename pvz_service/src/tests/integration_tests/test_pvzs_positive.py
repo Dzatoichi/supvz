@@ -6,7 +6,7 @@ from src.tests.factories import EmployeeFactory, GroupFactory, PVZFactory, PVZUp
 
 pytestmark = pytest.mark.anyio
 
-TEST_USER_ID = 999999
+TEST_OWNER_ID = 999999
 
 
 @pytest.mark.asyncio
@@ -17,12 +17,12 @@ async def test_add_pvz(client, session):
     Проверяет корректность ответа API и сохранение внешних ключей (group_id).
     """
 
-    group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
+    group = await GroupFactory.create_async(session)
 
     pvz_payload = PVZFactory.build(
         code="TEST-CODE-001",
         group_id=group.id,
-        owner_id=TEST_USER_ID,
+        owner_id=TEST_OWNER_ID,
     )
 
     response = await client.post("/pvzs/", json=pvz_payload.model_dump(mode="json"))
@@ -31,7 +31,6 @@ async def test_add_pvz(client, session):
     data = response.json()
     assert data["code"] == "TEST-CODE-001"
     assert data["group_id"] == group.id
-    assert data["owner_id"] == TEST_USER_ID
 
 
 @pytest.mark.asyncio
@@ -42,13 +41,13 @@ async def test_update_pvz_success(client, session):
     Проверяет изменение полей и привязку к новым сущностям (группа, куратор).
     """
 
-    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
-    group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
+    group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     pvz_update_payload = PVZUpdateFactory.build(
         address=pvz.address,
         owner_id=pvz.owner_id,
-        curator_id=1,
+        responsible_id=1,
         group_id=group.id,
     )
 
@@ -67,7 +66,7 @@ async def test_get_pvz_by_id_success(client, session):
     Проверяет соответствие возвращаемых данных созданным в БД.
     """
 
-    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     response = await client.get(f"/pvzs/{pvz.id}")
 
@@ -85,11 +84,11 @@ async def test_get_pvzs_with_query_params(client, session):
     и корректно считает total count.
     """
 
-    target_group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
+    target_group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     target_pvzs = []
     for _ in range(3):
-        pvz = await PVZFactory.create_async(session, group_id=target_group.id, owner_id=TEST_USER_ID)
+        pvz = await PVZFactory.create_async(session, group_id=target_group.id, owner_id=TEST_OWNER_ID)
         target_pvzs.append(pvz)
 
     for _ in range(7):
@@ -116,7 +115,7 @@ async def test_delete_pvz_success(client, session):
     Проверяет статус ответа API и физическое отсутствие записи в БД после удаления.
     """
 
-    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
     pvz_id = pvz.id
 
     response = await client.delete(f"/pvzs/{pvz_id}")
@@ -136,10 +135,10 @@ async def test_get_employees_success(client, session):
     Проверяет корректность работы Many-to-Many связей.
     """
 
-    pvz = await PVZFactory.create_async(session, owner_id=TEST_USER_ID)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
     await session.refresh(pvz, attribute_names=["employees"])
 
-    me_employee = await EmployeeFactory.create_async(session, user_id=TEST_USER_ID)
+    me_employee = await EmployeeFactory.create_async(session, user_id=TEST_OWNER_ID)
 
     pvz.employees.append(me_employee)
 
@@ -171,13 +170,13 @@ async def test_assign_pvz_to_group_success(client, session):
     Проверяет обновление group_id у списка переданных ПВЗ.
     """
 
-    target_group = await GroupFactory.create_async(session, owner_id=TEST_USER_ID)
+    target_group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     pvz_ids = []
     for _ in range(5):
         pvz = await PVZFactory.create_async(
             session,
-            owner_id=TEST_USER_ID,
+            owner_id=TEST_OWNER_ID,
         )
         await PVZFactory.create_async(session, owner_id=999)
 

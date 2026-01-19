@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import apaginate
-from sqlalchemy import exists, select, update
+from sqlalchemy import exists, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO
@@ -11,6 +11,10 @@ from src.models.pvzs.PVZs import PVZs
 
 
 class PVZsDAO(BaseDAO[PVZs]):
+    """
+    Класс, наследующий базовый DAO для работы с сущностями ПВЗ.
+    """
+
     def __init__(self):
         super().__init__(model=PVZs)
 
@@ -71,12 +75,12 @@ class PVZsDAO(BaseDAO[PVZs]):
             return await apaginate(session, stmt, params)
 
     @BaseDAO.with_exception
-    async def update_pvzs_curator_by_group(self, group_id: int, curator_id: int):
+    async def update_pvzs_responsible_by_group(self, group_id: int, responsible_id: int):
         """
-        Обновляет поле curator_id у всех ПВЗ, принадлежащих указанной группе.
+        Обновляет поле responsible_id у всех ПВЗ, принадлежащих указанной группе.
         """
         async with self._get_session() as session:
-            stmt = update(self.model).where(self.model.group_id == group_id).values(curator_id=curator_id)
+            stmt = update(self.model).where(self.model.group_id == group_id).values(responsible_id=responsible_id)
             await session.execute(stmt)
             await session.commit()
 
@@ -90,24 +94,27 @@ class PVZsDAO(BaseDAO[PVZs]):
             await session.commit()
 
     @BaseDAO.with_exception
-    async def set_curator_for_group(
+    async def set_responsible_for_group(
         self,
         group_id: int,
-        curator_id: int,
+        responsible_id: int,
         session: AsyncSession,
     ):
-        stmt = update(self.model).where(self.model.group_id == group_id).values(curator_id=curator_id)
+        stmt = update(self.model).where(self.model.group_id == group_id).values(responsible_id=responsible_id)
         await session.execute(stmt)
 
     @BaseDAO.with_exception
-    async def is_owner(self, pvz_id: int, owner_id: int) -> bool:
-        """Проверяет, владеет ли owner_id данным ПВЗ."""
+    async def is_owner_or_responsible(self, pvz_id: int, user_id: int) -> bool:
+        """Проверяет, является ли пользователь владельцем или ответственным за ПВЗ."""
         async with self._get_session() as session:
             stmt = select(
                 exists().where(
-                    self.model.id == pvz_id,
-                    self.model.owner_id == owner_id,
+                    (self.model.id == pvz_id)
+                    & or_(
+                        self.model.owner_id == user_id,
+                        self.model.responsible_id == user_id,
+                    )
                 )
             )
             result = await session.execute(stmt)
-            return result.scalar()
+            return bool(result.scalar())

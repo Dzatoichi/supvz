@@ -6,6 +6,9 @@ from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.database.base import db_helper
+from src.policies.employee_policy import EmployeeAccessPolicy
+from src.policies.pvz_group_policy import PVZGroupAccessPolicy
+from src.policies.pvz_policy import PVZAccessPolicy
 from src.schemas.employees_schemas import InternalUserSchema
 from src.services.employees_service import EmployeesService
 from src.services.pvz_groups_service import PVZGroupsService
@@ -28,22 +31,58 @@ def get_pvz_groups_repo() -> PVZGroupsDAO:
     return PVZGroupsDAO()
 
 
+# Policies
+
+
+def get_pvz_group_policy(
+    repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
+):
+    return PVZGroupAccessPolicy(repo=repo)
+
+
+def get_pvz_policy(
+    repo: PVZsDAO = Depends(get_pvz_repo),
+):
+    return PVZAccessPolicy(repo=repo)
+
+
+def get_employee_policy(
+    repo: EmployeesDAO = Depends(get_employees_repo),
+):
+    return EmployeeAccessPolicy(repo=repo)
+
+
 # Сервисы
 
 
-def get_employees_service() -> "EmployeesService":
+def get_employees_service(
+    employee_policy: EmployeeAccessPolicy = Depends(get_employee_policy),
+    pvz_policy: PVZAccessPolicy = Depends(get_pvz_policy),
+) -> "EmployeesService":
     """Создает сервис для работы с пользователями."""
-    return EmployeesService()
+    return EmployeesService(employee_policy=employee_policy, pvz_policy=pvz_policy)
 
 
-def get_pvz_service() -> "PVZService":
+def get_pvz_service(
+    pvz_policy: PVZAccessPolicy = Depends(get_pvz_policy),
+) -> "PVZService":
     """Создает сервис для работы с пользователями."""
-    return PVZService()
+    return PVZService(pvz_policy=pvz_policy)
 
 
-def get_pvz_groups_service() -> PVZGroupsService:
+def get_pvz_groups_service(
+    group_policy: PVZGroupAccessPolicy = Depends(get_pvz_group_policy),
+    group_repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+) -> PVZGroupsService:
     """Создает сервис для работы с группами"""
-    return PVZGroupsService(db_helper=db_helper)
+
+    return PVZGroupsService(
+        db_helper=db_helper,
+        group_policy=group_policy,
+        group_repo=group_repo,
+        pvz_repo=pvz_repo,
+    )
 
 
 # AUTH

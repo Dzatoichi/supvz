@@ -79,7 +79,7 @@ FULL_OWNER_PERMISSIONS = [
 ROLE_PERMISSIONS = {
     "administrator": FULL_OWNER_PERMISSIONS,
     "owner": FULL_OWNER_PERMISSIONS,
-    "curator": [
+    "responsible": [
         # Dashboard permissions
         PermissionEnum.VIEW_DASHBOARD,
         # Schedule permissions (только для прикрепленных ПВЗ)

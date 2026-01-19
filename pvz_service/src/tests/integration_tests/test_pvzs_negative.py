@@ -76,7 +76,7 @@ async def test_create_pvz_duplicate_code(client, session):
     [
         ({}, "required"),
         ({"type": "dhl"}, "input should be"),
-        ({"owner_id": "not-a-number"}, "valid integer"),
+        ({"responsible_id": "not-a-number"}, "valid integer"),
         ({"code": None}, "string"),
     ],
 )
