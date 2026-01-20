@@ -10,7 +10,7 @@ class EmployeeCreateRequestSchema(BaseModel):
     """Схема запроса для создания нового сотрудника."""
 
     owner_id: int
-    user_id: int | None = None
+    user_id: int
     position_id: int
     position_source: Literal["system", "custom"] = "system"
 

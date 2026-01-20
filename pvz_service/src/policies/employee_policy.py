@@ -16,5 +16,6 @@ class EmployeeAccessPolicy:
         if not employee:
             raise EmployeeNotFoundException("Сотрудник не найден")
 
-        if employee.owner_id != current_user_id:
+        current_user = await self.repo.get_employee(user_id=current_user_id)
+        if (employee.owner_id != current_user_id) and (employee.owner_id != current_user.owner_id):
             raise AccessDeniedException("Нет доступа к сотруднику")
