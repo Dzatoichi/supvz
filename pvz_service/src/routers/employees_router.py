@@ -12,6 +12,7 @@ from src.schemas.employees_schemas import (
 from src.services.employees_service import EmployeesService
 from src.utils.dependencies import (
     CurrentUserDep,
+    InternalKeyDep,
     get_employees_repo,
     get_employees_service,
     get_pvz_repo,
@@ -62,6 +63,7 @@ async def get_employees(
 )
 async def create_employee(
     payload: EmployeeCreateRequestSchema,
+    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     repo: EmployeesDAO = Depends(get_employees_repo),
 ):

@@ -37,6 +37,12 @@ class EmployeesService:
         repo: EmployeesDAO,
     ) -> EmployeeResponseSchema:
         """Создаёт нового сотрудника."""
+
+        if data.owner_id != data.user_id:
+            owner_exists = await repo.get_employee(user_id=data.owner_id)
+            if not owner_exists:
+                raise EmployeeNotFoundException(f"Owner с user_id={data.owner_id} не существует")
+
         condition = or_(
             repo.model.user_id == data.user_id,
             repo.model.phone_number == data.phone_number,

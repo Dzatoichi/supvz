@@ -65,15 +65,20 @@ def get_employees_service(
 
 def get_pvz_service(
     pvz_policy: PVZAccessPolicy = Depends(get_pvz_policy),
+    employee_repo: EmployeesDAO = Depends(get_employees_repo),
 ) -> "PVZService":
     """Создает сервис для работы с пользователями."""
-    return PVZService(pvz_policy=pvz_policy)
+    return PVZService(
+        pvz_policy=pvz_policy,
+        employees_repo=employee_repo,
+    )
 
 
 def get_pvz_groups_service(
     group_policy: PVZGroupAccessPolicy = Depends(get_pvz_group_policy),
     group_repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
     pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+    employee_repo: EmployeesDAO = Depends(get_employees_repo),
 ) -> PVZGroupsService:
     """Создает сервис для работы с группами"""
 
@@ -82,6 +87,7 @@ def get_pvz_groups_service(
         group_policy=group_policy,
         group_repo=group_repo,
         pvz_repo=pvz_repo,
+        employee_repo=employee_repo,
     )
 
 
@@ -109,3 +115,4 @@ async def get_current_user(
 
 
 CurrentUserDep = Annotated[InternalUserSchema, Depends(get_current_user)]
+InternalKeyDep = Depends(verify_internal_request)

@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 
+from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.policies.pvz_group_policy import PVZGroupAccessPolicy
@@ -9,6 +10,7 @@ from src.schemas.pvz_group_schemas import (
     PVZGroupUpdateSchema,
 )
 from src.utils.exceptions import (
+    EmployeeNotFoundException,
     PVZGroupAlreadyExistsException,
     PVZGroupFilterException,
     PVZGroupNotFoundException,
@@ -26,11 +28,13 @@ class PVZGroupsService:
         group_policy: PVZGroupAccessPolicy,
         group_repo: PVZGroupsDAO,
         pvz_repo: PVZsDAO,
+        employee_repo: EmployeesDAO,
     ):
         self.db_helper = db_helper
         self.group_policy = group_policy
         self.group_repo = group_repo
         self.pvz_repo = pvz_repo
+        self.employee_repo = employee_repo
 
     async def create_group(
         self,
@@ -42,6 +46,10 @@ class PVZGroupsService:
         existing_group = await self.group_repo.get_group(name=data.name, owner_id=current_user_id)
         if existing_group:
             raise PVZGroupAlreadyExistsException("Группа с таким именем уже существует")
+
+        owner_exists = await self.employee_repo.get_employee(user_id=current_user_id)
+        if not owner_exists:
+            raise EmployeeNotFoundException(f"Owner с user_id={current_user_id} не существует")
 
         payload = data.model_dump()
         payload["owner_id"] = current_user_id

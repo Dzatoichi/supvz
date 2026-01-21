@@ -17,6 +17,7 @@ async def test_add_pvz(client, session):
     Проверяет корректность ответа API и сохранение внешних ключей (group_id).
     """
 
+    await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID, user_id=TEST_OWNER_ID)
     group = await GroupFactory.create_async(session)
 
     pvz_payload = PVZFactory.build(

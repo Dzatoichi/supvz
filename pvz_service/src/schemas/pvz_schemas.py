@@ -24,8 +24,8 @@ class PVZAdd(BaseModel):
 
 
 class PVZUpdate(BaseModel):
-    address: str
-    owner_id: int
+    address: str | None = None
+    owner_id: int | None = None
     type: PVZType | None = None
     responsible_id: int | None = None
     group_id: int | None = None

@@ -17,6 +17,8 @@ async def test_create_group(client, session):
     POST /pvz_groups/
     """
 
+    await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID, user_id=TEST_OWNER_ID)
+
     payload_model = GroupFactory.build(owner_id=TEST_OWNER_ID)
     payload = payload_model.model_dump(mode="json")
 

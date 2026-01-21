@@ -27,8 +27,10 @@ class PVZService:
     def __init__(
         self,
         pvz_policy: PVZAccessPolicy,
+        employees_repo: EmployeesDAO,
     ):
         self.pvz_policy = pvz_policy
+        self.employees_repo = employees_repo
 
     async def add_pvz(
         self,
@@ -37,6 +39,10 @@ class PVZService:
         repo: PVZsDAO,
         group_repo: PVZGroupsDAO,
     ) -> PVZRead:
+        owner_exists = await self.employees_repo.get_employee(user_id=current_user_id)
+        if not owner_exists:
+            raise EmployeeNotFoundException(f"Owner с user_id={current_user_id} не существует")
+
         pvz = await repo.get_pvz(code=data.code)
         if pvz:
             raise PVZAlreadyExistsException("ПВЗ с таким кодом уже существует")
