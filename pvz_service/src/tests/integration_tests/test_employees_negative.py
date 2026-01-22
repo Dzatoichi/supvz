@@ -1,6 +1,6 @@
 import pytest
 
-from src.tests.factories import EmployeeFactory, PVZFactory
+from src.tests.factories import TEST_OWNER_ID, EmployeeFactory, PVZFactory
 
 pytestmark = pytest.mark.anyio
 
@@ -88,7 +88,7 @@ async def test_assign_employee_to_non_existent_pvz(client, session):
     Тест: Привязка сотрудника к несуществующему ПВЗ (404).
     POST /employees/{user_id}/assign
     """
-    employee = await EmployeeFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
     non_existent_pvz_id = 999999
 
     payload = {"new_pvz_id": non_existent_pvz_id}
@@ -132,8 +132,8 @@ async def test_assign_employee_duplicate_conflict(client, session):
     Тест: Повторная привязка сотрудника к тому же ПВЗ (409 Conflict).
     POST /employees/{user_id}/assign
     """
-    employee = await EmployeeFactory.create_async(session)
-    pvz = await PVZFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     await session.refresh(employee, attribute_names=["pvzs"])
     employee.pvzs.append(pvz)

@@ -11,6 +11,10 @@ from src.models.pvzs.PVZs import PVZs
 
 
 class PVZsDAO(BaseDAO[PVZs]):
+    """
+    Класс, наследующий базовый DAO для работы с сущностями ПВЗ.
+    """
+
     def __init__(self):
         super().__init__(model=PVZs)
 
@@ -71,12 +75,12 @@ class PVZsDAO(BaseDAO[PVZs]):
             return await apaginate(session, stmt, params)
 
     @BaseDAO.with_exception
-    async def update_pvzs_curator_by_group(self, group_id: int, curator_id: int):
+    async def update_pvzs_responsible_by_group(self, group_id: int, responsible_id: int):
         """
-        Обновляет поле curator_id у всех ПВЗ, принадлежащих указанной группе.
+        Обновляет поле responsible_id у всех ПВЗ, принадлежащих указанной группе.
         """
         async with self._get_session() as session:
-            stmt = update(self.model).where(self.model.group_id == group_id).values(curator_id=curator_id)
+            stmt = update(self.model).where(self.model.group_id == group_id).values(responsible_id=responsible_id)
             await session.execute(stmt)
             await session.commit()
 
@@ -89,11 +93,12 @@ class PVZsDAO(BaseDAO[PVZs]):
             await session.execute(stmt)
             await session.commit()
 
-    async def set_curator_for_group(
+    @BaseDAO.with_exception
+    async def set_responsible_for_group(
         self,
         group_id: int,
-        curator_id: int,
+        responsible_id: int,
         session: AsyncSession,
     ):
-        stmt = update(self.model).where(self.model.group_id == group_id).values(curator_id=curator_id)
+        stmt = update(self.model).where(self.model.group_id == group_id).values(responsible_id=responsible_id)
         await session.execute(stmt)

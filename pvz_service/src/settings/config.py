@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     DB_PASS: str
     DB_NAME: str
 
+    INTERNAL_API_KEY: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
     def CONNECT_ASYNC(self):

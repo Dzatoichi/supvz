@@ -36,3 +36,11 @@ class PVZGroupNotFoundException(Exception):
 
 class PVZGroupFilterException(Exception):
     pass
+
+
+class InvalidInternalApiKeyException(Exception):
+    pass
+
+
+class AccessDeniedException(Exception):
+    pass

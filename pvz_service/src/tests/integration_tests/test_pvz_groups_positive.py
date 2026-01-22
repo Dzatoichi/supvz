@@ -7,6 +7,8 @@ from src.tests.factories import EmployeeFactory, GroupFactory, PVZFactory
 
 pytestmark = pytest.mark.anyio
 
+TEST_OWNER_ID = 999999
+
 
 @pytest.mark.asyncio
 async def test_create_group(client, session):
@@ -14,16 +16,17 @@ async def test_create_group(client, session):
     Тест: Успешное создание группы ПВЗ.
     POST /pvz_groups/
     """
-    owner = await EmployeeFactory.create_async(session)
 
-    payload_model = GroupFactory.build(owner_id=owner.user_id)
+    await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID, user_id=TEST_OWNER_ID)
+
+    payload_model = GroupFactory.build(owner_id=TEST_OWNER_ID, responsible_id=None)
     payload = payload_model.model_dump(mode="json")
 
     response = await client.post("/pvz_groups", json=payload)
 
     assert response.status_code == 200
     data = response.json()
-    assert data["owner_id"] == owner.user_id
+    assert data["owner_id"] == TEST_OWNER_ID
     assert "id" in data
 
 
@@ -33,7 +36,7 @@ async def test_get_group_by_id(client, session):
     Тест: Получение группы по ID.
     GET /pvz_groups/{group_id}
     """
-    group = await GroupFactory.create_async(session)
+    group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     response = await client.get(f"/pvz_groups/{group.id}")
 
@@ -43,22 +46,39 @@ async def test_get_group_by_id(client, session):
 
 
 @pytest.mark.asyncio
-async def test_get_groups_filter(client, session):
+async def test_get_groups_by_owner_and_responsible(client, session):
     """
-    Тест: Получение списка групп с фильтрацией по owner_id.
-    GET /pvz_groups?owner_id=...
+    Сценарий:
+    owner создает 3 группы:
+    - 2 с responsible_id
+    - 1 без responsible_id
+    Проверяем, что при фильтрации по responsible_id
+    возвращаются только нужные группы owner'а
     """
-    target_owner = await EmployeeFactory.create_async(session)
-    other_owner = await EmployeeFactory.create_async(session)
 
-    groups_target = []
-    for _ in range(2):
-        group = await GroupFactory.create_async(session, owner_id=target_owner.user_id)
-        groups_target.append(group)
+    owner = await EmployeeFactory.create_async(session, user_id=TEST_OWNER_ID)
+    responsible = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
-    await GroupFactory.create_async(session, owner_id=other_owner.user_id)
+    group_1 = await GroupFactory.create_async(
+        session,
+        owner_id=owner.user_id,
+        responsible_id=responsible.user_id,
+    )
+    group_2 = await GroupFactory.create_async(
+        session,
+        owner_id=owner.user_id,
+        responsible_id=responsible.user_id,
+    )
+    await GroupFactory.create_async(
+        session,
+        owner_id=owner.user_id,
+        responsible_id=None,
+    )
 
-    response = await client.get("/pvz_groups", params={"owner_id": target_owner.user_id})
+    response = await client.get(
+        "/pvz_groups",
+        params={"responsible_id": responsible.user_id},
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -66,8 +86,9 @@ async def test_get_groups_filter(client, session):
     assert isinstance(data, list)
     assert len(data) == 2
 
-    received_ids = {g["id"] for g in data}
-    expected_ids = {g.id for g in groups_target}
+    received_ids = {group["id"] for group in data}
+    expected_ids = {group_1.id, group_2.id}
+
     assert received_ids == expected_ids
 
 
@@ -77,51 +98,51 @@ async def test_update_group(client, session):
     Тест: Обновление данных группы.
     PATCH /pvz_groups/{group_id}
     """
-    group = await GroupFactory.create_async(session)
-    new_curator = await EmployeeFactory.create_async(session)
+    group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
+    new_responsible = await EmployeeFactory.create_async(session)
 
-    update_payload = {"curator_id": new_curator.user_id, "name": "Updated Name Group"}
+    update_payload = {"responsible_id": new_responsible.user_id, "name": "Updated Name Group"}
 
     response = await client.patch(f"/pvz_groups/{group.id}", json=update_payload)
 
     assert response.status_code == 200
 
     data = response.json()
-    assert data["curator_id"] == new_curator.user_id
+    assert data["responsible_id"] == new_responsible.user_id
     assert data["name"] == "Updated Name Group"
 
 
 @pytest.mark.asyncio
-async def test_assign_curator_to_group_cascade(client, session):
+async def test_assign_responsible_to_group_cascade(client, session):
     """
     Тест: Назначение куратора группе.
-    PATCH /pvz_groups/{group_id}/curator
+    PATCH /pvz_groups/{group_id}/responsible
     Проверяет, что куратор проставился У ГРУППЫ и У ВСЕХ ЕЁ ПВЗ.
     """
-    curator = await EmployeeFactory.create_async(session)
-    group = await GroupFactory.create_async(session)
+    responsible = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
+    group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     for _ in range(3):
         await PVZFactory.create_async(session, group_id=group.id)
 
-    other_pvz = await PVZFactory.create_async(session, curator_id=None)
+    other_pvz = await PVZFactory.create_async(session, responsible_id=None)
 
-    response = await client.patch(f"/pvz_groups/{group.id}/curator", params={"curator_id": curator.user_id})
+    response = await client.patch(f"/pvz_groups/{group.id}/responsible", params={"responsible_id": responsible.user_id})
 
     assert response.status_code == 200
 
     await session.refresh(group)
-    assert group.curator_id == curator.user_id
+    assert group.responsible_id == responsible.user_id
 
     stmt = select(PVZs).where(PVZs.group_id == group.id)
     result = await session.execute(stmt)
     updated_pvzs = result.scalars().all()
 
     for pvz in updated_pvzs:
-        assert pvz.curator_id == curator.user_id
+        assert pvz.responsible_id == responsible.user_id
 
     await session.refresh(other_pvz)
-    assert other_pvz.curator_id is None
+    assert other_pvz.responsible_id is None
 
 
 @pytest.mark.asyncio
@@ -133,8 +154,8 @@ async def test_delete_group_and_unassign_pvzs(client, session):
     1. Группа удалена из БД.
     2. ПВЗ, которые были в группе, отвязались (group_id -> None).
     """
-    group = await GroupFactory.create_async(session)
-    pvz = await PVZFactory.create_async(session, group_id=group.id)
+    group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
+    pvz = await PVZFactory.create_async(session, group_id=group.id, owner_id=TEST_OWNER_ID)
 
     group_id = group.id
 

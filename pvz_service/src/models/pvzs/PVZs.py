@@ -33,7 +33,7 @@ class PVZs(Base):
     )
 
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=False, index=True)
-    curator_id: Mapped[Optional[int]] = mapped_column(
+    responsible_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         nullable=True,
         index=True,

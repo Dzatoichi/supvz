@@ -14,7 +14,7 @@ class PVZGroups(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     owner_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    curator_id: Mapped[Optional[int]] = mapped_column(
+    responsible_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         nullable=True,
         index=True,

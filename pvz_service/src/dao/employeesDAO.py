@@ -50,10 +50,10 @@ class EmployeesDAO(BaseDAO[Employees]):
             return result.scalars().all()
 
     @BaseDAO.with_exception
-    async def assign_to_pvz(self, employee_id: int, pvz_id: int):
+    async def assign_to_pvz(self, user_id: int, pvz_id: int):
         """Привязывает сотрудника к пункту выдачи заказов (ПВЗ)."""
         async with self._get_session() as session:
-            employee = await session.get(Employees, employee_id)
+            employee = await session.get(Employees, user_id)
             pvz = await session.get(PVZs, pvz_id)
             if pvz not in employee.pvzs:
                 employee.pvzs.append(pvz)
@@ -81,21 +81,19 @@ class EmployeesDAO(BaseDAO[Employees]):
             result = await session.execute(stmt)
             await session.commit()
             updated = result.scalar_one_or_none()
-            if updated:
-                await session.refresh(updated)
             return updated
 
     @BaseDAO.with_exception
     async def get_employees_filtered(
         self,
-        user_id: int,
+        owner_id: int,
         params: Params,
         pvz_id: int | None = None,
         position_id: int | None = None,
     ) -> Employees:
         """Возвращает список сотрудников владельца, при необходимости фильтрует по ID ПВЗ."""
         async with self._get_session() as session:
-            stmt = select(self.model).where(self.model.owner_id == user_id)
+            stmt = select(self.model).where(self.model.owner_id == owner_id)
             if pvz_id is not None:
                 stmt = stmt.where(self.model.pvzs.any(id=pvz_id))
             if position_id is not None:

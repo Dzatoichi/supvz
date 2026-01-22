@@ -5,7 +5,7 @@ from sqlalchemy.pool import NullPool
 
 from src.database.base import Base, db_helper
 from src.main import app
-from src.settings.config import Settings
+from src.settings.config import Settings, settings
 
 test_settings = Settings(_env_file=".env.test")
 TEST_DATABASE_URL = test_settings.CONNECT_ASYNC()
@@ -91,13 +91,44 @@ async def session():
     await connection.close()
 
 
+# ID тестового пользователя-владельца
+TEST_OWNER_ID = 999999
+
+
+@pytest.fixture
+def auth_headers() -> dict[str, str]:
+    """Заголовки для авторизованных запросов."""
+    return {
+        "X-Internal-API-Key": settings.INTERNAL_API_KEY,
+        "X-User-ID": str(TEST_OWNER_ID),
+    }
+
+
 @pytest.fixture(scope="function")
-async def client(session):
+async def client(session, auth_headers: dict[str, str]):
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        headers=auth_headers,
+    ) as ac:
         yield ac
 
 
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
+
+
+# Если нужен клиент с другим user_id
+@pytest.fixture
+def make_auth_headers():
+    """Фабрика заголовков для разных пользователей."""
+
+    def _make(user_id: int) -> dict[str, str]:
+        return {
+            "X-Internal-API-Key": test_settings.INTERNAL_API_KEY,
+            "X-User-ID": str(user_id),
+        }
+
+    return _make

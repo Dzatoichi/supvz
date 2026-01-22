@@ -8,6 +8,10 @@ from src.models.pvzs.PVZGroups import PVZGroups
 
 
 class PVZGroupsDAO(BaseDAO[PVZGroups]):
+    """
+    Класс, наследующий базовый DAO для работы с сущностями ПВЗ групп.
+    """
+
     def __init__(self):
         super().__init__(model=PVZGroups)
 
@@ -44,6 +48,6 @@ class PVZGroupsDAO(BaseDAO[PVZGroups]):
             return result.scalars().all()
 
     @BaseDAO.with_exception
-    async def set_curator(self, group_id: int, curator_id: int, session: AsyncSession):
-        stmt = update(self.model).where(self.model.id == group_id).values(curator_id=curator_id)
+    async def set_responsible(self, group_id: int, responsible_id: int, session: AsyncSession):
+        stmt = update(self.model).where(self.model.id == group_id).values(responsible_id=responsible_id)
         await session.execute(stmt)

@@ -1,6 +1,7 @@
 import pytest
 
-from src.tests.factories import PVZFactory
+from src.tests.conftest import TEST_OWNER_ID
+from src.tests.factories import EmployeeFactory, PVZFactory
 
 pytestmark = pytest.mark.anyio
 
@@ -59,6 +60,8 @@ async def test_create_pvz_duplicate_code(client, session):
     Проверяет уникальность поля 'code'.
     """
     existing_code = "DUPLICATE-CODE"
+
+    await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID, user_id=TEST_OWNER_ID)
     await PVZFactory.create_async(session, code=existing_code)
 
     new_pvz_payload = PVZFactory.build(code=existing_code)
@@ -76,7 +79,7 @@ async def test_create_pvz_duplicate_code(client, session):
     [
         ({}, "required"),
         ({"type": "dhl"}, "input should be"),
-        ({"owner_id": "not-a-number"}, "valid integer"),
+        ({"responsible_id": "not-a-number"}, "valid integer"),
         ({"code": None}, "string"),
     ],
 )

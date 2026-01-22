@@ -1,9 +1,14 @@
 import pytest
+from httpx import ASGITransport, AsyncClient
 
+from src.main import app
 from src.models.employees.employees import Employees
 from src.tests.factories import EmployeeFactory, PVZFactory
 
 pytestmark = pytest.mark.anyio
+
+# ID тестового пользователя-владельца
+TEST_OWNER_ID = 999999
 
 
 @pytest.mark.asyncio
@@ -13,15 +18,17 @@ async def test_create_employee(client, session):
     POST /employees
     """
 
-    payload_model = EmployeeFactory.build()
-    payload = payload_model.model_dump(mode="json")
+    await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID, user_id=TEST_OWNER_ID)
+
+    payload_model = EmployeeFactory.build(owner_id=TEST_OWNER_ID)
+    payload = payload_model.model_dump(mode="json", exclude={"id"})
 
     response = await client.post("/employees", json=payload)
 
     assert response.status_code == 201
     data = response.json()
 
-    assert data["user_id"] == payload["user_id"]
+    assert data["name"] == payload["name"]
 
 
 @pytest.mark.asyncio
@@ -30,7 +37,7 @@ async def test_get_employee_by_id(client, session):
     Тест: Получение сотрудника по user_id.
     GET /employees/{user_id}
     """
-    employee = await EmployeeFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     response = await client.get(f"/employees/{employee.user_id}")
 
@@ -40,7 +47,7 @@ async def test_get_employee_by_id(client, session):
 
 
 @pytest.mark.asyncio
-async def test_get_employees_filtered(client, session):
+async def test_get_employees_filtered(client, session, make_auth_headers):
     """
     Тест: Получение списка сотрудников с фильтрацией.
     GET /employees?user_id=...&pvz_id=...
@@ -62,17 +69,22 @@ async def test_get_employees_filtered(client, session):
 
     await EmployeeFactory.create_async(session, owner_id=other_owner_id)
 
-    response = await client.get("/employees", params={"user_id": target_owner_id})
+    # Создаем клиент, авторизованный как target_owner_id,
+    headers = make_auth_headers(target_owner_id)
+    transport = ASGITransport(app=app)
 
-    assert response.status_code == 200
-    data = response.json()
+    async with AsyncClient(transport=transport, base_url="http://test", headers=headers) as target_client:
+        response = await target_client.get("/employees")
 
-    assert "items" in data
-    assert data["total"] == 2
+        assert response.status_code == 200
+        data = response.json()
 
-    received_ids = {employee["user_id"] for employee in data["items"]}
-    expected_ids = {e.user_id for e in target_employees}
-    assert received_ids == expected_ids
+        assert "items" in data
+        assert data["total"] == 2
+
+        received_ids = {employee["user_id"] for employee in data["items"]}
+        expected_ids = {e.user_id for e in target_employees}
+        assert received_ids == expected_ids
 
 
 @pytest.mark.asyncio
@@ -81,7 +93,7 @@ async def test_update_employee(client, session):
     Тест: Обновление данных сотрудника.
     PATCH /employees/{user_id}
     """
-    employee = await EmployeeFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     update_payload = {"name": "Updated Name Ivanov", "phone_number": "+79990000000"}
 
@@ -99,8 +111,8 @@ async def test_assign_employee_to_pvz(client, session):
     Тест: Привязка сотрудника к ПВЗ (или перевод в другой).
     POST /employees/{user_id}/assign
     """
-    employee = await EmployeeFactory.create_async(session)
-    pvz = await PVZFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     payload = {"new_pvz_id": pvz.id}
 
@@ -119,8 +131,8 @@ async def test_unassign_employee_from_pvz(client, session):
     Тест: Отвязка сотрудника от ПВЗ.
     DELETE /employees/{user_id}/unassign/{pvz_id}
     """
-    employee = await EmployeeFactory.create_async(session)
-    pvz = await PVZFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
+    pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     await session.refresh(employee, attribute_names=["pvzs"])
     employee.pvzs.append(pvz)
@@ -145,7 +157,7 @@ async def test_delete_employee(client, session):
     Тест: Удаление сотрудника.
     DELETE /employees/{user_id}
     """
-    employee = await EmployeeFactory.create_async(session)
+    employee = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
     user_id = employee.user_id
 
     response = await client.delete(f"/employees/{user_id}")
