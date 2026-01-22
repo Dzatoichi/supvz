@@ -12,7 +12,6 @@ from src.schemas.pvz_group_schemas import (
 from src.utils.exceptions import (
     EmployeeNotFoundException,
     PVZGroupAlreadyExistsException,
-    PVZGroupFilterException,
     PVZGroupNotFoundException,
 )
 
@@ -84,23 +83,17 @@ class PVZGroupsService:
 
     async def get_groups(
         self,
-        params: dict,
+        responsible_id: int,
+        current_user_id: int,
     ) -> list[PVZGroupResponseSchema] | PVZGroupResponseSchema:
         """Возвращает группы по owner_id или responsible_id."""
 
-        actual_params = {key: value for key, value in params.items() if value is not None}
+        filters = {"owner_id": current_user_id}
 
-        # Если не передали ни одного параметра — вернуть все группы
-        if len(actual_params) == 0:
-            groups = await self.group_repo.get_all()
-            return [PVZGroupResponseSchema.model_validate(g) for g in groups]
+        if responsible_id is not None:
+            filters["responsible_id"] = responsible_id
 
-        if len(actual_params) > 1:
-            raise PVZGroupFilterException("Используйте только один параметр для поиска.")
-
-        field_name, field_value = next(iter(actual_params.items()))
-
-        groups = await self.group_repo.get_groups(**{field_name: field_value})
+        groups = await self.group_repo.get_groups(**filters)
 
         if not groups:
             raise PVZGroupNotFoundException("Группы не найдены")

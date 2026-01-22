@@ -46,22 +46,39 @@ async def test_get_group_by_id(client, session):
 
 
 @pytest.mark.asyncio
-async def test_get_groups_filter(client, session):
+async def test_get_groups_by_owner_and_responsible(client, session):
     """
-    Тест: Получение списка групп с фильтрацией по owner_id.
-    GET /pvz_groups?owner_id=...
+    Сценарий:
+    owner создает 3 группы:
+    - 2 с responsible_id
+    - 1 без responsible_id
+    Проверяем, что при фильтрации по responsible_id
+    возвращаются только нужные группы owner'а
     """
-    target_owner = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
-    other_owner = await EmployeeFactory.create_async(session)
 
-    groups_target = []
-    for _ in range(2):
-        group = await GroupFactory.create_async(session, owner_id=target_owner.user_id)
-        groups_target.append(group)
+    owner = await EmployeeFactory.create_async(session, user_id=TEST_OWNER_ID)
+    responsible = await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
-    await GroupFactory.create_async(session, owner_id=other_owner.user_id)
+    group_1 = await GroupFactory.create_async(
+        session,
+        owner_id=owner.user_id,
+        responsible_id=responsible.user_id,
+    )
+    group_2 = await GroupFactory.create_async(
+        session,
+        owner_id=owner.user_id,
+        responsible_id=responsible.user_id,
+    )
+    await GroupFactory.create_async(
+        session,
+        owner_id=owner.user_id,
+        responsible_id=None,
+    )
 
-    response = await client.get("/pvz_groups", params={"owner_id": target_owner.user_id})
+    response = await client.get(
+        "/pvz_groups",
+        params={"responsible_id": responsible.user_id},
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -70,7 +87,8 @@ async def test_get_groups_filter(client, session):
     assert len(data) == 2
 
     received_ids = {g["id"] for g in data}
-    expected_ids = {g.id for g in groups_target}
+    expected_ids = {group_1.id, group_2.id}
+
     assert received_ids == expected_ids
 
 

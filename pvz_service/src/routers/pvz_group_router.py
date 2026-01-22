@@ -10,7 +10,6 @@ from src.services.pvz_groups_service import PVZGroupsService
 from src.services.pvz_service import PVZService
 from src.utils.dependencies import (
     CurrentUserDep,
-    InternalKeyDep,
     get_pvz_groups_service,
     get_pvz_repo,
     get_pvz_service,
@@ -21,15 +20,16 @@ pvz_groups_router = APIRouter(prefix="/pvz_groups", tags=["PVZ_Groups"])
 
 @pvz_groups_router.get("", response_model=list[PVZGroupResponseSchema])
 async def get_groups(
-    owner_id: int | None = Query(default=None, description="ID владельца"),
+    current_user: CurrentUserDep,
     responsible_id: int | None = Query(default=None, description="ID куратора"),
-    _: None = InternalKeyDep,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
 ):
     """Возвращает список групп по owner_id или responsible_id."""
 
-    params_in = {"owner_id": owner_id, "responsible_id": responsible_id}
-    return await service.get_groups(params=params_in)
+    return await service.get_groups(
+        responsible_id=responsible_id,
+        current_user_id=current_user.id,
+    )
 
 
 @pvz_groups_router.post("", response_model=PVZGroupResponseSchema)
