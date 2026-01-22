@@ -17,4 +17,6 @@ public interface NotificationService {
     void processByEventId(UUID eventId);
 
     List<Integer> deleteOldNotifications();
+
+    void setViewed(Long notificationId);
 }

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * </h3>
  */
 @RestController
-@RequestMapping(name = "/api/v1/notifications")
+@RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
 public class NotificationsController {
     private final NotificationService service;
@@ -35,5 +35,13 @@ public class NotificationsController {
     ) {
         PageDto<NotificationDto> body = service.findAll(page, size, filter);
         return ResponseEntity.ok(body);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> setNotificationViewed(
+            @PathVariable(name = "id") Long notificationId
+    ) {
+        service.setViewed(notificationId);
+        return ResponseEntity.ok().build();
     }
 }
