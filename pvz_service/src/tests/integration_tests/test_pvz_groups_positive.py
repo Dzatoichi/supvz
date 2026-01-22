@@ -19,7 +19,7 @@ async def test_create_group(client, session):
 
     await EmployeeFactory.create_async(session, owner_id=TEST_OWNER_ID, user_id=TEST_OWNER_ID)
 
-    payload_model = GroupFactory.build(owner_id=TEST_OWNER_ID)
+    payload_model = GroupFactory.build(owner_id=TEST_OWNER_ID, responsible_id=None)
     payload = payload_model.model_dump(mode="json")
 
     response = await client.post("/pvz_groups", json=payload)
@@ -86,7 +86,7 @@ async def test_get_groups_by_owner_and_responsible(client, session):
     assert isinstance(data, list)
     assert len(data) == 2
 
-    received_ids = {g["id"] for g in data}
+    received_ids = {group["id"] for group in data}
     expected_ids = {group_1.id, group_2.id}
 
     assert received_ids == expected_ids

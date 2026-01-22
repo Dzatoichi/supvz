@@ -48,7 +48,12 @@ class PVZGroupsService:
 
         owner_exists = await self.employee_repo.get_employee(user_id=current_user_id)
         if not owner_exists:
-            raise EmployeeNotFoundException(f"Owner с user_id={current_user_id} не существует")
+            raise EmployeeNotFoundException(f"Владельца с user_id={current_user_id} не существует")
+
+        if data.responsible_id:
+            responsible_exists = await self.employee_repo.get_employee(user_id=data.responsible_id)
+            if not responsible_exists:
+                raise EmployeeNotFoundException(f"Ответственного с responsible_id={data.responsible_id} не существует")
 
         payload = data.model_dump()
         payload["owner_id"] = current_user_id
@@ -83,17 +88,28 @@ class PVZGroupsService:
 
     async def get_groups(
         self,
-        responsible_id: int,
         current_user_id: int,
-    ) -> list[PVZGroupResponseSchema] | PVZGroupResponseSchema:
-        """Возвращает группы по owner_id или responsible_id."""
+        responsible_id: int | None = None,
+    ) -> list[PVZGroupResponseSchema]:
+        """
+        Возвращает группы:
+        - если пользователь owner → owner_id = current_user_id
+          + (optional) responsible_id
+        - если пользователь responsible → responsible_id = current_user_id
+        """
 
-        filters = {"owner_id": current_user_id}
+        # Проверяем, является ли пользователь responsible хотя бы в одной группе
+        responsible_groups = await self.group_repo.get_groups(responsible_id=current_user_id)
 
-        if responsible_id is not None:
-            filters["responsible_id"] = responsible_id
+        if responsible_groups:
+            groups = responsible_groups
+        else:
+            filters = {"owner_id": current_user_id}
 
-        groups = await self.group_repo.get_groups(**filters)
+            if responsible_id:
+                filters["responsible_id"] = responsible_id
+
+            groups = await self.group_repo.get_groups(**filters)
 
         if not groups:
             raise PVZGroupNotFoundException("Группы не найдены")
