@@ -1,18 +1,18 @@
 """empty message
 
-Revision ID: 6ea6a26e7304
+Revision ID: 0c9d08ac3d05
 Revises: 
-Create Date: 2026-01-19 15:38:31.135859
+Create Date: 2026-01-22 18:11:39.612466
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '6ea6a26e7304'
+revision: str = '0c9d08ac3d05'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -32,6 +32,18 @@ def upgrade() -> None:
     sa.UniqueConstraint('phone_number')
     )
     op.create_index(op.f('ix_employees_owner_id'), 'employees', ['owner_id'], unique=False)
+    op.create_table('inbox',
+    sa.Column('event_id', sa.String(), nullable=False),
+    sa.Column('event_type', sa.Enum('CREATE_EMPLOYEE', 'UPDATE_EMPLOYEE', name='eventtype'), nullable=False),
+    sa.Column('status', sa.Enum('PROCESSING', 'COMPLETED', 'FAILED', name='eventstatus'), server_default='PROCESSING', nullable=False),
+    sa.Column('payload', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('response_body', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    sa.Column('error_info', sa.Text(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('finished_at', sa.DateTime(timezone=True), nullable=True),
+    sa.PrimaryKeyConstraint('event_id')
+    )
+    op.create_index('ix_inbox_status_created_at', 'inbox', ['status', 'created_at'], unique=False)
     op.create_table('pvz_groups',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -80,6 +92,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_pvz_groups_responsible_id'), table_name='pvz_groups')
     op.drop_index(op.f('ix_pvz_groups_owner_id'), table_name='pvz_groups')
     op.drop_table('pvz_groups')
+    op.drop_index('ix_inbox_status_created_at', table_name='inbox')
+    op.drop_table('inbox')
     op.drop_index(op.f('ix_employees_owner_id'), table_name='employees')
     op.drop_table('employees')
     # ### end Alembic commands ###
