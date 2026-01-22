@@ -86,3 +86,10 @@ management:
 
 server:
   port: 8003
+
+
+springdoc:
+  swagger-ui:
+    path: /docs
+  api-docs:
+    path: /v3/api-docs
