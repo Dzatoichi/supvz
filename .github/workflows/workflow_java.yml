@@ -26,7 +26,6 @@ jobs:
               - 'requests_service/**'
             notifications_service:
               - 'notifications_service/**'
-            # Добавьте другие Java-сервисы по мере появления
 
   build:
     name: BUILD & TEST (${{ matrix.service }})
