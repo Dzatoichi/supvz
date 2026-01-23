@@ -30,7 +30,6 @@ class InboxReadSchema(InboxBaseSchema):
     status: EventStatus
     payload: dict[str, Any]
     response_body: Optional[dict[str, Any]] = None
-    error_info: Optional[str] = None
     created_at: datetime
     finished_at: Optional[datetime] = None
 
@@ -44,5 +43,4 @@ class InboxUpdateSchema(BaseModel):
 
     status: EventStatus
     response_body: Optional[dict[str, Any]] = None
-    error_info: Optional[str] = None
     finished_at: Optional[datetime] = None

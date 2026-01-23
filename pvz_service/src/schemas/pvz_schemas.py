@@ -7,7 +7,7 @@ from pydantic import (
 )
 
 
-class PVZType(Enum):
+class PVZType(str, Enum):
     wb = "wb"
     ozon = "ozon"
     yamarket = "yamarket"

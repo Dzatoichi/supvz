@@ -87,13 +87,13 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
     async def mark_failed(
         self,
         event_id: str,
-        error_info: str,
+        response_body: dict,
     ) -> InboxEvents:
         """Обновляет статус на FAILED и сохраняет ошибку."""
         stmt = (
             update(InboxEvents)
             .where(InboxEvents.event_id == event_id)
-            .values(status=EventStatus.FAILED, error_info=error_info, finished_at=func.now())
+            .values(status=EventStatus.FAILED, response_body=response_body, finished_at=func.now())
             .returning(InboxEvents)
         )
         result = await self.session.execute(stmt)
@@ -106,7 +106,6 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
             .where(InboxEvents.event_id == event_id)
             .values(
                 status=EventStatus.PROCESSING,
-                error_info=None,
                 finished_at=None,
                 created_at=func.now(),
             )

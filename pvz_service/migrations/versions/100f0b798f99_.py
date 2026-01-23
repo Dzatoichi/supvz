@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 0c9d08ac3d05
+Revision ID: 100f0b798f99
 Revises: 
-Create Date: 2026-01-22 18:11:39.612466
+Create Date: 2026-01-23 15:50:01.347620
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '0c9d08ac3d05'
+revision: str = '100f0b798f99'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,11 +34,10 @@ def upgrade() -> None:
     op.create_index(op.f('ix_employees_owner_id'), 'employees', ['owner_id'], unique=False)
     op.create_table('inbox',
     sa.Column('event_id', sa.String(), nullable=False),
-    sa.Column('event_type', sa.Enum('CREATE_EMPLOYEE', 'UPDATE_EMPLOYEE', name='eventtype'), nullable=False),
+    sa.Column('event_type', sa.Enum('CREATE_EMPLOYEE', 'UPDATE_EMPLOYEE', 'DELETE_EMPLOYEE', 'ASSIGN_EMPLOYEE_TO_PVZ', 'UNASSIGN_EMPLOYEE_FROM_PVZ', 'CREATE_PVZ_GROUP', 'UPDATE_PVZ_GROUP', 'DELETE_PVZ_GROUP', 'ASSIGN_RESPONSIBLE_TO_PVZ_GROUP', 'CREATE_PVZ', 'UPDATE_PVZ', 'DELETE_PVZ', 'ASSIGN_PVZ_TO_GROUP', name='eventtype'), nullable=False),
     sa.Column('status', sa.Enum('PROCESSING', 'COMPLETED', 'FAILED', name='eventstatus'), server_default='PROCESSING', nullable=False),
     sa.Column('payload', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('response_body', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('error_info', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('finished_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('event_id')

@@ -4,7 +4,8 @@ from typing import Any, Awaitable, Callable, TypeVar
 from src.dao.inboxDAO import InboxEventsDAO
 from src.enums.inbox import EventStatus, EventType
 from src.models.inbox.inbox import InboxEvents
-from src.utils.exceptions import InboxConflictException
+from src.utils.exception_mapper import exception_map
+from src.utils.exceptions import AppException, ClientException, InboxConflictException
 
 T = TypeVar("T")
 
@@ -12,11 +13,10 @@ T = TypeVar("T")
 class InboxService:
     STALE_TIMEOUT = timedelta(seconds=30)
 
-    def __init__(self, db_helper, dao: InboxEventsDAO):
-        self.dao = dao
-        self.db_helper = db_helper
+    def __init__(self, inbox_repo: InboxEventsDAO):
+        self.inbox_repo = inbox_repo
 
-    async def execute_idempotent(
+    async def execute(
         self,
         event_id: str,
         event_type: EventType,
@@ -36,7 +36,7 @@ class InboxService:
             Результат выполнения handler или кешированный ответ.
         """
 
-        inbox_event, is_created = await self.dao.create_idempotency_key(
+        inbox_event, is_created = await self.inbox_repo.create_idempotency_key(
             event_id=event_id,
             event_type=event_type,
             payload=payload,
@@ -50,22 +50,43 @@ class InboxService:
 
     async def _process_new_event(self, event_id: str, handler: Callable[[], Awaitable[T]]) -> T:
         """Выполнение логики для нового события."""
-        async with self.db_helper.async_session_maker() as session:
-            try:
-                result = await handler()
+        session = self.inbox_repo.session
 
-                # Сериализуем результат (если это Pydantic модель -> dict)
-                response_data = result.model_dump() if hasattr(result, "model_dump") else result
+        try:
+            result = await handler()
 
-                await self.dao.mark_completed(event_id, response_body=response_data, session=session)
-                await session.commit()
-                return result
+            # Сериализуем результат (если это Pydantic модель -> dict)
+            response_data = result.model_dump(mode="json") if hasattr(result, "model_dump") else result
 
-            except Exception as e:
-                await session.rollback()
-                await self.dao.mark_failed(event_id, error_info=str(e), session=session)
-                await session.commit()
-            raise e
+            await self.inbox_repo.mark_completed(event_id, response_body=response_data)
+            await session.commit()
+            return result
+
+        except AppException as e:
+            await session.rollback()
+
+            if e.is_client_error:
+                await self.inbox_repo.mark_completed(event_id, response_body=e.to_response())
+            else:
+                await self.inbox_repo.mark_failed(event_id, response_body=e.to_response())
+
+            await session.commit()
+
+            raise
+
+        except Exception as e:
+            await session.rollback()
+
+            error_response = {
+                "status_code": 500,
+                "error": "internal_error",
+                "detail": str(e),
+                "exception_type": type(e).__name__,
+            }
+
+            await self.inbox_repo.mark_failed(event_id, response_body=error_response)
+            await session.commit()
+            raise
 
     async def _handle_existing_event(
         self,
@@ -76,39 +97,51 @@ class InboxService:
 
         if event.status == EventStatus.COMPLETED:
             # TODO: Здесь можно добавить лог "Return cached response for {event.event_id}"
-            return event.response_body
+            return self._return_cached_response(event.response_body)
 
-        if event.status == EventStatus.FAILED:
-            async with self.db_helper.async_session_maker() as session:
-                await self.dao.reset_to_processing(event.event_id, session=session)
-                return await self._process_new_event(event.event_id, handler)
+        elif event.status == EventStatus.FAILED:
+            await self.inbox_repo.reset_to_processing(event.event_id)
+            return await self._process_new_event(event.event_id, handler)
 
-        if event.status == EventStatus.PROCESSING:
+        elif event.status == EventStatus.PROCESSING:
             return await self._handle_processing_state(event, handler)
 
         raise ValueError(f"Неизвестный статус: {event.status}")
 
+    def _return_cached_response(self, response_body: dict[str, Any]) -> Any:
+        """Возвращает кэш или пересоздает exception для 4xx."""
+        if isinstance(response_body, dict) and "status_code" in response_body:
+            status_code = response_body["status_code"]
+
+            if 400 <= status_code < 500:
+                raise self._recreate_exception(response_body)
+
+        return response_body
+
+    def _recreate_exception(self, error_data: dict[str, Any]) -> AppException:
+        """Воссоздает exception из сохраненных данных."""
+
+        error_code = error_data.get("error", "internal_error")
+        detail = error_data.get("detail", "")
+
+        exception_class = exception_map.get(error_code, ClientException)
+        return exception_class(detail)
+
     async def _handle_processing_state(self, event: InboxEvents, handler: Callable[[], Awaitable[T]]) -> T:
         """Разруливание состояния PROCESSING (Fresh vs Stale)."""
 
-        # Вычисляем "возраст" записи.
-        # created_at имеет timezone, поэтому используем now(utc)
         now = datetime.now(event.created_at.tzinfo)
         age = now - event.created_at
 
-        # 1. Запись свежая (еще не истек таймаут) -> Реальный конфликт
         if age < self.STALE_TIMEOUT:
-            retry_after = int((self.STALE_TIMEOUT - age).total_seconds())
-            raise InboxConflictException(
-                message=f"Operation {event.event_id} is in progress", retry_after=max(1, retry_after)
-            )
+            raise InboxConflictException(f"Операция {event.event_id} в процессе.")
 
-        # 2. Запись протухла (Stale) -> Пытаемся захватить
-        is_claimed = await self.dao.claim_stale_event(event_id=event.event_id, stale_threshold=now - self.STALE_TIMEOUT)
+        is_claimed = await self.inbox_repo.claim_stale_event(
+            event_id=event.event_id,
+            stale_threshold=now - self.STALE_TIMEOUT,
+        )
 
         if is_claimed:
-            # Успешно захватили -> выполняем заново
             return await self._process_new_event(event.event_id, handler)
         else:
-            # Не смогли захватить (race condition, кто-то успел быстрее) -> Конфликт
-            raise InboxConflictException(message="Operation recovered by another worker", retry_after=5)
+            raise InboxConflictException("Операция, восстановленна другим работником")

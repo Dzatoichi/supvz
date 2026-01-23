@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status
 from fastapi_pagination import Page, Params
 
+from src.enums.inbox import EventType
 from src.schemas.employees_schemas import (
     EmployeeCreateRequestSchema,
     EmployeeResponseSchema,
@@ -8,10 +9,13 @@ from src.schemas.employees_schemas import (
     TransferRequestSchema,
 )
 from src.services.employees_service import EmployeesService
+from src.services.inbox_service import InboxService
 from src.utils.dependencies import (
     CurrentUserDep,
+    IdempotencyKeyDep,
     InternalKeyDep,
     get_employees_service,
+    get_inbox_service,
 )
 
 employees_router = APIRouter(prefix="/employees", tags=["Employees"])
@@ -55,13 +59,19 @@ async def get_employees(
 )
 async def create_employee(
     payload: EmployeeCreateRequestSchema,
+    event_id: IdempotencyKeyDep,
     _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
+    inbox_service: InboxService = Depends(get_inbox_service),
 ):
     """Создаёт нового сотрудника."""
 
-    employee = await employee_service.create_employee(data=payload)
-    return employee
+    return await inbox_service.execute(
+        event_id=event_id,
+        event_type=EventType.CREATE_EMPLOYEE,
+        payload=payload.model_dump(),
+        handler=lambda: employee_service.create_employee(data=payload),
+    )
 
 
 @employees_router.patch(
@@ -71,18 +81,25 @@ async def create_employee(
 async def update_employee(
     user_id: int,
     payload: EmployeeUpdateRequestSchema,
+    event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
+    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
+    inbox_service: InboxService = Depends(get_inbox_service),
 ):
-    """Обновляет данные сотрудника по его идентификатору."""
-
-    updated_employee = await employee_service.update_employee(
-        user_id=user_id,
-        data=payload,
-        current_user_id=current_user.id,
+    return await inbox_service.execute(
+        event_id=event_id,
+        event_type=EventType.UPDATE_EMPLOYEE,
+        payload={
+            "user_id": user_id,
+            **payload.model_dump(),
+        },
+        handler=lambda: employee_service.update_employee(
+            user_id=user_id,
+            data=payload,
+            current_user_id=current_user.id,
+        ),
     )
-
-    return updated_employee
 
 
 @employees_router.post(
@@ -91,16 +108,25 @@ async def update_employee(
 )
 async def assign_employee_to_pvz(
     user_id: int,
-    current_user: CurrentUserDep,
     pvz_in: TransferRequestSchema,
+    event_id: IdempotencyKeyDep,
+    current_user: CurrentUserDep,
+    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
+    inbox_service: InboxService = Depends(get_inbox_service),
 ):
-    """Переводит сотрудника в другой ПВЗ."""
-
-    return await employee_service.assign_employee_to_other_pvz(
-        user_id=user_id,
-        current_user_id=current_user.id,
-        new_pvz_id=pvz_in.new_pvz_id,
+    return await inbox_service.execute(
+        event_id=event_id,
+        event_type=EventType.ASSIGN_EMPLOYEE_TO_PVZ,
+        payload={
+            "user_id": user_id,
+            **pvz_in.model_dump(),
+        },
+        handler=lambda: employee_service.assign_employee_to_other_pvz(
+            user_id=user_id,
+            current_user_id=current_user.id,
+            new_pvz_id=pvz_in.new_pvz_id,
+        ),
     )
 
 
@@ -111,15 +137,21 @@ async def assign_employee_to_pvz(
 async def unassign_employee_from_pvz(
     user_id: int,
     pvz_id: int,
+    event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
+    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
+    inbox_service: InboxService = Depends(get_inbox_service),
 ):
-    """Отвязывает сотрудника от ПВЗ, убирая назначение."""
-
-    return await employee_service.unassign_employee_from_pvz(
-        user_id=user_id,
-        current_user_id=current_user.id,
-        pvz_id=pvz_id,
+    await inbox_service.execute(
+        event_id=event_id,
+        event_type=EventType.UNASSIGN_EMPLOYEE_FROM_PVZ,
+        payload={"user_id": user_id, "pvz_id": pvz_id},
+        handler=lambda: employee_service.unassign_employee_from_pvz(
+            user_id=user_id,
+            current_user_id=current_user.id,
+            pvz_id=pvz_id,
+        ),
     )
 
 
@@ -129,12 +161,18 @@ async def unassign_employee_from_pvz(
 )
 async def delete_employee(
     user_id: int,
+    event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
+    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
+    inbox_service: InboxService = Depends(get_inbox_service),
 ):
-    """Удаляет сотрудника по его user_id."""
-
-    await employee_service.delete_employee(
-        user_id=user_id,
-        current_user_id=current_user.id,
+    await inbox_service.execute(
+        event_id=event_id,
+        event_type=EventType.DELETE_EMPLOYEE,
+        payload={"user_id": user_id},
+        handler=lambda: employee_service.delete_employee(
+            user_id=user_id,
+            current_user_id=current_user.id,
+        ),
     )

@@ -50,7 +50,7 @@ class BaseDAO(Generic[T]):
         """
         obj = self.model(**payload)
         self.session.add(obj)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(obj)
         return obj
 
@@ -79,7 +79,6 @@ class BaseDAO(Generic[T]):
         """
         stmt = update(self.model).where(self.model.id == id).values(**kwargs).returning(self.model)
         result = await self.session.execute(stmt)
-        await self.session.commit()
         updated = result.scalar_one_or_none()
         if updated:
             await self.session.refresh(updated)
@@ -89,5 +88,5 @@ class BaseDAO(Generic[T]):
     async def delete(self, **filters) -> bool:
         stmt = delete(self.model).filter_by(**filters)
         result = await self.session.execute(stmt)
-        await self.session.commit()
+        await self.session.flush()
         return result.rowcount > 0
