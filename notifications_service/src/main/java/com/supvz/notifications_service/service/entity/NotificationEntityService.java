@@ -149,4 +149,14 @@ public class NotificationEntityService implements NotificationService {
     public List<Integer> deleteOldNotifications() {
         return repo.deleteOldNotifications(viewedTtlDays, notViewedTtlDays, emailTtlDays);
     }
+
+    @Override
+    public void setViewed(Long notificationId) {
+        Notification notification = repo.findById(notificationId)
+                .orElseThrow(() -> new NotificationNotFoundException("Нотификация [%s] не была найдена."
+                        .formatted(notificationId)));
+        notification.setViewed(true);
+        repo.save(notification);
+        log.info("Нотификация [{}] была просмотрена.", notificationId);
+    }
 }

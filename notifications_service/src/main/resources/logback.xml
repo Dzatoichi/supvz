@@ -13,7 +13,7 @@
                 <loggerName/>
                 <message/>
                 <mdc>
-                    <flatten>true</flatten> <!-- Опционально: вынести trace_id на верхний уровень -->
+                    <flatten>true</flatten>
                 </mdc>
                 <arguments/>
                 <stackTrace/>
@@ -25,13 +25,9 @@
         <file>/app/logs/app.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- Шаблон имён ротированных файлов -->
             <fileNamePattern>/app/logs/app-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <!-- Макс. размер файла перед ротацией -->
             <maxFileSize>10MB</maxFileSize>
-            <!-- Хранить логи за 7 дней -->
             <maxHistory>7</maxHistory>
-            <!-- Общий лимит места на логи -->
             <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>
 
