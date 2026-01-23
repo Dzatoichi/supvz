@@ -8,6 +8,7 @@ from src.utils.exceptions import (
     EmployeeAlreadyExistsException,
     EmployeeNotAllowedException,
     EmployeeNotFoundException,
+    InboxConflictException,
     InvalidInternalApiKeyException,
     NoEmployeesInPVZException,
     PVZAlreadyExistsException,
@@ -152,6 +153,16 @@ def setup_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
             content={"error": "access_denied", "detail": str(exc)},
+        )
+
+    @app.exception_handler(InboxConflictException)
+    async def inbox_conflict_handler(
+        request: Request,
+        exc: InboxConflictException,
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "inbox_conflict", "detail": str(exc)},
         )
 
     @app.exception_handler(SQLAlchemyError)

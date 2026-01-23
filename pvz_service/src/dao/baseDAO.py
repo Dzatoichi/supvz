@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 from functools import wraps
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
@@ -6,7 +5,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.base import Base, db_helper
+from src.database.base import Base
 
 T = TypeVar("T", bound=Base)
 
@@ -16,31 +15,16 @@ class BaseDAO(Generic[T]):
     Базовый класс DAO для работы с ORM-моделями.
     """
 
-    def __init__(self, model: Optional[Type[T]] = None):
+    def __init__(self, session: AsyncSession, model: Optional[Type[T]] = None):
         """
         Метод инициализации.
         """
+        self.session = session
         if model is not None:
             self.model = model
 
         if not hasattr(self, "model") or self.model is None:
             raise TypeError("Отсутствует модель")
-
-        self._db_helper = db_helper
-
-    @asynccontextmanager
-    async def _get_session(self) -> AsyncSession:
-        """
-        Метод получения сессии.
-        """
-        async with self._db_helper.async_session_maker() as session:
-            try:
-                yield session
-            except SQLAlchemyError as e:
-                await session.rollback()
-                raise e
-            finally:
-                await session.close()
 
     @staticmethod
     def with_exception(func):
@@ -65,11 +49,10 @@ class BaseDAO(Generic[T]):
         Базовый метод создания сущности.
         """
         obj = self.model(**payload)
-        async with self._get_session() as session:
-            session.add(obj)
-            await session.commit()
-            await session.refresh(obj)
-            return obj
+        self.session.add(obj)
+        await self.session.commit()
+        await self.session.refresh(obj)
+        return obj
 
     @with_exception
     async def get_by_id(self, id: int) -> Optional[T]:
@@ -77,9 +60,8 @@ class BaseDAO(Generic[T]):
         Базовый метод получения сущности по id.
         """
         stmt = select(self.model).where(self.model.id == id)
-        async with self._get_session() as session:
-            result = await session.execute(stmt)
-            return result.scalar_one_or_none()
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
 
     @with_exception
     async def get_all(self) -> List[T]:
@@ -87,28 +69,25 @@ class BaseDAO(Generic[T]):
         Базовый метод получения сущностей.
         """
         stmt = select(self.model)
-        async with self._get_session() as session:
-            result = await session.execute(stmt)
-            return result.scalars().all()
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
 
     @with_exception
     async def update(self, id: int, **kwargs) -> Optional[T]:
         """
         Базовый метод изменения сущностей.
         """
-        async with self._get_session() as session:
-            stmt = update(self.model).where(self.model.id == id).values(**kwargs).returning(self.model)
-            result = await session.execute(stmt)
-            await session.commit()
-            updated = result.scalar_one_or_none()
-            if updated:
-                await session.refresh(updated)
-            return updated
+        stmt = update(self.model).where(self.model.id == id).values(**kwargs).returning(self.model)
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        updated = result.scalar_one_or_none()
+        if updated:
+            await self.session.refresh(updated)
+        return updated
 
     @with_exception
     async def delete(self, **filters) -> bool:
-        async with self._get_session() as session:
-            stmt = delete(self.model).filter_by(**filters)
-            result = await session.execute(stmt)
-            await session.commit()
-            return result.rowcount > 0
+        stmt = delete(self.model).filter_by(**filters)
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.rowcount > 0

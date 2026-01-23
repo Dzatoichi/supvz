@@ -26,9 +26,11 @@ class PVZService:
 
     def __init__(
         self,
+        pvz_repo: PVZsDAO,
         pvz_policy: PVZAccessPolicy,
         employees_repo: EmployeesDAO,
     ):
+        self.pvz_repo = pvz_repo
         self.pvz_policy = pvz_policy
         self.employees_repo = employees_repo
 

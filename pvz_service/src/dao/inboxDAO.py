@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Any, Tuple
 
-from sqlalchemy import func, insert, select, update
+from sqlalchemy import func, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO
@@ -14,17 +15,16 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
     Класс, наследующий базовый DAO для работы c сущностью InboxEvents.
     """
 
-    def __init__(self):
-        super().__init__(model=InboxEvents)
+    def __init__(self, session: AsyncSession):
+        super().__init__(model=InboxEvents, session=session)
 
     async def get_by_event_id(
         self,
         event_id: str,
-        session: AsyncSession,
     ) -> InboxEvents | None:
         """Получить событие по ID."""
         query = select(InboxEvents).where(InboxEvents.event_id == event_id)
-        result = await session.execute(query)
+        result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
     async def create_idempotency_key(
@@ -42,74 +42,85 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
         Если запись создана -> is_created=True
         Если запись уже была -> is_created=False, возвращаем существующую
         """
-        async with self._get_session() as session:
-            stmt = (
-                insert(InboxEvents)
-                .values(
-                    event_id=event_id,
-                    event_type=event_type,
-                    payload=payload,
-                    status=EventStatus.PROCESSING,
-                )
-                .on_conflict_do_nothing(index_elements=[InboxEvents.event_id])
-                .returning(InboxEvents)
+        stmt = (
+            insert(InboxEvents)
+            .values(
+                event_id=event_id,
+                event_type=event_type,
+                payload=payload,
+                status=EventStatus.PROCESSING,
             )
+            .on_conflict_do_nothing(index_elements=["event_id"])
+            .returning(InboxEvents)
+        )
 
-            result = await session.execute(stmt)
-            new_event = result.scalar_one_or_none()
+        result = await self.session.execute(stmt)
+        new_event = result.scalar_one_or_none()
 
-            if new_event:
-                return new_event, True
+        if new_event:
+            await self.session.commit()
+            return new_event, True
 
-            existing_event = await self.get_by_event_id(event_id, session)
+        existing_event = await self.get_by_event_id(event_id)
 
-            if not existing_event:
-                raise ValueError(f"Race condition обнаружена для event_id={event_id}")
+        if not existing_event:
+            await self.session.rollback()
+            raise ValueError(f"Race condition обнаружена для event_id={event_id}")
 
-            return existing_event, False
+        return existing_event, False
 
-    async def mark_completed(self, event_id: str, response_body: dict[str, Any] | None) -> InboxEvents:
+    async def mark_completed(
+        self,
+        event_id: str,
+        response_body: dict[str, Any] | None,
+    ) -> InboxEvents:
         """Обновляет статус на COMPLETED и сохраняет ответ."""
-        async with self._get_session() as session:
-            stmt = (
-                update(InboxEvents)
-                .where(InboxEvents.event_id == event_id)
-                .values(status=EventStatus.COMPLETED, response_body=response_body, finished_at=func.now())
-                .returning(InboxEvents)
-            )
-            result = await session.execute(stmt)
-            return result.scalar_one()
+        stmt = (
+            update(InboxEvents)
+            .where(InboxEvents.event_id == event_id)
+            .values(status=EventStatus.COMPLETED, response_body=response_body, finished_at=func.now())
+            .returning(InboxEvents)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one()
 
-    async def mark_failed(self, event_id: str, error_info: str) -> InboxEvents:
+    async def mark_failed(
+        self,
+        event_id: str,
+        error_info: str,
+    ) -> InboxEvents:
         """Обновляет статус на FAILED и сохраняет ошибку."""
-        async with self._get_session() as session:
-            stmt = (
-                update(InboxEvents)
-                .where(InboxEvents.event_id == event_id)
-                .values(status=EventStatus.FAILED, error_info=error_info, finished_at=func.now())
-                .returning(InboxEvents)
-            )
-            result = await session.execute(stmt)
-            return result.scalar_one()
+        stmt = (
+            update(InboxEvents)
+            .where(InboxEvents.event_id == event_id)
+            .values(status=EventStatus.FAILED, error_info=error_info, finished_at=func.now())
+            .returning(InboxEvents)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one()
 
     async def reset_to_processing(self, event_id: str) -> InboxEvents:
         """Сбрасывает статус на PROCESSING (для повторной попытки после FAILED)."""
-        async with self._get_session() as session:
-            stmt = (
-                update(InboxEvents)
-                .where(InboxEvents.event_id == event_id)
-                .values(
-                    status=EventStatus.PROCESSING,
-                    error_info=None,
-                    finished_at=None,
-                    created_at=func.now(),
-                )
-                .returning(InboxEvents)
+        stmt = (
+            update(InboxEvents)
+            .where(InboxEvents.event_id == event_id)
+            .values(
+                status=EventStatus.PROCESSING,
+                error_info=None,
+                finished_at=None,
+                created_at=func.now(),
             )
-            result = await session.execute(stmt)
-            return result.scalar_one()
+            .returning(InboxEvents)
+        )
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.scalar_one()
 
-    async def claim_stale_event(self, event_id: str, stale_threshold: datetime) -> bool:
+    async def claim_stale_event(
+        self,
+        event_id: str,
+        stale_threshold: datetime,
+    ) -> bool:
         """
         Атомарно пытается захватить зависшее (stale) событие.
 
@@ -118,17 +129,20 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
 
         Возвращает True, если удалось захватить.
         """
-        async with self._get_session() as session:
-            stmt = (
-                update(InboxEvents)
-                .where(
-                    InboxEvents.event_id == event_id,
-                    InboxEvents.status == EventStatus.PROCESSING,
-                    InboxEvents.created_at < stale_threshold,
-                )
-                .values(created_at=func.now())
-                .returning(InboxEvents.event_id)
+        stmt = (
+            update(InboxEvents)
+            .where(
+                InboxEvents.event_id == event_id,
+                InboxEvents.status == EventStatus.PROCESSING,
+                InboxEvents.created_at < stale_threshold,
             )
+            .values(created_at=func.now())
+            .returning(InboxEvents.event_id)
+        )
 
-            result = await session.execute(stmt)
-            return result.scalar_one_or_none() is not None
+        result = await self.session.execute(stmt)
+        success = result.scalar_one_or_none() is not None
+
+        if success:
+            await self.session.commit()
+        return success

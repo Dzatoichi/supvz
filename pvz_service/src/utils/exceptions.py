@@ -44,3 +44,16 @@ class InvalidInternalApiKeyException(Exception):
 
 class AccessDeniedException(Exception):
     pass
+
+
+class InboxConflictException(Exception):
+    """
+    Вызывается, когда запрос уже обрабатывается другим процессом (Processing).
+    Ожидаемое поведение: вернуть 409 Conflict.
+    """
+
+    pass
+    # def __init__(self, message: str = "Запрос уже обрабатывается", retry_after: int = 10):
+    #     self.message = message
+    #     self.retry_after = retry_after
+    #     super().__init__(message)

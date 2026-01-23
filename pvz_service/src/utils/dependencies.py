@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, Header
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.employeesDAO import EmployeesDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
@@ -16,19 +17,31 @@ from src.services.pvz_service import PVZService
 from src.settings.config import settings
 from src.utils.exceptions import InvalidInternalApiKeyException
 
+
+async def get_session() -> AsyncSession:
+    async with db_helper.async_session_maker() as session:
+        yield session
+
+
 # DAO
 
 
-def get_employees_repo() -> EmployeesDAO:
-    return EmployeesDAO()
+def get_employees_repo(
+    session: AsyncSession = Depends(get_session),
+) -> EmployeesDAO:
+    return EmployeesDAO(session=session)
 
 
-def get_pvz_repo() -> PVZsDAO:
-    return PVZsDAO()
+def get_pvz_repo(
+    session: AsyncSession = Depends(get_session),
+) -> PVZsDAO:
+    return PVZsDAO(session=session)
 
 
-def get_pvz_groups_repo() -> PVZGroupsDAO:
-    return PVZGroupsDAO()
+def get_pvz_groups_repo(
+    session: AsyncSession = Depends(get_session),
+) -> PVZGroupsDAO:
+    return PVZGroupsDAO(session=session)
 
 
 # Policies
@@ -56,19 +69,28 @@ def get_employee_policy(
 
 
 def get_employees_service(
+    employees_repo: EmployeesDAO = Depends(get_employees_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
     employee_policy: EmployeeAccessPolicy = Depends(get_employee_policy),
     pvz_policy: PVZAccessPolicy = Depends(get_pvz_policy),
 ) -> "EmployeesService":
     """Создает сервис для работы с пользователями."""
-    return EmployeesService(employee_policy=employee_policy, pvz_policy=pvz_policy)
+    return EmployeesService(
+        employee_policy=employee_policy,
+        pvz_policy=pvz_policy,
+        employees_repo=employees_repo,
+        pvz_repo=pvz_repo,
+    )
 
 
 def get_pvz_service(
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
     pvz_policy: PVZAccessPolicy = Depends(get_pvz_policy),
     employee_repo: EmployeesDAO = Depends(get_employees_repo),
 ) -> "PVZService":
     """Создает сервис для работы с пользователями."""
     return PVZService(
+        pvz_repo=pvz_repo,
         pvz_policy=pvz_policy,
         employees_repo=employee_repo,
     )
