@@ -23,24 +23,24 @@ class ShiftValidationException(Exception):
 
 
 class ShiftPenaltyNotFoundException(Exception):
-    """Исключение: штраф смены не найден."""
+    """Исключение: штраф не найден."""
 
-    def __init__(self, message: str = "Штраф смены не найден"):
+    def __init__(self, message: str = "Штраф не найден"):
         self.message = message
         super().__init__(self.message)
 
 
 class ShiftPenaltyAlreadyExistsException(Exception):
-    """Исключение: штраф смены уже существует."""
+    """Исключение: штраф уже существует."""
 
-    def __init__(self, message: str = "Штраф смены уже существует"):
+    def __init__(self, message: str = "Штраф уже существует"):
         self.message = message
         super().__init__(self.message)
 
 
 class ShiftPenaltyValidationException(Exception):
-    """Исключение валидации штрафа смены."""
+    """Исключение валидации штрафа."""
 
-    def __init__(self, message: str = "Ошибка валидации штрафа смены"):
+    def __init__(self, message: str = "Ошибка валидации штрафа"):
         self.message = message
         super().__init__(self.message)

@@ -4,118 +4,107 @@ from fastapi import APIRouter, Depends, Query, status
 from fastapi_pagination import Page, Params
 
 from src.schemas.shift_penalties_schemas import (
-    PenaltyTypeEnum,
-    ShiftPenaltyCreateSchema,
-    ShiftPenaltyFilterSchema,
-    ShiftPenaltyReadSchema,
-    ShiftPenaltySummarySchema,
-    ShiftPenaltyUpdateSchema,
+    PenaltyCreateSchema,
+    PenaltyFilterSchema,
+    PenaltyReadSchema,
+    PenaltySummarySchema,
+    PenaltyUpdateSchema,
 )
-from src.services.shift_penalties_service import ShiftPenaltiesService
-from src.utils.dependencies import get_shift_penalties_service
+from src.services.shift_penalties_service import PenaltiesService
+from src.utils.dependencies import get_penalties_service
 
-shift_penalties_router = APIRouter(prefix="/shift-penalties", tags=["Shift Penalties"])
+penalties_router = APIRouter(prefix="/penalties", tags=["Penalties"])
 
 
-@shift_penalties_router.post(
+@penalties_router.post(
     "",
-    response_model=ShiftPenaltyReadSchema,
+    response_model=PenaltyReadSchema,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_penalty(
-    data: ShiftPenaltyCreateSchema,
-    service: ShiftPenaltiesService = Depends(get_shift_penalties_service),
-) -> ShiftPenaltyReadSchema:
-    """Создать новый штраф для смены."""
+    data: PenaltyCreateSchema,
+    service: PenaltiesService = Depends(get_penalties_service),
+) -> PenaltyReadSchema:
+    """Создать новый штраф для сотрудника."""
     return await service.create_penalty(data)
 
 
-@shift_penalties_router.get(
+@penalties_router.get(
     "",
-    response_model=Page[ShiftPenaltyReadSchema],
+    response_model=Page[PenaltyReadSchema],
 )
 async def get_penalties(
     params: Params = Depends(),
-    scheduled_shift_id: int | None = Query(None, description="ID запланированной смены"),
-    penalty_type: PenaltyTypeEnum | None = Query(None, alias="type", description="Тип штрафа"),
-    penalty_points_min: int | None = Query(None, ge=0, description="Минимальное количество баллов"),
-    penalty_points_max: int | None = Query(None, ge=0, description="Максимальное количество баллов"),
-    detected_at_from: datetime | None = Query(None, description="Дата обнаружения от"),
-    detected_at_to: datetime | None = Query(None, description="Дата обнаружения до"),
+    employee_id: int | None = Query(None, description="ID сотрудника"),
     created_at_from: datetime | None = Query(None, description="Дата создания от"),
     created_at_to: datetime | None = Query(None, description="Дата создания до"),
-    service: ShiftPenaltiesService = Depends(get_shift_penalties_service),
-) -> Page[ShiftPenaltyReadSchema]:
+    service: PenaltiesService = Depends(get_penalties_service),
+) -> Page[PenaltyReadSchema]:
     """Получить список штрафов с фильтрацией и пагинацией."""
-    filters = ShiftPenaltyFilterSchema(
-        scheduled_shift_id=scheduled_shift_id,
-        type=penalty_type,
-        penalty_points_min=penalty_points_min,
-        penalty_points_max=penalty_points_max,
-        detected_at_from=detected_at_from,
-        detected_at_to=detected_at_to,
+    filters = PenaltyFilterSchema(
+        employee_id=employee_id,
         created_at_from=created_at_from,
         created_at_to=created_at_to,
     )
     return await service.get_penalties(params=params, filters=filters)
 
 
-@shift_penalties_router.get(
-    "/shift/{scheduled_shift_id}",
-    response_model=list[ShiftPenaltyReadSchema],
+@penalties_router.get(
+    "/employee/{employee_id}",
+    response_model=list[PenaltyReadSchema],
 )
-async def get_penalties_by_shift(
-    scheduled_shift_id: int,
-    service: ShiftPenaltiesService = Depends(get_shift_penalties_service),
-) -> list[ShiftPenaltyReadSchema]:
-    """Получить все штрафы для конкретной запланированной смены."""
-    return await service.get_penalties_by_shift_id(scheduled_shift_id)
+async def get_penalties_by_employee(
+    employee_id: int,
+    service: PenaltiesService = Depends(get_penalties_service),
+) -> list[PenaltyReadSchema]:
+    """Получить все штрафы для конкретного сотрудника."""
+    return await service.get_penalties_by_employee_id(employee_id)
 
 
-@shift_penalties_router.get(
-    "/shift/{scheduled_shift_id}/summary",
-    response_model=ShiftPenaltySummarySchema,
+@penalties_router.get(
+    "/employee/{employee_id}/summary",
+    response_model=PenaltySummarySchema,
 )
 async def get_penalties_summary(
-    scheduled_shift_id: int,
-    service: ShiftPenaltiesService = Depends(get_shift_penalties_service),
-) -> ShiftPenaltySummarySchema:
-    """Получить сводку штрафов для конкретной запланированной смены."""
-    return await service.get_summary_by_shift_id(scheduled_shift_id)
+    employee_id: int,
+    service: PenaltiesService = Depends(get_penalties_service),
+) -> PenaltySummarySchema:
+    """Получить сводку штрафов для конкретного сотрудника."""
+    return await service.get_summary_by_employee_id(employee_id)
 
 
-@shift_penalties_router.get(
+@penalties_router.get(
     "/{penalty_id}",
-    response_model=ShiftPenaltyReadSchema,
+    response_model=PenaltyReadSchema,
 )
 async def get_penalty(
     penalty_id: int,
-    service: ShiftPenaltiesService = Depends(get_shift_penalties_service),
-) -> ShiftPenaltyReadSchema:
+    service: PenaltiesService = Depends(get_penalties_service),
+) -> PenaltyReadSchema:
     """Получить штраф по ID."""
     return await service.get_penalty_by_id(penalty_id)
 
 
-@shift_penalties_router.patch(
+@penalties_router.patch(
     "/{penalty_id}",
-    response_model=ShiftPenaltyReadSchema,
+    response_model=PenaltyReadSchema,
 )
 async def update_penalty(
     penalty_id: int,
-    data: ShiftPenaltyUpdateSchema,
-    service: ShiftPenaltiesService = Depends(get_shift_penalties_service),
-) -> ShiftPenaltyReadSchema:
+    data: PenaltyUpdateSchema,
+    service: PenaltiesService = Depends(get_penalties_service),
+) -> PenaltyReadSchema:
     """Обновить существующий штраф."""
     return await service.update_penalty(penalty_id, data)
 
 
-@shift_penalties_router.delete(
+@penalties_router.delete(
     "/{penalty_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_penalty(
     penalty_id: int,
-    service: ShiftPenaltiesService = Depends(get_shift_penalties_service),
+    service: PenaltiesService = Depends(get_penalties_service),
 ) -> None:
     """Удалить штраф."""
     await service.delete_penalty(penalty_id)

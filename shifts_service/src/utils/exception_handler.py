@@ -64,7 +64,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ShiftPenaltyNotFoundException)
     async def shift_penalty_not_found_exception_handler(request: Request, exc: ShiftPenaltyNotFoundException):
-        """Обработчик ошибки: штраф смены не найден."""
+        """Обработчик ошибки: штраф не найден."""
         logger.error(
             "ShiftPenaltyNotFoundException",
             method=request.method,
@@ -79,7 +79,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ShiftPenaltyAlreadyExistsException)
     async def shift_penalty_already_exists_exception_handler(request: Request, exc: ShiftPenaltyAlreadyExistsException):
-        """Обработчик ошибки: штраф смены уже существует."""
+        """Обработчик ошибки: штраф уже существует."""
         logger.error(
             "ShiftPenaltyAlreadyExistsException",
             method=request.method,
@@ -94,7 +94,7 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ShiftPenaltyValidationException)
     async def shift_penalty_validation_exception_handler(request: Request, exc: ShiftPenaltyValidationException):
-        """Обработчик ошибки: ошибка валидации штрафа смены."""
+        """Обработчик ошибки: ошибка валидации штрафа."""
         logger.error(
             "ShiftPenaltyValidationException",
             method=request.method,
