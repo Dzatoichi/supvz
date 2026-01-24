@@ -13,7 +13,7 @@ from src.tests.factories.custom_position_factories import (
 from src.tests.factories.permission_factories import PermissionFactory
 from src.tests.factories.user_factories import UserFactory
 
-POSITIONS_URL = "/positions/"
+POSITIONS_URL = "/positions"
 
 
 @pytest.mark.asyncio
@@ -83,7 +83,7 @@ async def test_get_position_by_id(
     position_id = positions_test_data[pos_id_key]
 
     response = await client.get(
-        f"{POSITIONS_URL}{position_id}",
+        f"{POSITIONS_URL}/{position_id}",
         params={"position_source": source_enum.value},
     )
 
@@ -147,7 +147,7 @@ async def test_update_custom_position(
         permission_ids=[new_perm.id],
     ).model_dump(mode="json")
 
-    response = await client.patch(f"{POSITIONS_URL}{position.id}", json=payload)
+    response = await client.patch(f"{POSITIONS_URL}/{position.id}", json=payload)
 
     assert response.status_code == 200
     assert response.json()["title"] == "Updated Title"
@@ -171,7 +171,7 @@ async def test_delete_custom_position(
     user = await UserFactory.create_async(session)
     position = await CustomPositionFactory.create_async(session, owner_id=user.id)
 
-    response = await client.delete(f"{POSITIONS_URL}{position.id}")
+    response = await client.delete(f"{POSITIONS_URL}/{position.id}")
 
     assert response.status_code == 204
 

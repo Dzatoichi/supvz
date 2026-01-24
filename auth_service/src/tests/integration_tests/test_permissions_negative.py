@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient
 
-PERMISSIONS_URL = "/permissions/"
+PERMISSIONS_URL = "/permissions"
 
 
 @pytest.mark.asyncio
