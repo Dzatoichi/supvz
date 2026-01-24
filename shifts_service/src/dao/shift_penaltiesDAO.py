@@ -69,11 +69,7 @@ class PenaltiesDAO(BaseDAO[ShiftPenalty]):
         employee_id: int,
     ) -> list[PenaltyReadSchema]:
         """Получение всех штрафов по ID сотрудника."""
-        stmt = (
-            select(self.model)
-            .where(self.model.employee_id == employee_id)
-            .order_by(self.model.created_at.desc())
-        )
+        stmt = select(self.model).where(self.model.employee_id == employee_id).order_by(self.model.created_at.desc())
 
         result = await self.session.execute(stmt)
         penalties = result.scalars().all()
