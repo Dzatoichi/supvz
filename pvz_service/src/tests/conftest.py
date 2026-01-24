@@ -1,3 +1,6 @@
+import uuid
+from contextlib import asynccontextmanager
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -5,7 +8,7 @@ from sqlalchemy.pool import NullPool
 
 from src.database.base import Base, db_helper
 from src.main import app
-from src.settings.config import Settings, settings
+from src.settings.config import Settings
 
 test_settings = Settings(_env_file=".env.test")
 TEST_DATABASE_URL = test_settings.CONNECT_ASYNC()
@@ -33,34 +36,22 @@ async def prepare_database():
 @pytest.fixture(scope="function")
 async def session():
     """
-    Создает сессию
+    Создает сессию с поддержкой реальных commit/rollback,
+    но всё откатывается в конце теста.
+
+    Ключ: join_transaction_mode="create_savepoint"
     """
     connection = await test_engine.connect()
     transaction = await connection.begin()
 
-    session = TestingSessionLocal(bind=connection)
+    TestSessionLocal = async_sessionmaker(
+        bind=connection,
+        expire_on_commit=False,
+        autoflush=False,
+        join_transaction_mode="create_savepoint",
+    )
 
-    async def mock_commit():
-        await session.flush()
-
-    session.commit = mock_commit
-
-    async def mock_close():
-        pass
-
-    session.close = mock_close
-
-    class MockTransactionContext:
-        async def __aenter__(self):
-            return None
-
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            pass
-
-    def mock_begin():
-        return MockTransactionContext()
-
-    session.begin = mock_begin
+    session = TestSessionLocal()
 
     class MockSessionMaker:
         def __call__(self):
@@ -95,24 +86,66 @@ async def session():
 TEST_OWNER_ID = 999999
 
 
-@pytest.fixture
-def auth_headers() -> dict[str, str]:
-    """Заголовки для авторизованных запросов."""
+def create_auth_headers(user_id: int) -> dict[str, str]:
+    """Создаёт заголовки авторизации для указанного пользователя."""
     return {
-        "X-Internal-API-Key": settings.INTERNAL_API_KEY,
-        "X-User-ID": str(TEST_OWNER_ID),
+        "X-Internal-API-Key": test_settings.INTERNAL_API_KEY,
+        "X-User-ID": str(user_id),
     }
 
 
+@pytest.fixture
+def auth_headers() -> dict[str, str]:
+    """Заголовки для авторизованных запросов (дефолтный пользователь)."""
+    return create_auth_headers(TEST_OWNER_ID)
+
+
+class EventIdClient:
+    """
+    Обёртка над AsyncClient, автоматически добавляющая X-Idempotency-Key
+    для мутирующих запросов (POST, PATCH, PUT, DELETE).
+    """
+
+    def __init__(self, client: AsyncClient):
+        self._client = client
+
+    def _merge_headers_with_event_id(self, headers: dict | None) -> dict:
+        """Добавляет уникальный event_id к headers."""
+        result = dict(headers) if headers else {}
+        result["X-Idempotency-Key"] = str(uuid.uuid4())
+        return result
+
+    async def get(self, url: str, **kwargs):
+        """GET запросы не требуют event_id."""
+        return await self._client.get(url, **kwargs)
+
+    async def post(self, url: str, **kwargs):
+        kwargs["headers"] = self._merge_headers_with_event_id(kwargs.get("headers"))
+        return await self._client.post(url, **kwargs)
+
+    async def patch(self, url: str, **kwargs):
+        kwargs["headers"] = self._merge_headers_with_event_id(kwargs.get("headers"))
+        return await self._client.patch(url, **kwargs)
+
+    async def put(self, url: str, **kwargs):
+        kwargs["headers"] = self._merge_headers_with_event_id(kwargs.get("headers"))
+        return await self._client.put(url, **kwargs)
+
+    async def delete(self, url: str, **kwargs):
+        kwargs["headers"] = self._merge_headers_with_event_id(kwargs.get("headers"))
+        return await self._client.delete(url, **kwargs)
+
+
 @pytest.fixture(scope="function")
-async def client(session, auth_headers: dict[str, str]):
+async def client(session, auth_headers: dict[str, str]) -> EventIdClient:
+    """HTTP клиент с автоматическим добавлением idempotency key."""
     transport = ASGITransport(app=app)
     async with AsyncClient(
         transport=transport,
         base_url="http://test",
         headers=auth_headers,
     ) as ac:
-        yield ac
+        yield EventIdClient(ac)
 
 
 @pytest.fixture(scope="session")
@@ -120,15 +153,25 @@ def anyio_backend():
     return "asyncio"
 
 
-# Если нужен клиент с другим user_id
 @pytest.fixture
 def make_auth_headers():
     """Фабрика заголовков для разных пользователей."""
+    return create_auth_headers(TEST_OWNER_ID)
 
-    def _make(user_id: int) -> dict[str, str]:
-        return {
-            "X-Internal-API-Key": test_settings.INTERNAL_API_KEY,
-            "X-User-ID": str(user_id),
-        }
+
+@pytest.fixture
+def make_client_for_user(session):
+    """Фабрика клиентов для разных пользователей."""
+
+    @asynccontextmanager
+    async def _make(user_id: int):
+        headers = create_auth_headers(user_id)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(
+            transport=transport,
+            base_url="http://test",
+            headers=headers,
+        ) as ac:
+            yield EventIdClient(ac)
 
     return _make

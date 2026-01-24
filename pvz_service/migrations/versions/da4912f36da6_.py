@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 100f0b798f99
+Revision ID: da4912f36da6
 Revises: 
-Create Date: 2026-01-23 15:50:01.347620
+Create Date: 2026-01-24 09:17:32.981843
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '100f0b798f99'
+revision: str = 'da4912f36da6'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -32,7 +32,7 @@ def upgrade() -> None:
     sa.UniqueConstraint('phone_number')
     )
     op.create_index(op.f('ix_employees_owner_id'), 'employees', ['owner_id'], unique=False)
-    op.create_table('inbox',
+    op.create_table('inbox_events',
     sa.Column('event_id', sa.String(), nullable=False),
     sa.Column('event_type', sa.Enum('CREATE_EMPLOYEE', 'UPDATE_EMPLOYEE', 'DELETE_EMPLOYEE', 'ASSIGN_EMPLOYEE_TO_PVZ', 'UNASSIGN_EMPLOYEE_FROM_PVZ', 'CREATE_PVZ_GROUP', 'UPDATE_PVZ_GROUP', 'DELETE_PVZ_GROUP', 'ASSIGN_RESPONSIBLE_TO_PVZ_GROUP', 'CREATE_PVZ', 'UPDATE_PVZ', 'DELETE_PVZ', 'ASSIGN_PVZ_TO_GROUP', name='eventtype'), nullable=False),
     sa.Column('status', sa.Enum('PROCESSING', 'COMPLETED', 'FAILED', name='eventstatus'), server_default='PROCESSING', nullable=False),
@@ -42,7 +42,7 @@ def upgrade() -> None:
     sa.Column('finished_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('event_id')
     )
-    op.create_index('ix_inbox_status_created_at', 'inbox', ['status', 'created_at'], unique=False)
+    op.create_index('ix_inbox_status_created_at', 'inbox_events', ['status', 'created_at'], unique=False)
     op.create_table('pvz_groups',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -91,8 +91,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_pvz_groups_responsible_id'), table_name='pvz_groups')
     op.drop_index(op.f('ix_pvz_groups_owner_id'), table_name='pvz_groups')
     op.drop_table('pvz_groups')
-    op.drop_index('ix_inbox_status_created_at', table_name='inbox')
-    op.drop_table('inbox')
+    op.drop_index('ix_inbox_status_created_at', table_name='inbox_events')
+    op.drop_table('inbox_events')
     op.drop_index(op.f('ix_employees_owner_id'), table_name='employees')
     op.drop_table('employees')
     # ### end Alembic commands ###

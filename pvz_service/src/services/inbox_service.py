@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Awaitable, Callable, TypeVar
 
 from src.dao.inboxDAO import InboxEventsDAO
 from src.enums.inbox import EventStatus, EventType
 from src.models.inbox.inbox import InboxEvents
+from src.settings.config import settings
 from src.utils.exception_mapper import exception_map
 from src.utils.exceptions import AppException, ClientException, InboxConflictException
 
@@ -11,10 +12,9 @@ T = TypeVar("T")
 
 
 class InboxService:
-    STALE_TIMEOUT = timedelta(seconds=30)
-
     def __init__(self, inbox_repo: InboxEventsDAO):
         self.inbox_repo = inbox_repo
+        self.stale_timeout = settings.inbox_stale_timeout
 
     async def execute(
         self,
@@ -80,7 +80,7 @@ class InboxService:
             error_response = {
                 "status_code": 500,
                 "error": "internal_error",
-                "detail": str(e),
+                "detail": "Internal Server Error",
                 "exception_type": type(e).__name__,
             }
 
@@ -133,12 +133,12 @@ class InboxService:
         now = datetime.now(event.created_at.tzinfo)
         age = now - event.created_at
 
-        if age < self.STALE_TIMEOUT:
+        if age < self.stale_timeout:
             raise InboxConflictException(f"Операция {event.event_id} в процессе.")
 
         is_claimed = await self.inbox_repo.claim_stale_event(
             event_id=event.event_id,
-            stale_threshold=now - self.STALE_TIMEOUT,
+            stale_threshold=now - self.stale_timeout,
         )
 
         if is_claimed:

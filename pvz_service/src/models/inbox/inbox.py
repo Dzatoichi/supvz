@@ -11,7 +11,7 @@ from src.enums.inbox import EventStatus, EventType
 
 
 class InboxEvents(Base):
-    __tablename__ = "inbox"
+    __tablename__ = "inbox_events"
 
     # Композитный индекс для очистки старых записей и поиска stale событий
     __table_args__ = (Index("ix_inbox_status_created_at", "status", "created_at"),)
