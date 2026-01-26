@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.dao.baseDAO import BaseDAO
 from src.enums.inbox import EventStatus, EventType
 from src.models.inbox.inbox import InboxEvents
-from src.utils.exceptions import EventRaceConditionError
+from src.utils.exceptions import DatabaseException
 
 
 class InboxEventsDAO(BaseDAO[InboxEvents]):
