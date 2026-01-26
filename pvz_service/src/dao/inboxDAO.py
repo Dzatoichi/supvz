@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.dao.baseDAO import BaseDAO
 from src.enums.inbox import EventStatus, EventType
 from src.models.inbox.inbox import InboxEvents
+from src.utils.exceptions import EventRaceConditionError
 
 
 class InboxEventsDAO(BaseDAO[InboxEvents]):
@@ -23,11 +24,11 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
         event_id: str,
     ) -> InboxEvents | None:
         """Получить событие по ID."""
-        query = select(InboxEvents).where(InboxEvents.event_id == event_id)
+        query = select(self.model).where(self.model.event_id == event_id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def create_idempotency_key(
+    async def create_event(
         self,
         event_id: str,
         event_type: EventType,
@@ -43,7 +44,7 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
         Если запись уже была -> is_created=False, возвращаем существующую
         """
         stmt = (
-            insert(InboxEvents)
+            insert(self.model)
             .values(
                 event_id=event_id,
                 event_type=event_type,
@@ -51,7 +52,7 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
                 status=EventStatus.PROCESSING,
             )
             .on_conflict_do_nothing(index_elements=["event_id"])
-            .returning(InboxEvents)
+            .returning(self.model)
         )
 
         result = await self.session.execute(stmt)
@@ -65,7 +66,7 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
 
         if not existing_event:
             await self.session.rollback()
-            raise ValueError(f"Race condition обнаружена для event_id={event_id}")
+            raise EventRaceConditionError(f"Race condition обнаружена для event_id={event_id}")
 
         return existing_event, False
 
@@ -76,10 +77,10 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
     ) -> InboxEvents:
         """Обновляет статус на COMPLETED и сохраняет ответ."""
         stmt = (
-            update(InboxEvents)
-            .where(InboxEvents.event_id == event_id)
+            update(self.model)
+            .where(self.model.event_id == event_id)
             .values(status=EventStatus.COMPLETED, response_body=response_body, finished_at=func.now())
-            .returning(InboxEvents)
+            .returning(self.model)
         )
         result = await self.session.execute(stmt)
         return result.scalar_one()
@@ -91,10 +92,10 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
     ) -> InboxEvents:
         """Обновляет статус на FAILED и сохраняет ошибку."""
         stmt = (
-            update(InboxEvents)
-            .where(InboxEvents.event_id == event_id)
+            update(self.model)
+            .where(self.model.event_id == event_id)
             .values(status=EventStatus.FAILED, response_body=response_body, finished_at=func.now())
-            .returning(InboxEvents)
+            .returning(self.model)
         )
         result = await self.session.execute(stmt)
         return result.scalar_one()
@@ -102,14 +103,14 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
     async def reset_to_processing(self, event_id: str) -> InboxEvents:
         """Сбрасывает статус на PROCESSING (для повторной попытки после FAILED)."""
         stmt = (
-            update(InboxEvents)
-            .where(InboxEvents.event_id == event_id)
+            update(self.model)
+            .where(self.model.event_id == event_id)
             .values(
                 status=EventStatus.PROCESSING,
                 finished_at=None,
                 created_at=func.now(),
             )
-            .returning(InboxEvents)
+            .returning(self.model)
         )
         result = await self.session.execute(stmt)
         await self.session.commit()
@@ -129,14 +130,14 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
         Возвращает True, если удалось захватить.
         """
         stmt = (
-            update(InboxEvents)
+            update(self.model)
             .where(
-                InboxEvents.event_id == event_id,
-                InboxEvents.status == EventStatus.PROCESSING,
-                InboxEvents.created_at < stale_threshold,
+                self.model.event_id == event_id,
+                self.model.status == EventStatus.PROCESSING,
+                self.model.created_at < stale_threshold,
             )
             .values(created_at=func.now())
-            .returning(InboxEvents.event_id)
+            .returning(self.model.event_id)
         )
 
         result = await self.session.execute(stmt)

@@ -6,12 +6,16 @@ from src.enums.inbox import EventStatus, EventType
 from src.models.inbox.inbox import InboxEvents
 from src.settings.config import settings
 from src.utils.exception_mapper import exception_map
-from src.utils.exceptions import AppException, ClientException, InboxConflictException
+from src.utils.exceptions import AppException, ClientException, DatabaseException, InboxConflictException
 
 T = TypeVar("T")
 
 
 class InboxService:
+    """
+    Управляет жизненным циклом входящих событий (Inbox Events).
+    """
+
     def __init__(self, inbox_repo: InboxEventsDAO):
         self.inbox_repo = inbox_repo
         self.stale_timeout = settings.inbox_stale_timeout
@@ -36,17 +40,23 @@ class InboxService:
             Результат выполнения handler или кешированный ответ.
         """
 
-        inbox_event, is_created = await self.inbox_repo.create_idempotency_key(
+        inbox_event, is_created = await self.inbox_repo.create_event(
             event_id=event_id,
             event_type=event_type,
             payload=payload,
         )
 
         if is_created:
-            return await self._process_new_event(inbox_event.event_id, handler)
+            return await self._process_new_event(
+                event_id=inbox_event.event_id,
+                handler=handler,
+            )
 
         # Запись уже существует - разбираем статусы
-        return await self._handle_existing_event(inbox_event, handler)
+        return await self._handle_existing_event(
+            event=inbox_event,
+            handler=handler,
+        )
 
     async def _process_new_event(self, event_id: str, handler: Callable[[], Awaitable[T]]) -> T:
         """Выполнение логики для нового события."""
@@ -58,7 +68,7 @@ class InboxService:
             # Сериализуем результат (если это Pydantic модель -> dict)
             response_data = result.model_dump(mode="json") if hasattr(result, "model_dump") else result
 
-            await self.inbox_repo.mark_completed(event_id, response_body=response_data)
+            await self.inbox_repo.mark_completed(event_id=event_id, response_body=response_data)
             await session.commit()
             return result
 
@@ -66,9 +76,9 @@ class InboxService:
             await session.rollback()
 
             if e.is_client_error:
-                await self.inbox_repo.mark_completed(event_id, response_body=e.to_response())
+                await self.inbox_repo.mark_completed(event_id=event_id, response_body=e.to_response())
             else:
-                await self.inbox_repo.mark_failed(event_id, response_body=e.to_response())
+                await self.inbox_repo.mark_failed(event_id=event_id, response_body=e.to_response())
 
             await session.commit()
 
@@ -84,7 +94,7 @@ class InboxService:
                 "exception_type": type(e).__name__,
             }
 
-            await self.inbox_repo.mark_failed(event_id, response_body=error_response)
+            await self.inbox_repo.mark_failed(event_id=event_id, response_body=error_response)
             await session.commit()
             raise
 
@@ -97,16 +107,16 @@ class InboxService:
 
         if event.status == EventStatus.COMPLETED:
             # TODO: Здесь можно добавить лог "Return cached response for {event.event_id}"
-            return self._return_cached_response(event.response_body)
+            return self._return_cached_response(response_body=event.response_body)
 
         elif event.status == EventStatus.FAILED:
-            await self.inbox_repo.reset_to_processing(event.event_id)
-            return await self._process_new_event(event.event_id, handler)
+            await self.inbox_repo.reset_to_processing(event_id=event.event_id)
+            return await self._process_new_event(event_id=event.event_id, handler=handler)
 
         elif event.status == EventStatus.PROCESSING:
-            return await self._handle_processing_state(event, handler)
+            return await self._handle_processing_state(event=event, handler=handler)
 
-        raise ValueError(f"Неизвестный статус: {event.status}")
+        raise DatabaseException(f"Неизвестный статус: {event.status}")
 
     def _return_cached_response(self, response_body: dict[str, Any]) -> Any:
         """Возвращает кэш или пересоздает exception для 4xx."""
@@ -114,7 +124,7 @@ class InboxService:
             status_code = response_body["status_code"]
 
             if 400 <= status_code < 500:
-                raise self._recreate_exception(response_body)
+                raise self._recreate_exception(error_data=response_body)
 
         return response_body
 
@@ -142,6 +152,6 @@ class InboxService:
         )
 
         if is_claimed:
-            return await self._process_new_event(event.event_id, handler)
+            return await self._process_new_event(event_id=event.event_id, handler=handler)
         else:
             raise InboxConflictException("Операция, восстановленна другим работником")

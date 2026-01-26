@@ -119,6 +119,15 @@ class InboxConflictException(ClientException):
     error_code = "inbox_conflict"
 
 
+class EventRaceConditionError(ClientException):
+    """
+    Исключение, возникающее при конкурентном доступе к InboxEvents.
+    """
+
+    status_code = 409
+    error_code = "event_race_condition"
+
+
 # ─────────────── 500 Conflict ───────────────
 
 

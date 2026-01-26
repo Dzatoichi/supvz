@@ -83,7 +83,6 @@ async def update_employee(
     payload: EmployeeUpdateRequestSchema,
     event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
-    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -111,7 +110,6 @@ async def assign_employee_to_pvz(
     pvz_in: TransferRequestSchema,
     event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
-    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -139,7 +137,6 @@ async def unassign_employee_from_pvz(
     pvz_id: int,
     event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
-    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -163,7 +160,6 @@ async def delete_employee(
     user_id: int,
     event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
-    _: None = InternalKeyDep,
     employee_service: EmployeesService = Depends(get_employees_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):

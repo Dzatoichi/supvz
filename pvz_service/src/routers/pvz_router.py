@@ -12,7 +12,6 @@ from src.services.pvz_service import PVZService
 from src.utils.dependencies import (
     CurrentUserDep,
     IdempotencyKeyDep,
-    InternalKeyDep,
     get_inbox_service,
     get_pvz_service,
 )
@@ -29,7 +28,6 @@ async def add_pvz(
     pvz_in: PVZAdd,
     event_id: IdempotencyKeyDep,
     current_user: CurrentUserDep,
-    _: None = InternalKeyDep,
     pvz_service: PVZService = Depends(get_pvz_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -52,7 +50,6 @@ async def assign_pvz_to_group(
     data: PVZAssignmentSchema,
     current_user: CurrentUserDep,
     event_id: IdempotencyKeyDep,
-    _: None = InternalKeyDep,
     service: PVZService = Depends(get_pvz_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -76,7 +73,6 @@ async def update_pvz_by_id(
     current_user: CurrentUserDep,
     pvz_in: PVZUpdate,
     event_id: IdempotencyKeyDep,
-    _: None = InternalKeyDep,
     pvz_service: PVZService = Depends(get_pvz_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -160,7 +156,6 @@ async def delete_pvz_by_id(
     pvz_id: int,
     current_user: CurrentUserDep,
     event_id: IdempotencyKeyDep,
-    _: None = InternalKeyDep,
     pvz_service: PVZService = Depends(get_pvz_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):

@@ -12,7 +12,6 @@ from src.services.pvz_service import PVZService
 from src.utils.dependencies import (
     CurrentUserDep,
     IdempotencyKeyDep,
-    InternalKeyDep,
     get_inbox_service,
     get_pvz_groups_service,
     get_pvz_service,
@@ -40,7 +39,6 @@ async def create_group(
     data: PVZGroupCreateSchema,
     current_user: CurrentUserDep,
     event_id: IdempotencyKeyDep,
-    _: None = InternalKeyDep,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -66,7 +64,6 @@ async def assign_responsible_to_group(
     responsible_id: int,
     current_user: CurrentUserDep,
     event_id: IdempotencyKeyDep,
-    _: None = InternalKeyDep,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -92,7 +89,6 @@ async def update_group(
     current_user: CurrentUserDep,
     data: PVZGroupUpdateSchema,
     event_id: IdempotencyKeyDep,
-    _: None = InternalKeyDep,
     service: PVZGroupsService = Depends(get_pvz_groups_service),
     inbox_service: InboxService = Depends(get_inbox_service),
 ):
@@ -131,7 +127,6 @@ async def delete_group(
     group_id: int,
     current_user: CurrentUserDep,
     event_id: IdempotencyKeyDep,
-    _: None = InternalKeyDep,
     group_service: PVZGroupsService = Depends(get_pvz_groups_service),
     pvz_service: PVZService = Depends(get_pvz_service),
     inbox_service: InboxService = Depends(get_inbox_service),

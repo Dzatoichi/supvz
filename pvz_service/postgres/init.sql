@@ -1,11 +1,20 @@
-CREATE EXTENSION IF NOT EXISTS pg_cron;
+-- Индексы для оптимизации cleanup
+CREATE INDEX CONCURRENTLY IF NOT EXISTS
+    ix_inbox_events_finished_at_partial
+ON inbox_events (finished_at)
+WHERE finished_at IS NOT NULL;
 
-GRANT USAGE ON SCHEMA cron TO PUBLIC;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS
+    ix_inbox_events_stuck_processing
+ON inbox_events (created_at)
+WHERE finished_at IS NULL AND status = 'processing';
 
--- Процедура батчевого удаления
+
+
 CREATE OR REPLACE PROCEDURE cleanup_inbox_events(
-    retention_days INT DEFAULT 15,
-    batch_size INT DEFAULT 1000
+    retention_days INT DEFAULT 30,
+    stuck_threshold_hours INT DEFAULT 24,
+    batch_size INT DEFAULT 5000
 )
     LANGUAGE plpgsql
 AS
@@ -13,38 +22,45 @@ $$
 DECLARE
     deleted_count INT;
     total_deleted INT := 0;
+    cutoff_finished TIMESTAMPTZ;
+    cutoff_stuck TIMESTAMPTZ;
 BEGIN
+    cutoff_finished := NOW() - (retention_days || ' days')::INTERVAL;
+    cutoff_stuck := NOW() - (stuck_threshold_hours || ' hours')::INTERVAL;
+
     LOOP
-        DELETE
-        FROM inbox_events
-        WHERE event_id IN (SELECT event_id
-                           FROM inbox_events
-                           WHERE finished_at < NOW() - (retention_days || ' days')::INTERVAL
-                           LIMIT batch_size);
+        DELETE FROM inbox_events
+        WHERE ctid IN (
+            SELECT ctid
+            FROM inbox_events
+            WHERE
+                (finished_at IS NOT NULL AND finished_at < cutoff_finished)
+                OR
+                (finished_at IS NULL AND status = 'processing' AND created_at < cutoff_stuck)
+            LIMIT batch_size
+            FOR UPDATE SKIP LOCKED
+        );
 
         GET DIAGNOSTICS deleted_count = ROW_COUNT;
         total_deleted := total_deleted + deleted_count;
 
-        EXIT WHEN deleted_count < batch_size;
-
         COMMIT;
+
+        EXIT WHEN deleted_count < batch_size;
     END LOOP;
 
-    RAISE LOG 'inbox_events cleanup: deleted % rows', total_deleted;
+    IF total_deleted > 0 THEN
+        RAISE LOG 'inbox_events cleanup: deleted % rows', total_deleted;
+    END IF;
 END;
 $$;
 
--- Регистрация cron-задачи
-DO
-$$
-    BEGIN
-        IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cleanup-inbox-events') THEN
-            PERFORM cron.schedule(
-                    'cleanup-inbox-events',
-                    '0 3 * * *',
-                    'CALL cleanup_inbox_events(15, 1000)'
-                    );
-            RAISE NOTICE 'Created cron job: cleanup-inbox-events';
-        END IF;
-    END
-$$;
+
+
+SELECT cron.unschedule('cleanup-inbox-events');
+
+SELECT cron.schedule(
+    'cleanup-inbox-events',
+    '0 3 * * *',
+    'CALL cleanup_inbox_events(30, 24, 5000)'
+);

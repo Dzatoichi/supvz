@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -29,9 +29,9 @@ class InboxReadSchema(InboxBaseSchema):
 
     status: EventStatus
     payload: dict[str, Any]
-    response_body: Optional[dict[str, Any]] = None
+    response_body: dict[str, Any] | None = None
     created_at: datetime
-    finished_at: Optional[datetime] = None
+    finished_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -42,5 +42,5 @@ class InboxUpdateSchema(BaseModel):
     """
 
     status: EventStatus
-    response_body: Optional[dict[str, Any]] = None
-    finished_at: Optional[datetime] = None
+    response_body: dict[str, Any] | None = None
+    finished_at: datetime | None = None

@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import (
     BaseModel,
@@ -7,7 +7,7 @@ from pydantic import (
 )
 
 
-class PVZType(str, Enum):
+class PVZType(StrEnum):
     wb = "wb"
     ozon = "ozon"
     yamarket = "yamarket"
