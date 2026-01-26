@@ -7,7 +7,6 @@ from src.schemas.shift_penalties_schemas import (
     PenaltyCreateSchema,
     PenaltyFilterSchema,
     PenaltyReadSchema,
-    PenaltySummarySchema,
     PenaltyUpdateSchema,
 )
 from src.services.shift_penalties_service import PenaltiesService
@@ -47,30 +46,6 @@ async def get_penalties(
         created_at_to=created_at_to,
     )
     return await service.get_penalties(params=params, filters=filters)
-
-
-@penalties_router.get(
-    "/employee/{employee_id}",
-    response_model=list[PenaltyReadSchema],
-)
-async def get_penalties_by_employee(
-    employee_id: int,
-    service: PenaltiesService = Depends(get_penalties_service),
-) -> list[PenaltyReadSchema]:
-    """Получить все штрафы для конкретного сотрудника."""
-    return await service.get_penalties_by_employee_id(employee_id)
-
-
-@penalties_router.get(
-    "/employee/{employee_id}/summary",
-    response_model=PenaltySummarySchema,
-)
-async def get_penalties_summary(
-    employee_id: int,
-    service: PenaltiesService = Depends(get_penalties_service),
-) -> PenaltySummarySchema:
-    """Получить сводку штрафов для конкретного сотрудника."""
-    return await service.get_summary_by_employee_id(employee_id)
 
 
 @penalties_router.get(

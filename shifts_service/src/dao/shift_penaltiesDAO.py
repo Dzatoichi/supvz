@@ -1,6 +1,6 @@
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.baseDAO import BaseDAO
@@ -9,7 +9,6 @@ from src.schemas.shift_penalties_schemas import (
     PenaltyCreateSchema,
     PenaltyFilterSchema,
     PenaltyReadSchema,
-    PenaltySummarySchema,
     PenaltyUpdateSchema,
 )
 
@@ -54,26 +53,7 @@ class PenaltiesDAO(BaseDAO[ShiftPenalty]):
 
         stmt = stmt.order_by(self.model.id.desc())
 
-        page = await paginate(self.session, stmt, params)
-        return Page(
-            items=[PenaltyReadSchema.model_validate(item) for item in page.items],
-            total=page.total,
-            page=page.page,
-            pages=page.pages,
-            size=page.size,
-        )
-
-    @BaseDAO.with_exception
-    async def get_penalties_by_employee_id(
-        self,
-        employee_id: int,
-    ) -> list[PenaltyReadSchema]:
-        """Получение всех штрафов по ID сотрудника."""
-        stmt = select(self.model).where(self.model.employee_id == employee_id).order_by(self.model.created_at.desc())
-
-        result = await self.session.execute(stmt)
-        penalties = result.scalars().all()
-        return [PenaltyReadSchema.model_validate(p) for p in penalties]
+        return await paginate(self.session, stmt, params)
 
     @BaseDAO.with_exception
     async def update_penalty(
@@ -91,20 +71,3 @@ class PenaltiesDAO(BaseDAO[ShiftPenalty]):
     async def delete_penalty(self, penalty_id: int) -> bool:
         """Удаление штрафа."""
         return await super().delete(penalty_id)
-
-    @BaseDAO.with_exception
-    async def get_summary_by_employee_id(
-        self,
-        employee_id: int,
-    ) -> PenaltySummarySchema:
-        """Получение сводки штрафов по ID сотрудника."""
-        stmt = select(
-            func.count(self.model.id).label("total_penalties"),
-        ).where(self.model.employee_id == employee_id)
-
-        result = await self.session.execute(stmt)
-        row = result.one()
-
-        return PenaltySummarySchema(
-            total_penalties=row.total_penalties,
-        )

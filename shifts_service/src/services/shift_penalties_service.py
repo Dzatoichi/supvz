@@ -5,7 +5,6 @@ from src.schemas.shift_penalties_schemas import (
     PenaltyCreateSchema,
     PenaltyFilterSchema,
     PenaltyReadSchema,
-    PenaltySummarySchema,
     PenaltyUpdateSchema,
 )
 from src.utils.exceptions import ShiftPenaltyNotFoundException
@@ -40,13 +39,6 @@ class PenaltiesService:
         """Получение списка штрафов."""
         return await self.dao.get_penalties_paginated(params=params, filters=filters)
 
-    async def get_penalties_by_employee_id(
-        self,
-        employee_id: int,
-    ) -> list[PenaltyReadSchema]:
-        """Получение штрафов по ID сотрудника."""
-        return await self.dao.get_penalties_by_employee_id(employee_id)
-
     async def update_penalty(
         self,
         penalty_id: int,
@@ -67,10 +59,3 @@ class PenaltiesService:
         if not existing:
             raise ShiftPenaltyNotFoundException()
         return await self.dao.delete_penalty(penalty_id)
-
-    async def get_summary_by_employee_id(
-        self,
-        employee_id: int,
-    ) -> PenaltySummarySchema:
-        """Получение сводки штрафов по ID сотрудника."""
-        return await self.dao.get_summary_by_employee_id(employee_id)

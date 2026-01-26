@@ -22,6 +22,7 @@ class PenaltyCreateSchema(BaseModel):
 class PenaltyUpdateSchema(BaseModel):
     """Схема обновления штрафа."""
 
+    employee_id: int
     reason: str | None = Field(default=None, min_length=1, max_length=2000, description="Причина штрафа")
 
 
