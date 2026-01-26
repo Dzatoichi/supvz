@@ -66,7 +66,7 @@ class InboxEventsDAO(BaseDAO[InboxEvents]):
 
         if not existing_event:
             await self.session.rollback()
-            raise EventRaceConditionError(f"Race condition обнаружена для event_id={event_id}")
+            raise DatabaseException(f"Race condition обнаружена для event_id={event_id}")
 
         return existing_event, False
 
