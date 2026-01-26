@@ -23,13 +23,11 @@ class PVZGroupsService:
 
     def __init__(
         self,
-        db_helper,
         group_policy: PVZGroupAccessPolicy,
         group_repo: PVZGroupsDAO,
         pvz_repo: PVZsDAO,
         employee_repo: EmployeesDAO,
     ):
-        self.db_helper = db_helper
         self.group_policy = group_policy
         self.group_repo = group_repo
         self.pvz_repo = pvz_repo
@@ -161,9 +159,7 @@ class PVZGroupsService:
         if not existing_group:
             raise PVZGroupNotFoundException("Группы с таким id не существет")
 
-        async with self.db_helper.async_session_maker() as session:
-            async with session.begin():
-                await self.group_repo.set_responsible(group_id, responsible_id, session)
-                await self.pvz_repo.set_responsible_for_group(group_id, responsible_id, session)
+        await self.group_repo.set_responsible(group_id, responsible_id)
+        await self.pvz_repo.set_responsible_for_group(group_id, responsible_id)
 
         return {"detail": "Куратор успешно назначен и применён ко всем ПВЗ группы"}

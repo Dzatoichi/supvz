@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:17
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
     container_name: pvz_postgres
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -10,6 +12,8 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - ./pg_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: postgres -c shared_preload_libraries=pg_cron -c cron.database_name=${DB_NAME}
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]

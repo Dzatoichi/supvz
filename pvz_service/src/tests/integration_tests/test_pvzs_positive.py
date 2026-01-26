@@ -7,6 +7,7 @@ from src.tests.factories import EmployeeFactory, GroupFactory, PVZFactory, PVZUp
 pytestmark = pytest.mark.anyio
 
 TEST_OWNER_ID = 999999
+URL = "/pvzs"
 
 
 @pytest.mark.asyncio
@@ -26,7 +27,7 @@ async def test_add_pvz(client, session):
         owner_id=TEST_OWNER_ID,
     )
 
-    response = await client.post("/pvzs/", json=pvz_payload.model_dump(mode="json"))
+    response = await client.post(f"{URL}", json=pvz_payload.model_dump(mode="json"))
 
     assert response.status_code == 201
     data = response.json()
@@ -42,17 +43,18 @@ async def test_update_pvz_success(client, session):
     Проверяет изменение полей и привязку к новым сущностям (группа, куратор).
     """
 
+    await EmployeeFactory.create_async(session, user_id=TEST_OWNER_ID)
     pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
     group = await GroupFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
     pvz_update_payload = PVZUpdateFactory.build(
         address=pvz.address,
         owner_id=pvz.owner_id,
-        responsible_id=1,
         group_id=group.id,
+        responsible_id=None,
     )
 
-    response = await client.patch(f"/pvzs/{pvz.id}", json=pvz_update_payload.model_dump(mode="json"))
+    response = await client.patch(f"{URL}/{pvz.id}", json=pvz_update_payload.model_dump(mode="json"))
 
     assert response.status_code == 200
     data = response.json()
@@ -69,7 +71,7 @@ async def test_get_pvz_by_id_success(client, session):
 
     pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
 
-    response = await client.get(f"/pvzs/{pvz.id}")
+    response = await client.get(f"{URL}/{pvz.id}")
 
     assert response.status_code == 200
     data = response.json()
@@ -95,7 +97,7 @@ async def test_get_pvzs_with_query_params(client, session):
     for _ in range(7):
         await PVZFactory.create_async(session, owner_id=999)
 
-    response = await client.get("/pvzs/", params={"group_id": target_group.id})
+    response = await client.get(f"{URL}", params={"group_id": target_group.id})
 
     assert response.status_code == 200
     data = response.json()
@@ -119,10 +121,9 @@ async def test_delete_pvz_success(client, session):
     pvz = await PVZFactory.create_async(session, owner_id=TEST_OWNER_ID)
     pvz_id = pvz.id
 
-    response = await client.delete(f"/pvzs/{pvz_id}")
+    response = await client.delete(f"{URL}/{pvz_id}")
 
-    assert response.status_code == 200
-    assert response.json()["id"] == pvz_id
+    assert response.status_code == 204
 
     deleted_pvz = await session.get(PVZs, pvz_id)
     assert deleted_pvz is None
@@ -151,7 +152,7 @@ async def test_get_employees_success(client, session):
 
     await session.commit()
 
-    response = await client.get(f"/pvzs/{pvz.id}/employees")
+    response = await client.get(f"{URL}/{pvz.id}/employees")
 
     assert response.status_code == 200
     data = response.json()
@@ -188,7 +189,7 @@ async def test_assign_pvz_to_group_success(client, session):
         "pvz_ids": pvz_ids,
     }
 
-    response = await client.patch("/pvzs/group_assignment", json=payload)
+    response = await client.patch(f"{URL}/group_assignment", json=payload)
 
     assert response.status_code == 200
 

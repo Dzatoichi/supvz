@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.schemas.enums import PositionSourceEnum
 from src.tests.factories.system_position_factories import SystemPositionFactory
 
-PERMISSIONS_URL = "/permissions/"
+PERMISSIONS_URL = "/permissions"
 
 
 @pytest.mark.asyncio

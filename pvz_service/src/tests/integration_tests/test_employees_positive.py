@@ -1,7 +1,5 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
 
-from src.main import app
 from src.models.employees.employees import Employees
 from src.tests.factories import EmployeeFactory, PVZFactory
 
@@ -47,18 +45,10 @@ async def test_get_employee_by_id(client, session):
 
 
 @pytest.mark.asyncio
-async def test_get_employees_filtered(client, session, make_auth_headers):
+async def test_get_employees_filtered(client, session, make_client_for_user):
     """
     Тест: Получение списка сотрудников с фильтрацией.
-    GET /employees?user_id=...&pvz_id=...
-
-    Сценарий:
-    1. Создаем владельца (owner_id).
-    2. Создаем 2 сотрудников, привязанных к этому владельцу.
-    3. Создаем 3-го сотрудника ("шум") с другим владельцем.
-    4. Проверяем, что фильтр по user_id (owner_id) возвращает только нужных.
     """
-
     target_owner_id = 100
     other_owner_id = 200
 
@@ -69,11 +59,7 @@ async def test_get_employees_filtered(client, session, make_auth_headers):
 
     await EmployeeFactory.create_async(session, owner_id=other_owner_id)
 
-    # Создаем клиент, авторизованный как target_owner_id,
-    headers = make_auth_headers(target_owner_id)
-    transport = ASGITransport(app=app)
-
-    async with AsyncClient(transport=transport, base_url="http://test", headers=headers) as target_client:
+    async with make_client_for_user(target_owner_id) as target_client:
         response = await target_client.get("/employees")
 
         assert response.status_code == 200

@@ -18,7 +18,7 @@ from src.utils.dependencies import (
 positions_router = APIRouter(prefix="/positions", tags=["Positions"])
 
 
-@positions_router.get("/", response_model=Page[PositionReadSchema])
+@positions_router.get("", response_model=Page[PositionReadSchema])
 async def get_positions(
     owner_id: int | None = None,
     position_source: PositionSourceEnum = Query(...),
@@ -48,7 +48,7 @@ async def get_position(
     )
 
 
-@positions_router.post("/", response_model=PositionReadSchema)
+@positions_router.post("", response_model=PositionReadSchema)
 async def create_custom_position(
     data: CustomPositionCreateSchema,
     position_service: PositionService = Depends(get_position_service),

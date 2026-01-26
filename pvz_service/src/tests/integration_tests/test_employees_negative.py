@@ -4,6 +4,8 @@ from src.tests.factories import TEST_OWNER_ID, EmployeeFactory, PVZFactory
 
 pytestmark = pytest.mark.anyio
 
+NON_EXISTENT_ID = 777777
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -56,10 +58,9 @@ async def test_update_employee_not_found(client):
     Тест: Обновление несуществующего сотрудника (404).
     PATCH /employees/{user_id}
     """
-    non_existent_id = 999999
     update_payload = {"name": "Ghost"}
 
-    response = await client.patch(f"/employees/{non_existent_id}", json=update_payload)
+    response = await client.patch(f"/employees/{NON_EXISTENT_ID}", json=update_payload)
 
     assert response.status_code == 404
     assert response.json()["error"] == "employee_not_found"

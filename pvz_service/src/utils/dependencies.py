@@ -1,8 +1,10 @@
 from typing import Annotated
 
 from fastapi import Depends, Header
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.employeesDAO import EmployeesDAO
+from src.dao.inboxDAO import InboxEventsDAO
 from src.dao.pvzGroupsDAO import PVZGroupsDAO
 from src.dao.pvzsDAO import PVZsDAO
 from src.database.base import db_helper
@@ -11,24 +13,43 @@ from src.policies.pvz_group_policy import PVZGroupAccessPolicy
 from src.policies.pvz_policy import PVZAccessPolicy
 from src.schemas.employees_schemas import InternalUserSchema
 from src.services.employees_service import EmployeesService
+from src.services.inbox_service import InboxService
 from src.services.pvz_groups_service import PVZGroupsService
 from src.services.pvz_service import PVZService
 from src.settings.config import settings
 from src.utils.exceptions import InvalidInternalApiKeyException
 
+
+async def get_session() -> AsyncSession:
+    async with db_helper.async_session_maker() as session:
+        yield session
+
+
 # DAO
 
 
-def get_employees_repo() -> EmployeesDAO:
-    return EmployeesDAO()
+def get_employees_repo(
+    session: AsyncSession = Depends(get_session),
+) -> EmployeesDAO:
+    return EmployeesDAO(session=session)
 
 
-def get_pvz_repo() -> PVZsDAO:
-    return PVZsDAO()
+def get_pvz_repo(
+    session: AsyncSession = Depends(get_session),
+) -> PVZsDAO:
+    return PVZsDAO(session=session)
 
 
-def get_pvz_groups_repo() -> PVZGroupsDAO:
-    return PVZGroupsDAO()
+def get_pvz_groups_repo(
+    session: AsyncSession = Depends(get_session),
+) -> PVZGroupsDAO:
+    return PVZGroupsDAO(session=session)
+
+
+def get_inbox_repo(
+    session: AsyncSession = Depends(get_session),
+) -> InboxEventsDAO:
+    return InboxEventsDAO(session=session)
 
 
 # Policies
@@ -56,19 +77,30 @@ def get_employee_policy(
 
 
 def get_employees_service(
+    employees_repo: EmployeesDAO = Depends(get_employees_repo),
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
     employee_policy: EmployeeAccessPolicy = Depends(get_employee_policy),
     pvz_policy: PVZAccessPolicy = Depends(get_pvz_policy),
 ) -> "EmployeesService":
     """Создает сервис для работы с пользователями."""
-    return EmployeesService(employee_policy=employee_policy, pvz_policy=pvz_policy)
+    return EmployeesService(
+        employee_policy=employee_policy,
+        pvz_policy=pvz_policy,
+        employees_repo=employees_repo,
+        pvz_repo=pvz_repo,
+    )
 
 
 def get_pvz_service(
+    pvz_repo: PVZsDAO = Depends(get_pvz_repo),
+    pvz_groups_repo: PVZGroupsDAO = Depends(get_pvz_groups_repo),
     pvz_policy: PVZAccessPolicy = Depends(get_pvz_policy),
     employee_repo: EmployeesDAO = Depends(get_employees_repo),
 ) -> "PVZService":
     """Создает сервис для работы с пользователями."""
     return PVZService(
+        pvz_repo=pvz_repo,
+        pvz_groups_repo=pvz_groups_repo,
         pvz_policy=pvz_policy,
         employees_repo=employee_repo,
     )
@@ -83,12 +115,17 @@ def get_pvz_groups_service(
     """Создает сервис для работы с группами"""
 
     return PVZGroupsService(
-        db_helper=db_helper,
         group_policy=group_policy,
         group_repo=group_repo,
         pvz_repo=pvz_repo,
         employee_repo=employee_repo,
     )
+
+
+def get_inbox_service(
+    inbox_repo: InboxEventsDAO = Depends(get_inbox_repo),
+):
+    return InboxService(inbox_repo=inbox_repo)
 
 
 # AUTH
@@ -116,3 +153,4 @@ async def get_current_user(
 
 CurrentUserDep = Annotated[InternalUserSchema, Depends(get_current_user)]
 InternalKeyDep = Depends(verify_internal_request)
+IdempotencyKeyDep = Annotated[str, Header(alias="X-Idempotency-Key")]

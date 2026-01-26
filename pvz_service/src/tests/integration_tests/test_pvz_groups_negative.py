@@ -1,7 +1,5 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
 
-from src.main import app
 from src.tests.factories import GroupFactory
 
 pytestmark = pytest.mark.anyio
@@ -39,7 +37,7 @@ async def test_create_group_validation_error(client, payload, error_field):
 
 
 @pytest.mark.asyncio
-async def test_create_group_duplicate(session, make_auth_headers):
+async def test_create_group_duplicate(session, make_client_for_user):
     """
     Тест: Создание группы с неуникальным именем (409 Conflict).
     Сценарий:
@@ -55,11 +53,8 @@ async def test_create_group_duplicate(session, make_auth_headers):
 
     payload = {"name": duplicate_name}
 
-    headers = make_auth_headers(target_owner_id)
-    transport = ASGITransport(app=app)
-
-    async with AsyncClient(transport=transport, base_url="http://test", headers=headers) as ac:
-        response = await ac.post("/pvz_groups", json=payload)
+    async with make_client_for_user(target_owner_id) as target_client:
+        response = await target_client.post("/pvz_groups", json=payload)
 
         assert response.status_code == 409
         data = response.json()

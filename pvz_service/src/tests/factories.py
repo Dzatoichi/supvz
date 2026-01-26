@@ -67,6 +67,7 @@ class PVZFactory(AsyncPersistenceFactory[PVZAdd]):
     __model_cls__ = PVZs
 
     group_id = None
+    responsible_id = None
 
 
 class PVZUpdateFactory(AsyncPersistenceFactory[PVZUpdate]):

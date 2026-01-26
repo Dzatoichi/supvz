@@ -10,7 +10,7 @@ from src.utils.dependencies import get_permissions_service
 permissions_router = APIRouter(prefix="/permissions", tags=["Permissions"])
 
 
-@permissions_router.get("/")
+@permissions_router.get("")
 async def get_permissions(
     position_id: int | None = Query(None, description="ID должности"),
     user_id: int | None = Query(None, description="ID пользователя"),

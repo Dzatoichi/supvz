@@ -10,7 +10,7 @@ from src.tests.factories.custom_position_factories import (
 )
 from src.tests.factories.user_factories import UserFactory
 
-POSITIONS_URL = "/positions/"
+POSITIONS_URL = "/positions"
 
 
 @pytest.mark.asyncio
@@ -116,7 +116,7 @@ async def test_get_position_not_found(
     non_existent_id = 999999
 
     response = await client.get(
-        f"{POSITIONS_URL}{non_existent_id}",
+        f"{POSITIONS_URL}/{non_existent_id}",
         params={"position_source": PositionSourceEnum.custom.value},
     )
 
@@ -159,7 +159,7 @@ async def test_delete_position_not_found(
     """
     non_existent_id = 999999
 
-    response = await client.delete(f"{POSITIONS_URL}{non_existent_id}")
+    response = await client.delete(f"{POSITIONS_URL}/{non_existent_id}")
 
     assert response.status_code == 204
 

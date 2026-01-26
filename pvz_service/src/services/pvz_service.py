@@ -26,9 +26,13 @@ class PVZService:
 
     def __init__(
         self,
+        pvz_repo: PVZsDAO,
+        pvz_groups_repo: PVZGroupsDAO,
         pvz_policy: PVZAccessPolicy,
         employees_repo: EmployeesDAO,
     ):
+        self.pvz_repo = pvz_repo
+        self.pvz_groups_repo = pvz_groups_repo
         self.pvz_policy = pvz_policy
         self.employees_repo = employees_repo
 
@@ -36,14 +40,18 @@ class PVZService:
         self,
         data: PVZAdd,
         current_user_id: int,
-        repo: PVZsDAO,
-        group_repo: PVZGroupsDAO,
     ) -> PVZRead:
+        """Метод создания ПВЗ"""
         owner_exists = await self.employees_repo.get_employee(user_id=current_user_id)
         if not owner_exists:
             raise EmployeeNotFoundException(f"Owner с user_id={current_user_id} не существует")
 
-        pvz = await repo.get_pvz(code=data.code)
+        if data.responsible_id:
+            responsible_exists = await self.employees_repo.get_employee(user_id=data.responsible_id)
+            if not responsible_exists:
+                raise EmployeeNotFoundException(f"Ответственного с responsible_id={data.responsible_id} не существует")
+
+        pvz = await self.pvz_repo.get_pvz(code=data.code)
         if pvz:
             raise PVZAlreadyExistsException("ПВЗ с таким кодом уже существует")
 
@@ -51,7 +59,7 @@ class PVZService:
         if data.group_id == 0:
             data.group_id = None
         elif data.group_id:
-            group = await group_repo.get_group(id=data.group_id)
+            group = await self.pvz_groups_repo.get_group(id=data.group_id)
             if not group:
                 raise PVZGroupNotFoundException(f"Группа {data.group_id} не найдена")
 
@@ -60,7 +68,7 @@ class PVZService:
 
         payload = data.model_dump()
         payload["owner_id"] = current_user_id
-        pvz_add = await repo.create(payload)
+        pvz_add = await self.pvz_repo.create(payload)
 
         return PVZRead.model_validate(pvz_add, from_attributes=True)
 
@@ -69,14 +77,17 @@ class PVZService:
         pvz_id: int,
         current_user_id: int,
         data: PVZUpdate,
-        repo: PVZsDAO,
-        group_repo: PVZGroupsDAO,
     ) -> PVZRead:
         await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
+        if data.responsible_id:
+            responsible_exists = await self.employees_repo.get_employee(user_id=data.responsible_id)
+            if not responsible_exists:
+                raise EmployeeNotFoundException(f"Ответственного с responsible_id={data.responsible_id} не существует")
+
         # Если меняем группу, проверяем права на новую группу
         if data.group_id:
-            group = await group_repo.get_group(id=data.group_id)
+            group = await self.pvz_groups_repo.get_group(id=data.group_id)
             if not group:
                 raise PVZGroupNotFoundException("Группа не найдена")
             if group.owner_id != current_user_id:
@@ -88,20 +99,19 @@ class PVZService:
             "group_id": data.group_id,
             "type": data.type,
         }
-        payload = {k: v for k, v in payload.items() if v is not None}
+        payload = {k: v for k, v in payload.items() if v}
 
-        pvz_update = await repo.update(id=pvz_id, **payload)
+        pvz_update = await self.pvz_repo.update(id=pvz_id, **payload)
         return PVZRead.model_validate(pvz_update)
 
     async def get_pvz_by_id(
         self,
         pvz_id: int,
         current_user_id: int,
-        repo: PVZsDAO,
     ) -> PVZRead:
         await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
-        pvz = await repo.get_pvz(id=pvz_id)
+        pvz = await self.pvz_repo.get_pvz(id=pvz_id)
         if not pvz:
             raise PVZNotFoundException("ПВЗ не найден")
 
@@ -113,7 +123,6 @@ class PVZService:
         code: str,
         type: str,
         address: str,
-        repo: PVZsDAO,
         params: Params,
         group_id: int | None = None,
     ) -> Page[PVZRead]:
@@ -128,7 +137,7 @@ class PVZService:
         if group_id is not None:
             filters["group_id"] = group_id
 
-        pvzs = await repo.get_pvzs(params=params, **filters)
+        pvzs = await self.pvz_repo.get_pvzs(params=params, **filters)
 
         pvzs.items = [PVZRead.model_validate(pvz) for pvz in pvzs.items]
 
@@ -138,42 +147,28 @@ class PVZService:
         self,
         pvz_id: int,
         current_user_id: int,
-        repo: PVZsDAO,
-    ) -> PVZRead:
+    ) -> None:
         await self.pvz_policy.check_pvz_access(pvz_id, current_user_id)
 
-        pvz = await repo.get_pvz(id=pvz_id)
+        pvz = await self.pvz_repo.get_pvz(id=pvz_id)
+        if not pvz:
+            raise PVZNotFoundException("ПВЗ не найден")
 
-        result_data = {
-            "id": pvz.id,
-            "code": pvz.code,
-            "type": pvz.type,
-            "address": pvz.address,
-            "owner_id": pvz.owner_id,
-            "group_id": pvz.group_id,
-            "responsible_id": pvz.responsible_id,
-            "created_at": pvz.created_at,
-        }
-
-        success = await repo.delete(id=pvz_id)
+        success = await self.pvz_repo.delete(id=pvz_id)
         if not success:
             raise PVZDeleteFailedException("Ошибка при удалении ПВЗ")
-
-        return PVZRead(**result_data)
 
     async def get_employees_by_pvz_checked(
         self,
         user_id: int,
         pvz_id: int,
-        repo: EmployeesDAO,
-        pvz_repo: PVZsDAO,
         params: Params,
     ) -> Page[EmployeeResponseSchema]:
         """
         Возвращает список сотрудников указанного ПВЗ, если запрашивающий сотрудник
         действительно привязан к этому ПВЗ.
         """
-        employee = await repo.get_employee(user_id=user_id)
+        employee = await self.employees_repo.get_employee(user_id=user_id)
         if not employee:
             raise EmployeeNotFoundException("Сотрудник не найден")
 
@@ -182,7 +177,7 @@ class PVZService:
             raise EmployeeNotAllowedException("Нет доступа к этому ПВЗ")
 
         # Получаем всех сотрудников данного ПВЗ
-        employees_page = await pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id, params=params)
+        employees_page = await self.pvz_repo.get_employees_by_pvz_id(pvz_id=pvz_id, params=params)
         if not employees_page.items:
             raise NoEmployeesInPVZException("В ПВЗ нет сотрудников")
 
@@ -196,15 +191,13 @@ class PVZService:
         group_id: int,
         pvz_ids: list[int],
         current_user_id: int,
-        repo: PVZGroupsDAO,
-        pvz_repo: PVZsDAO,
     ):
-        group = await repo.get_group(id=group_id)
+        group = await self.pvz_groups_repo.get_group(id=group_id)
         if not group:
             raise PVZGroupNotFoundException("Группа не найдена")
 
         # Получаем все ПВЗ, которые хотим привязать
-        pvzs = await pvz_repo.get_pvzs(
+        pvzs = await self.pvz_repo.get_pvzs(
             Params(size=len(pvz_ids)),
             PVZs.id.in_(pvz_ids),
             owner_id=current_user_id,
@@ -213,15 +206,14 @@ class PVZService:
         if len(pvzs.items) != len(pvz_ids):
             raise PVZAlreadyExistsException("Некоторые ПВЗ не существуют")
 
-        await pvz_repo.assign_pvz_to_group(group_id=group_id, pvz_ids=pvz_ids)
+        await self.pvz_repo.assign_pvz_to_group(group_id=group_id, pvz_ids=pvz_ids)
 
         return {"detail": "ПВЗ успешно привязаны к группе"}
 
     async def unassign_all_pvz_from_group(
         self,
         group_id,
-        pvz_repo: PVZsDAO,
     ):
         """Отвязывает все ПВЗ от группы."""
 
-        await pvz_repo.unassign_pvzs_from_group(group_id)
+        await self.pvz_repo.unassign_pvzs_from_group(group_id)
