@@ -6,6 +6,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.utils.exceptions import (
     ShiftAlreadyExistsException,
     ShiftNotFoundException,
+    ShiftPenaltyAlreadyExistsException,
+    ShiftPenaltyNotFoundException,
+    ShiftPenaltyValidationException,
     ShiftValidationException,
 )
 from src.utils.logger_settings import logger
@@ -49,6 +52,51 @@ def setup_exception_handlers(app: FastAPI):
         """Обработчик ошибки: ошибка валидации смены."""
         logger.error(
             "ShiftValidationException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "validation_error", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftPenaltyNotFoundException)
+    async def shift_penalty_not_found_exception_handler(request: Request, exc: ShiftPenaltyNotFoundException):
+        """Обработчик ошибки: штраф не найден."""
+        logger.error(
+            "ShiftPenaltyNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "not_found", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftPenaltyAlreadyExistsException)
+    async def shift_penalty_already_exists_exception_handler(request: Request, exc: ShiftPenaltyAlreadyExistsException):
+        """Обработчик ошибки: штраф уже существует."""
+        logger.error(
+            "ShiftPenaltyAlreadyExistsException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "conflict", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftPenaltyValidationException)
+    async def shift_penalty_validation_exception_handler(request: Request, exc: ShiftPenaltyValidationException):
+        """Обработчик ошибки: ошибка валидации штрафа."""
+        logger.error(
+            "ShiftPenaltyValidationException",
             method=request.method,
             path=request.url.path,
             detail=exc.message,

@@ -3,8 +3,10 @@ from collections.abc import AsyncGenerator
 from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.dao.shift_penaltiesDAO import PenaltiesDAO
 from src.dao.shiftsDAO import ShiftsDAO
 from src.database.base import db_helper
+from src.services.shift_penalties_service import PenaltiesService
 from src.services.shifts_service import ShiftsService
 
 
@@ -29,3 +31,15 @@ def get_shift_service(
     dao: ShiftsDAO = Depends(get_shifts_dao),
 ) -> ShiftsService:
     return ShiftsService(dao=dao)
+
+
+def get_penalties_dao(
+    session: AsyncSession = Depends(get_session),
+) -> PenaltiesDAO:
+    return PenaltiesDAO(session=session)
+
+
+def get_penalties_service(
+    dao: PenaltiesDAO = Depends(get_penalties_dao),
+) -> PenaltiesService:
+    return PenaltiesService(dao=dao)
