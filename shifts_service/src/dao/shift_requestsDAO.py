@@ -99,7 +99,7 @@ class ShiftRequestsDAO(BaseDAO[ShiftRequest]):
         request_id: int,
         status: str,
         processed_by: int | None = None,
-        reason: str | None = None,
+        response: str | None = None,
     ) -> ShiftRequestReadSchema | None:
         """Обновление статуса запроса."""
         update_data = {
@@ -108,8 +108,8 @@ class ShiftRequestsDAO(BaseDAO[ShiftRequest]):
         }
         if processed_by is not None:
             update_data["processed_by"] = processed_by
-        if reason is not None:
-            update_data["reason"] = reason
+        if response is not None:
+            update_data["response"] = response
 
         stmt = update(self.model).where(self.model.id == request_id).values(**update_data).returning(self.model)
         result = await self.session.execute(stmt)
@@ -123,7 +123,7 @@ class ShiftRequestsDAO(BaseDAO[ShiftRequest]):
     @BaseDAO.with_exception
     async def delete_request(self, request_id: int) -> bool:
         """Удаление запроса."""
-        return await super().delete(request_id)
+        await super().delete(request_id)
 
     @BaseDAO.with_exception
     async def check_duplicate_pending_request(

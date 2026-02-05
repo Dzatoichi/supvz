@@ -6,7 +6,6 @@ from src.dao.shift_requestsDAO import ShiftRequestsDAO
 from src.schemas.shift_requests_schemas import (
     RequestStatusEnum,
     RequestTypeEnum,
-    ShiftRequestCancelByUserSchema,
     ShiftRequestCreateSchema,
     ShiftRequestFilterSchema,
     ShiftRequestProcessSchema,
@@ -41,7 +40,7 @@ class ShiftRequestsService:
         if data.request_type in (RequestTypeEnum.CANCEL, RequestTypeEnum.CHANGE):
             if data.scheduled_shift_start_time <= current_time:
                 raise ShiftRequestShiftAlreadyStartedException(
-                    "Нельзя создать запрос на отмену/изменение: смена уже началась"
+                    "Нельзя создать запрос на отмену/изменение: смена уже началась",
                 )
 
         is_duplicate = await self.dao.check_duplicate_pending_request(
@@ -121,7 +120,7 @@ class ShiftRequestsService:
             request_id=request_id,
             status=data.status.value,
             processed_by=data.processed_by,
-            reason=data.reason,
+            response=data.response,
         )
         if not updated:
             raise ShiftRequestNotFoundException()
@@ -131,7 +130,6 @@ class ShiftRequestsService:
         self,
         request_id: int,
         user_id: int,
-        data: ShiftRequestCancelByUserSchema | None = None,
     ) -> ShiftRequestReadSchema:
         """
         Отмена запроса пользователем.
@@ -146,20 +144,17 @@ class ShiftRequestsService:
         if existing.status != RequestStatusEnum.PENDING:
             raise ShiftRequestAlreadyProcessedException("Нельзя отменить уже обработанный запрос")
 
-        reason = data.reason if data else None
-
         updated = await self.dao.update_request_status(
             request_id=request_id,
-            status=RequestStatus.CANCELLED_BY_USER.value,
-            reason=reason,
+            status=RequestStatusEnum.CANCELLED_BY_USER.value,
         )
         if not updated:
             raise ShiftRequestNotFoundException()
         return updated
 
-    async def delete_request(self, request_id: int) -> bool:
+    async def delete_request(self, request_id: int) -> None:
         """Удаление запроса."""
         existing = await self.dao.get_request_by_id(request_id)
         if not existing:
             raise ShiftRequestNotFoundException()
-        return await self.dao.delete_request(request_id)
+        await self.dao.delete_request(request_id)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -25,7 +25,7 @@ class RequestStatusEnum(str, Enum):
 class ShiftRequestBaseSchema(BaseModel):
     """Базовая схема запроса на смену."""
 
-    scheduled_shift_id: int | None = Field(
+    scheduled_shift_id: int = Field(
         default=None,
         description="ID запланированной смены",
     )
@@ -51,7 +51,7 @@ class ShiftRequestBaseSchema(BaseModel):
 class ShiftRequestCreateSchema(BaseModel):
     """Схема создания запроса на смену."""
 
-    scheduled_shift_id: int | None = Field(
+    scheduled_shift_id: int = Field(
         default=None,
         description="ID запланированной смены (обязательно для cancel/change)",
     )
@@ -73,10 +73,14 @@ class ShiftRequestCreateSchema(BaseModel):
 
     @field_validator("scheduled_shift_start_time")
     @classmethod
-    def remove_timezone(cls, v: datetime) -> datetime:
-        """Удаляет информацию о часовом поясе из datetime."""
+    def validate_shift_start_time(cls, v: datetime) -> datetime:
+        """Валидирует время начала смены."""
         if v is not None and v.tzinfo is not None:
-            return v.replace(tzinfo=None)
+            v = v.replace(tzinfo=None)
+
+        if v is not None and v.date() < date.today():
+            raise ValueError("Нельзя создать запрос на смену на прошедший день")
+
         return v
 
     @model_validator(mode="after")
@@ -111,10 +115,10 @@ class ShiftRequestProcessSchema(BaseModel):
         description="Новый статус запроса",
     )
     processed_by: int = Field(..., description="ID обработавшего пользователя")
-    reason: str | None = Field(
+    response: str | None = Field(
         default=None,
         max_length=2000,
-        description="Причина одобрения/отклонения",
+        description="Ответ от обработавшего (комментарий к одобрению/отклонению)",
     )
 
     @field_validator("status")
@@ -140,6 +144,7 @@ class ShiftRequestReadSchema(BaseModel):
     processed_at: datetime | None
     processed_by: int | None
     reason: str | None
+    response: str | None
     scheduled_shift_start_time: datetime
     created_at: datetime
     updated_at: datetime
@@ -192,13 +197,3 @@ class ShiftRequestFilterSchema(BaseModel):
         if v is not None and v.tzinfo is not None:
             return v.replace(tzinfo=None)
         return v
-
-
-class ShiftRequestCancelByUserSchema(BaseModel):
-    """Схема отмены запроса пользователем."""
-
-    reason: str | None = Field(
-        default=None,
-        max_length=2000,
-        description="Причина отмены",
-    )

@@ -53,6 +53,10 @@ class ShiftRequest(Base):
         Text,
         nullable=True,
     )
+    response: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
     scheduled_shift_start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

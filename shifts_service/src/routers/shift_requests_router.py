@@ -6,7 +6,6 @@ from fastapi_pagination import Page, Params
 from src.schemas.shift_requests_schemas import (
     RequestStatusEnum,
     RequestTypeEnum,
-    ShiftRequestCancelByUserSchema,
     ShiftRequestCreateSchema,
     ShiftRequestFilterSchema,
     ShiftRequestProcessSchema,
@@ -134,7 +133,6 @@ async def process_shift_request(
 async def cancel_shift_request_by_user(
     request_id: int,
     user_id: int = Query(..., description="ID пользователя, отменяющего запрос"),
-    data: ShiftRequestCancelByUserSchema | None = None,
     service: ShiftRequestsService = Depends(get_shift_requests_service),
 ) -> ShiftRequestReadSchema:
     """
@@ -142,7 +140,7 @@ async def cancel_shift_request_by_user(
 
     Пользователь может отменить только свой pending запрос.
     """
-    return await service.cancel_request_by_user(request_id, user_id, data)
+    return await service.cancel_request_by_user(request_id, user_id)
 
 
 @shift_requests_router.delete(
