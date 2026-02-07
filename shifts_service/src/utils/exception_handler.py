@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.utils.exceptions import (
+    SalaryRuleNotFoundException,
+    SalaryRuleValidationException,
     ShiftAlreadyExistsException,
     ShiftNotFoundException,
     ShiftPenaltyAlreadyExistsException,
@@ -97,6 +99,36 @@ def setup_exception_handlers(app: FastAPI):
         """Обработчик ошибки: ошибка валидации штрафа."""
         logger.error(
             "ShiftPenaltyValidationException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "validation_error", "detail": exc.message},
+        )
+
+    @app.exception_handler(SalaryRuleNotFoundException)
+    async def salary_rule_not_found_exception_handler(request: Request, exc: SalaryRuleNotFoundException):
+        """Обработчик ошибки: правило расчета зарплаты не найдено."""
+        logger.error(
+            "SalaryRuleNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "not_found", "detail": exc.message},
+        )
+
+    @app.exception_handler(SalaryRuleValidationException)
+    async def salary_rule_validation_exception_handler(request: Request, exc: SalaryRuleValidationException):
+        """Обработчик ошибки: ошибка валидации правила расчета зарплаты."""
+        logger.error(
+            "SalaryRuleValidationException",
             method=request.method,
             path=request.url.path,
             detail=exc.message,
