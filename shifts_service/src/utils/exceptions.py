@@ -84,3 +84,19 @@ class ShiftRequestShiftAlreadyStartedException(Exception):
     def __init__(self, message: str = "Смена уже началась"):
         self.message = message
         super().__init__(self.message)
+
+
+class SalaryRuleNotFoundException(Exception):
+    """Исключение: правило расчета зарплаты не найдено."""
+
+    def __init__(self, message: str = "Правило расчета зарплаты не найдено"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class SalaryRuleValidationException(Exception):
+    """Исключение валидации правила расчета зарплаты."""
+
+    def __init__(self, message: str = "Ошибка валидации правила расчета зарплаты"):
+        self.message = message
+        super().__init__(self.message)
