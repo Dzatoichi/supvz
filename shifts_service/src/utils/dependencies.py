@@ -4,9 +4,11 @@ from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dao.shift_penaltiesDAO import PenaltiesDAO
+from src.dao.shift_requestsDAO import ShiftRequestsDAO
 from src.dao.shiftsDAO import ShiftsDAO
 from src.database.base import db_helper
 from src.services.shift_penalties_service import PenaltiesService
+from src.services.shift_requests_service import ShiftRequestsService
 from src.services.shifts_service import ShiftsService
 
 
@@ -43,3 +45,15 @@ def get_penalties_service(
     dao: PenaltiesDAO = Depends(get_penalties_dao),
 ) -> PenaltiesService:
     return PenaltiesService(dao=dao)
+
+
+def get_shift_requests_dao(
+    session: AsyncSession = Depends(get_session),
+) -> ShiftRequestsDAO:
+    return ShiftRequestsDAO(session=session)
+
+
+def get_shift_requests_service(
+    dao: ShiftRequestsDAO = Depends(get_shift_requests_dao),
+) -> ShiftRequestsService:
+    return ShiftRequestsService(dao=dao)
