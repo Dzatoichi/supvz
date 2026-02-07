@@ -11,6 +11,11 @@ from src.utils.exceptions import (
     ShiftPenaltyAlreadyExistsException,
     ShiftPenaltyNotFoundException,
     ShiftPenaltyValidationException,
+    ShiftRequestAlreadyExistsException,
+    ShiftRequestAlreadyProcessedException,
+    ShiftRequestNotFoundException,
+    ShiftRequestShiftAlreadyStartedException,
+    ShiftRequestValidationException,
     ShiftValidationException,
 )
 from src.utils.logger_settings import logger
@@ -107,6 +112,85 @@ def setup_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={"error": "validation_error", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftRequestNotFoundException)
+    async def shift_request_not_found_exception_handler(request: Request, exc: ShiftRequestNotFoundException):
+        """Обработчик ошибки: запрос на смену не найден."""
+        logger.error(
+            "ShiftRequestNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "not_found", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftRequestAlreadyExistsException)
+    async def shift_request_already_exists_exception_handler(request: Request, exc: ShiftRequestAlreadyExistsException):
+        """Обработчик ошибки: запрос на смену уже существует."""
+        logger.error(
+            "ShiftRequestAlreadyExistsException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "conflict", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftRequestValidationException)
+    async def shift_request_validation_exception_handler(request: Request, exc: ShiftRequestValidationException):
+        """Обработчик ошибки: ошибка валидации запроса на смену."""
+        logger.error(
+            "ShiftRequestValidationException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "validation_error", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftRequestAlreadyProcessedException)
+    async def shift_request_already_processed_exception_handler(
+        request: Request, exc: ShiftRequestAlreadyProcessedException
+    ):
+        """Обработчик ошибки: запрос на смену уже обработан."""
+        logger.error(
+            "ShiftRequestAlreadyProcessedException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "conflict", "detail": exc.message},
+        )
+
+    @app.exception_handler(ShiftRequestShiftAlreadyStartedException)
+    async def shift_request_shift_already_started_exception_handler(
+        request: Request, exc: ShiftRequestShiftAlreadyStartedException
+    ):
+        """Обработчик ошибки: смена уже началась."""
+        logger.error(
+            "ShiftRequestShiftAlreadyStartedException",
+            method=request.method,
+            path=request.url.path,
+            detail=exc.message,
+            client_ip=request.client.host if request.client else None,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "shift_already_started", "detail": exc.message},
         )
 
     @app.exception_handler(SalaryRuleNotFoundException)

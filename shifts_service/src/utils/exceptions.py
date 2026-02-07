@@ -46,6 +46,46 @@ class ShiftPenaltyValidationException(Exception):
         super().__init__(self.message)
 
 
+class ShiftRequestNotFoundException(Exception):
+    """Исключение: запрос на смену не найден."""
+
+    def __init__(self, message: str = "Запрос на смену не найден"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class ShiftRequestAlreadyExistsException(Exception):
+    """Исключение: запрос на смену уже существует."""
+
+    def __init__(self, message: str = "Запрос на смену уже существует"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class ShiftRequestValidationException(Exception):
+    """Исключение валидации запроса на смену."""
+
+    def __init__(self, message: str = "Ошибка валидации запроса на смену"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class ShiftRequestAlreadyProcessedException(Exception):
+    """Исключение: запрос на смену уже обработан."""
+
+    def __init__(self, message: str = "Запрос на смену уже обработан"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class ShiftRequestShiftAlreadyStartedException(Exception):
+    """Исключение: смена уже началась."""
+
+    def __init__(self, message: str = "Смена уже началась"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class SalaryRuleNotFoundException(Exception):
     """Исключение: правило расчета зарплаты не найдено."""
 
