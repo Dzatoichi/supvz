@@ -3,6 +3,19 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
+from src.utils.exceptions import (
+    ScheduledShiftAlreadyExistsException,
+    ScheduledShiftNotFoundException,
+    ScheduledShiftValidationException,
+    ScheduledShiftTimeConflictException,
+    ScheduledShiftBusinessLogicException,
+    UserNotFoundException,
+    UserNotAvailableException,
+    CannotUpdateCompletedShiftException,
+    CannotDeleteCompletedShiftException,
+    PVZNotFoundException,
+)
+
 from src.utils.logger_settings import logger
 
 
@@ -16,11 +29,9 @@ def setup_exception_handlers(app: FastAPI):
         """
         Функция обработчика стандартных HTTP-исключений.
         """
-        # Определите тип исключения для логирования
-        exc_type = type(exc).__name__
 
-        logger.warning(
-            exc_type,
+        logger.error(
+            "HTTPException",
             method=request.method,
             path=request.url.path,
             status_code=exc.status_code,
@@ -76,8 +87,185 @@ def setup_exception_handlers(app: FastAPI):
             content={"error": "database_error", "detail": "DB operation failed"},
         )
 
-    # УДАЛИТЕ все специфичные обработчики для кастомных исключений
-    # так как они теперь наследуются от HTTPException
+    @app.exception_handler(ScheduledShiftAlreadyExistsException)
+    async def scheduled_shift_already_exists_handler(
+            request: Request,
+            exc: ScheduledShiftAlreadyExistsException,
+    ):
+        logger.error(
+            "ScheduledShiftAlreadyExistsException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "sheduled_shift_already_exists", "detail": str(exc)},
+        )
+
+    @app.exception_handler(ScheduledShiftValidationException)
+    async def scheduled_shift_validation_handler(
+            request: Request,
+            exc: ScheduledShiftValidationException,
+    ):
+        logger.error(
+            "ScheduledShiftValidationException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "scheduled_shift_validation_error", "detail": str(exc)},
+        )
+
+    @app.exception_handler(ScheduledShiftNotFoundException)
+    async def scheduled_shift_not_found_handler(
+            request: Request,
+            exc: ScheduledShiftNotFoundException,
+    ):
+        logger.error(
+            "ScheduledShiftNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "scheduled_shift_not_found", "detail": str(exc)},
+        )
+
+    @app.exception_handler(ScheduledShiftTimeConflictException)
+    async def scheduled_shift_time_conflict_handler(
+            request: Request,
+            exc: ScheduledShiftTimeConflictException,
+    ):
+        logger.error(
+            "ScheduledShiftTimeConflictException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "scheduled_shift_time_conflict", "detail": str(exc)},
+        )
+
+    @app.exception_handler(ScheduledShiftBusinessLogicException)
+    async def scheduled_shift_business_logic_handler(
+            request: Request,
+            exc: ScheduledShiftBusinessLogicException,
+    ):
+        logger.error(
+            "ScheduledShiftBusinessLogicException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "scheduled_shift_business_logic_error", "detail": str(exc)},
+        )
+
+    @app.exception_handler(PVZNotFoundException)
+    async def pvz_not_found_handler(
+            request: Request,
+            exc: PVZNotFoundException,
+    ):
+        logger.error(
+            "PVZNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "pvz_not_found", "detail": str(exc)},
+        )
+
+    @app.exception_handler(UserNotFoundException)
+    async def user_not_found_handler(
+            request: Request,
+            exc: UserNotFoundException,
+    ):
+        logger.error(
+            "UserNotFoundException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "user_not_found", "detail": str(exc)},
+        )
+
+    @app.exception_handler(UserNotAvailableException)
+    async def user_not_available_handler(
+            request: Request,
+            exc: UserNotAvailableException,
+    ):
+        logger.error(
+            "UserNotAvailableException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "user_not_available", "detail": str(exc)},
+        )
+
+    @app.exception_handler(CannotUpdateCompletedShiftException)
+    async def cannot_update_completed_shift_handler(
+            request: Request,
+            exc: CannotUpdateCompletedShiftException,
+    ):
+        logger.error(
+            "CannotUpdateCompletedShiftException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "cannot_update_completed_shift", "detail": str(exc)},
+        )
+
+    @app.exception_handler(CannotDeleteCompletedShiftException)
+    async def cannot_delete_completed_shift_handler(
+            request: Request,
+            exc: CannotDeleteCompletedShiftException,
+    ):
+        logger.error(
+            "CannotDeleteCompletedShiftException",
+            method=request.method,
+            path=request.url.path,
+            detail=str(exc),
+            client_ip=request.client.host if request.client else None,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": "cannot_delete_completed_shift", "detail": str(exc)},
+        )
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
