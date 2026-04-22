@@ -1,0 +1,232 @@
+from fastapi_pagination import Page, Params
+from sqlalchemy.exc import IntegrityError
+
+from src.dao.permissionsDAO import PermissionsDAO
+from src.dao.usersDAO import UsersDAO
+from src.models.users.users import Users
+from src.schemas.permissions_schemas import PermissionReadSchema
+from src.schemas.tokens_schemas import TokenTypesEnum
+from src.schemas.users_schemas import (
+    StatusResponseSchema,
+    SubscriptionEnum,
+    UpdateUsersPermissionsSchema,
+    UserAuthRequestSchema,
+    UserReadSchema,
+    UserUpdateMeSchema,
+    UserUpdateSchema,
+)
+from src.services.token_service import JWTTokensService
+from src.utils.exceptions import (
+    EmailAlreadyExistException,
+    PermissionDeniedException,
+    PermissionsNotFound,
+    UserNotFoundException,
+    UserUnauthorizedException,
+)
+from src.utils.logger_settings import logger
+
+
+class UserService:
+    """
+    Класс сервиса для работы с пользователями.
+    """
+
+    def __init__(
+        self,
+        db_helper,
+        users_dao: UsersDAO,
+        permissions_dao: PermissionsDAO,
+        token_service: JWTTokensService,
+    ):
+        self.db_helper = db_helper
+        self.users_repo = users_dao
+        self.permissions_repo = permissions_dao
+        self.token_service = token_service
+
+    async def set_paid_owner(self, user_id: int) -> UserReadSchema:
+        """
+        Метод для обновления подписки с test на paid.
+        """
+
+        user = await self.users_repo.get_by_id(user_id)
+        if not user:
+            raise UserNotFoundException("User not found")
+
+        if user.subscription != SubscriptionEnum.test:
+            logger.error(
+                "Пользователю не удалось поменять подписку, т.к у него нет роли owner!",
+                user_id=user.id,
+            )
+
+            raise PermissionDeniedException("User is not owner")
+
+        updated_user = await self.users_repo.update(id=user_id, subscription=SubscriptionEnum.paid)
+
+        logger.info(
+            "Пользователю успешно поменяна подписка!",
+            user_id=user.id,
+        )
+
+        return UserReadSchema.model_validate(updated_user)
+
+    async def get_user_by_id(self, user_id: int) -> UserReadSchema:
+        """Получает юзера по id"""
+
+        user = await self.users_repo.get_by_id(user_id)
+        if not user:
+            raise UserNotFoundException("User not found")
+
+        return UserReadSchema.model_validate(user)
+
+    async def get_users(self, params: Params) -> Page[Users]:
+        """Получает всех юзеров"""
+
+        users = await self.users_repo.get_users(params=params)
+
+        if users.total == 0:
+            raise UserNotFoundException("Users not found")
+
+        return users
+
+    async def update_user(
+        self,
+        user_id: int,
+        user: UserUpdateSchema,
+    ) -> UserReadSchema:
+        """Обновляет данные пользователя"""
+
+        update_user = await self.users_repo.get_by_id(id=user_id)
+        if not update_user:
+            raise UserNotFoundException("User not found")
+
+        try:
+            updated_user = await self.users_repo.update(
+                update_user.id,
+                email=user.email,
+            )
+        except IntegrityError as e:
+            raise EmailAlreadyExistException("На данный email уже привязан аккаунт.") from e
+
+        logger.info(
+            "Информация о пользователе id={user_id} успешно обновлена!",
+            user_id=user_id,
+        )
+        return updated_user
+
+    async def delete_user(self, user_id: int):
+        """Удаляет пользователя по id"""
+
+        user = await self.users_repo.get_by_id(user_id)
+        if not user:
+            raise UserNotFoundException("User not found")
+
+        logger.info(
+            "Пользователь id={user_id} успешно удален!",
+            user_id=user.id,
+        )
+
+        await self.users_repo.delete(user.id)
+
+    async def set_user_permissions(
+        self,
+        user_id: int,
+        permission_ids: list[int],
+    ) -> list[PermissionReadSchema]:
+        """Обновляет список прав пользователя"""
+
+        user = await self.users_repo.get_by_id(id=user_id)
+        if not user:
+            raise UserNotFoundException("Пользователь с таким id не найден.")
+
+        async with self.db_helper.async_session_maker() as session:
+            async with session.begin():
+                try:
+                    await self.users_repo.update_user_permissions(
+                        session=session,
+                        user_id=user_id,
+                        new_permission_ids=permission_ids,
+                    )
+                except IntegrityError as e:
+                    raise PermissionsNotFound("Права доступа из списка не найдены.") from e
+
+                permissions = await self.permissions_repo.get_user_permissions_without_pagination(
+                    session=session,
+                    user_id=user_id,
+                )
+
+                return [PermissionReadSchema.model_validate(p) for p in permissions]
+
+    async def update_users_permissions(
+        self,
+        data: UpdateUsersPermissionsSchema,
+    ) -> StatusResponseSchema:
+        """
+        Обновляет права пользователей.
+        """
+
+        found_users = await self.users_repo.get_users_by_ids(user_ids=data.users)
+        found_ids = {user.id for user in found_users}
+        requested_ids = set(data.users)
+
+        missing_ids = requested_ids - found_ids
+        if missing_ids:
+            raise UserNotFoundException(f"Пользователи с id {list(missing_ids)} не найдены.")
+
+        try:
+            await self.users_repo.update_users_permissions(
+                user_ids=data.users,
+                permission_ids=data.new_permission_ids,
+            )
+        except IntegrityError as e:
+            raise PermissionsNotFound("Права доступа из списка не найдены.") from e
+
+        return StatusResponseSchema(
+            status="ok",
+            message=f"Права обновлены для {len(data.users)} пользователей.",
+        )
+
+    async def get_me(
+        self,
+        token: UserAuthRequestSchema,
+    ) -> UserReadSchema:
+        """
+        Получает данные о пользователе по access token
+        """
+
+        token_payload = await self.token_service.validate_token(
+            token=token.access_token, token_type=TokenTypesEnum.access
+        )
+        user_id = token_payload.get("user_id")
+        user = await self.users_repo.get_by_id(user_id)
+        if not user:
+            raise UserUnauthorizedException("Пользователь не найден или удален.")
+        return UserReadSchema.model_validate(user)
+
+    async def update_me(
+        self,
+        token: UserAuthRequestSchema,
+        user_data: UserUpdateMeSchema,
+    ) -> UserReadSchema:
+        """
+        Обновление собственных данных пользователя с помощью access token
+        """
+
+        token_payload = await self.token_service.validate_token(
+            token.access_token,
+            TokenTypesEnum.access,
+        )
+
+        user = await self.users_repo.get_by_id(token_payload.get("user_id"))
+        if not user:
+            raise UserNotFoundException("User not found")
+
+        updated_user = await self.users_repo.update(
+            id=user.id,
+            email=user_data.email,
+        )
+
+        logger.info(
+            "Информация о пользователе id={user_id} успешно обновлена!",
+            user_id=updated_user.id,
+        )
+        return updated_user

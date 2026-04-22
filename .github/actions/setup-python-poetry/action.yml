@@ -1,0 +1,27 @@
+name: 'Setup Python & Poetry'
+inputs:
+  service-dir:
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry  
+      shell: bash
+      run: |
+        pipx install poetry==2.0.0 --python python
+        poetry config virtualenvs.in-project true
+
+    - uses: actions/cache@v4
+      with:
+        path: ${{ inputs.service-dir }}/.venv
+        key: venv-${{ runner.os }}-${{ hashFiles(format('{0}/poetry.lock', inputs.service-dir)) }}
+        restore-keys: |
+          venv-${{ runner.os }}-py3.11-${{ inputs.service-dir }}-
+
+    - run: poetry install --no-root --no-interaction
+      shell: bash
+      working-directory: ${{ inputs.service-dir }}

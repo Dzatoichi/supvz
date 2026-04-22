@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: requests_service
+  liquibase:
+    change-log: migrations/db.changelog-master.yaml
+
+server:
+  port: 8002
+
+springdoc:
+  swagger-ui:
+    path: /docs
+  api-docs:
+    path: /v3/api-docs

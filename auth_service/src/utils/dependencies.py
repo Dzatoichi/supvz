@@ -1,0 +1,130 @@
+from fastapi import Depends, HTTPException, Request, status
+
+from src.dao.custom_positionsDAO import CustomPositionDAO
+from src.dao.permissionsDAO import PermissionsDAO
+from src.dao.system_positionsDAO import SystemPositionDAO
+from src.dao.tokensDAO import RefreshTokensDAO, StatefulTokenDAO
+from src.dao.usersDAO import UsersDAO
+from src.database.base import db_helper
+from src.schemas.users_schemas import UserAuthRequestSchema
+from src.services.permission_service import PermissionService
+from src.services.position_service import PositionService
+from src.services.token_service import JWTTokensService, StatefulTokenService
+from src.services.user_service import UserService
+
+# region DAOS
+
+
+def get_users_dao() -> UsersDAO:
+    """Создаёт репозиторий (сессия внутри через _get_session)."""
+    return UsersDAO()
+
+
+def get_stateful_token_dao() -> StatefulTokenDAO:
+    """Создаём DAO для работы с stateful токенами."""
+    return StatefulTokenDAO()
+
+
+def get_refresh_token_dao() -> RefreshTokensDAO:
+    """Создаём DAO для работы с refresh токенами"""
+    return RefreshTokensDAO()
+
+
+def get_permissions_dao() -> PermissionsDAO:
+    """Создаем DAO для работы с Permissions."""
+    return PermissionsDAO()
+
+
+def get_custom_position_dao() -> CustomPositionDAO:
+    """Создаем DAO для работы с CustomPosition."""
+    return CustomPositionDAO()
+
+
+def get_system_position_dao() -> SystemPositionDAO:
+    """Создаем DAO для работы с SystemPosition."""
+    return SystemPositionDAO()
+
+
+# region Сервисы
+
+
+def get_stateful_token_service(
+    dao: StatefulTokenDAO = Depends(get_stateful_token_dao),
+) -> StatefulTokenService:
+    """Создает сервис для работы с stateful токенами."""
+    return StatefulTokenService(dao=dao)
+
+
+def get_auth_service(
+    custom_repo: CustomPositionDAO = Depends(get_custom_position_dao),
+    system_repo: SystemPositionDAO = Depends(get_system_position_dao),
+    user_repo: UsersDAO = Depends(get_users_dao),
+    perm_repo: PermissionsDAO = Depends(get_permissions_dao),
+) -> "AuthService":  # type: ignore
+    """Создаёт сервис для работы с авторизацией."""
+    from src.services.auth_service import AuthService
+
+    return AuthService(
+        db_helper=db_helper,
+        custom_repo=custom_repo,
+        system_repo=system_repo,
+        user_repo=user_repo,
+        permission_repo=perm_repo,
+    )
+
+
+def get_jwt_tokens_service(
+    repo: RefreshTokensDAO = Depends(get_refresh_token_dao),
+) -> JWTTokensService:
+    """Создаёт сервис для работы с JWT токенами."""
+
+    return JWTTokensService(repo=repo)
+
+
+def get_user_service(
+    users_dao: UsersDAO = Depends(get_users_dao),
+    permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+) -> "UserService":
+    """Создает сервис для работы с пользователями."""
+    return UserService(
+        db_helper=db_helper,
+        users_dao=users_dao,
+        permissions_dao=permissions_dao,
+        token_service=token_service,
+    )
+
+
+def get_position_service(
+    custom_position_dao: CustomPositionDAO = Depends(get_custom_position_dao),
+    system_position_dao: SystemPositionDAO = Depends(get_system_position_dao),
+    permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
+    user_dao: UsersDAO = Depends(get_users_dao),
+) -> "PositionService":
+    """Создает сервис для работы с должностями."""
+
+    return PositionService(
+        db_helper=db_helper,
+        custom_position_dao=custom_position_dao,
+        system_position_dao=system_position_dao,
+        permissions_dao=permissions_dao,
+        user_dao=user_dao,
+    )
+
+
+def get_permissions_service(
+    permissions_dao: PermissionsDAO = Depends(get_permissions_dao),
+) -> "PermissionService":
+    """Создает сервис для работы с правами доступа"""
+    return PermissionService(permissions_dao=permissions_dao)
+
+
+def get_access_token_from_cookie(request: Request) -> UserAuthRequestSchema:
+    """Зависимость для получения access токена из куки"""
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access token not found in cookies",
+        )
+    return access_token

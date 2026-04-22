@@ -204,3 +204,23 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+.idea/
+pg_data/
+.vscode/
+
+# Maven / Java proj
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+### Сервисы в которых не принимал участие
+notifications_service/
+requests_service/
