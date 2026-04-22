@@ -1,6 +1,7 @@
+import builtins
 from datetime import datetime
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -11,23 +12,9 @@ from pydantic import (
     model_validator,
 )
 
-from src.core.security.permissions import PermissionEnum
-from src.core.security.permissions.role_permissions import get_permissions_for_role
+from src.schemas.enums import PositionSourceEnum
 
 str = Annotated[str, StringConstraints(min_length=8, max_length=128)]
-
-
-class UserRoleEnum(str, Enum):
-    """
-    Перечисление ролей пользователя.
-    """
-
-    administrator = "administrator"
-    owner = "owner"
-    curator = "curator"
-    employee = "employee"
-    intern = "intern"
-    handyman = "handyman"
 
 
 class SubscriptionEnum(Enum):
@@ -38,6 +25,13 @@ class SubscriptionEnum(Enum):
     paid = "paid"
     test = "test"
     expired = "expired"
+
+
+class StatusResponseSchema(BaseModel):
+    """Схема для возврата текстового ответа."""
+
+    status: Literal["ok", "error"] = "ok"
+    message: str | None = None
 
 
 class UserBaseSchema(BaseModel):
@@ -72,6 +66,7 @@ class UserRegisterSchema(UserLoginSchema):
     """
 
     confirm_password: str
+    register_token: Annotated[str, StringConstraints(min_length=8, max_length=512)] | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserRegisterSchema":
@@ -83,15 +78,20 @@ class UserRegisterSchema(UserLoginSchema):
         return self
 
 
-class UserUpdateSchema(BaseModel):
+class UserUpdateSchema(UserBaseSchema):
     """
     Схема изменения пользователя.
     """
 
-    id: int
-    email: EmailStr | None = None
+    pass
 
-    model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+class UserUpdateMeSchema(UserBaseSchema):
+    """
+    Схема для изменения собственных данных пользователя
+    """
+
+    pass
 
 
 class UserReadSchema(UserBaseSchema):
@@ -100,17 +100,10 @@ class UserReadSchema(UserBaseSchema):
     """
 
     id: int
-    role: UserRoleEnum
     subscription: SubscriptionEnum
-    permissions: list[PermissionEnum] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
-
-    @model_validator(mode="after")
-    def set_permissions(self) -> "UserReadSchema":
-        self.permissions = get_permissions_for_role(self.role)
-        return self
 
 
 class UserAuthRequestSchema(BaseModel):
@@ -118,7 +111,7 @@ class UserAuthRequestSchema(BaseModel):
     Схема для принятия авторизационного запроса(токена).
     """
 
-    access_token: str
+    access_token: Annotated[builtins.str, StringConstraints(min_length=8, max_length=4096)]
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
@@ -170,3 +163,41 @@ class UserForgotPasswordSchema(BaseModel):
         return v.lower()
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
+
+
+class UpdateUserPermissionsSchema(BaseModel):
+    """
+    Схема для обновления списка прав пользователя
+    """
+
+    permission_ids: list[int]
+
+
+class UpdateUsersPermissionsSchema(BaseModel):
+    """
+    Схема для обновления списка прав у всех юзеров,
+    которые подаются на вход
+    """
+
+    users: list[int]
+    new_permission_ids: list[int]
+
+
+class UserRegisterEmployeeSchema(BaseModel):
+    """
+    Схема запроса для генерации JWT register token, который используется для регистрации сотрудников.
+    """
+
+    pvz_id: int
+    owner_id: int
+    position_id: int
+    position_source: PositionSourceEnum = PositionSourceEnum.system
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserPermissionSchema(BaseModel):
+    """Вспомогательная схема для связи пользователя с правом."""
+
+    user_id: int
+    permission_id: int

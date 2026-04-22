@@ -1,0 +1,30 @@
+from src.utils.exceptions import (
+    AccessDeniedException,
+    AppException,
+    EmployeeAlreadyExistsException,
+    EmployeeNotAllowedException,
+    EmployeeNotFoundException,
+    InboxConflictException,
+    InvalidInternalApiKeyException,
+    NoEmployeesInPVZException,
+    PVZAlreadyExistsException,
+    PVZGroupAlreadyExistsException,
+    PVZGroupFilterException,
+    PVZGroupNotFoundException,
+    PVZNotFoundException,
+)
+
+exception_map: dict[str, type[AppException]] = {
+    "pvz_already_exists": PVZAlreadyExistsException,
+    "pvz_not_found": PVZNotFoundException,
+    "employee_already_exists": EmployeeAlreadyExistsException,
+    "employee_not_found": EmployeeNotFoundException,
+    "employee_not_allowed": EmployeeNotAllowedException,
+    "no_employees_in_pvz": NoEmployeesInPVZException,
+    "pvz_group_already_exists": PVZGroupAlreadyExistsException,
+    "pvz_group_not_found": PVZGroupNotFoundException,
+    "pvz_group_filter": PVZGroupFilterException,
+    "invalid_internal_api_key": InvalidInternalApiKeyException,
+    "access_denied": AccessDeniedException,
+    "inbox_conflict": InboxConflictException,
+}

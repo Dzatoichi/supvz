@@ -2,58 +2,87 @@ name: CI_PYTHON
 
 on:
   pull_request:
-    branches: [dev]
+    branches: [ dev ]
   push:
-    branches: [dev]
+    branches: [ dev ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint:
-    name: Lint (${{ matrix.service }})
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: dev
+          filters: |
+            auth_service:
+              - 'auth_service/**'
+            pvz_service:
+              - 'pvz_service/**'
+            shifts_service:
+              - 'shifts_service/**'
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.services != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service, pvz_service]
-    env:
-      SERVICE_DIR: ${{ matrix.service }}
+        service: ${{ fromJson(needs.changes.outputs.services) }}
     steps:
-      - uses: actions/checkout@main
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: '3.11'
-      - name: Install dependencies
-        working-directory: ${{ env.SERVICE_DIR }}
-        run: |
-          sudo curl -sSL https://install.python-poetry.org | python3 -
-          export PATH="$HOME/.local/bin:$PATH"
-          poetry install --no-root
-      - name: Lint with ruff
-        working-directory: ${{ env.SERVICE_DIR }}
+          service-dir: ${{ matrix.service }}
+      - name: Lint
+        working-directory: ${{ matrix.service }}
         run: |
           poetry run ruff check .
           poetry run ruff format --check --diff
 
   test:
-    name: Tests (${{ matrix.service }})
-    needs: lint
+    needs: changes
+    if: needs.changes.outputs.services != '[]'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        service: [auth_service, pvz_service]
+        service: ${{ fromJson(needs.changes.outputs.services) }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
-      SERVICE_DIR: ${{ matrix.service }}
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: test_user
+      DB_PASS: test_pass
+      DB_NAME: test_db
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-poetry
         with:
-          python-version: "3.11"
-      - name: Install dependencies
-        working-directory: ${{ env.SERVICE_DIR }}
-        run: |
-          sudo curl -sSL https://install.python-poetry.org | python3 -
-          export PATH="$HOME/.local/bin:$PATH"
-          poetry install --no-root
+          service-dir: ${{ matrix.service }}
       - name: Run tests
-        working-directory: ${{ env.SERVICE_DIR }}
-        run: |
-          poetry run pytest
+        working-directory: ${{ matrix.service }}
+        run: poetry run pytest -v --tb=short

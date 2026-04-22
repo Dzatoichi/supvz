@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import (
     BaseModel,
@@ -7,7 +7,7 @@ from pydantic import (
 )
 
 
-class PVZType(Enum):
+class PVZType(StrEnum):
     wb = "wb"
     ozon = "ozon"
     yamarket = "yamarket"
@@ -17,17 +17,17 @@ class PVZAdd(BaseModel):
     code: str
     type: PVZType
     address: str
-    owner_id: int
     group_id: int | None = None
-    curator_id: int | None = None
+    responsible_id: int | None = None
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)
 
 
 class PVZUpdate(BaseModel):
-    address: str
-    owner_id: int
-    curator_id: int | None = None
+    address: str | None = None
+    owner_id: int | None = None
+    type: PVZType | None = None
+    responsible_id: int | None = None
     group_id: int | None = None
 
     model_config = ConfigDict(from_attributes=True, str_strip_whitespace=True)

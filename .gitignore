@@ -219,3 +219,8 @@ pg_data/
 *.iws
 *.iml
 *.ipr
+
+
+### Сервисы в которых не принимал участие
+notifications_service/
+requests_service/

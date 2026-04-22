@@ -1,0 +1,12 @@
+spring:
+#  docker:
+#    compose:
+#      enabled: true
+#      file:
+#        - infrastructure/dev/docker-compose.yml
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.supvz.notifications_service: trace

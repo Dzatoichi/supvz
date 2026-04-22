@@ -1,7 +1,7 @@
 services:
-  postgres:
+  requests-psql:
     image: postgres:17-alpine
-    container_name: req_postgres
+    container_name: requests-psql
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
@@ -10,24 +10,28 @@ services:
       - "${DB_PORT}:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 15s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
-  requests_service:
+  requests-service:
     build:
       dockerfile: Dockerfile
-    container_name: req_service
+    container_name: requests-service
     restart: always
     expose:
       - "8002"
     env_file:
       - docker_build/.env
     depends_on:
-      postgres:
+      requests-psql:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -k -f http://localhost:8002/actuator/health || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
 
   nginx:
     image: nginx:stable-alpine
@@ -38,4 +42,5 @@ services:
     volumes:
       - ./docker_build/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - requests_service
+      requests-service:
+        condition: service_healthy

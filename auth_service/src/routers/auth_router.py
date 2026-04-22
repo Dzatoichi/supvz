@@ -2,13 +2,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 
-from src.core.security.permissions import PermissionEnum
-from src.dao.usersDAO import UsersDAO
 from src.schemas.users_schemas import (
     PasswordResetConfirmSchema,
     UserForgotPasswordSchema,
     UserLoginSchema,
     UserReadSchema,
+    UserRegisterEmployeeSchema,
     UserRegisterSchema,
 )
 from src.services.auth_service import AuthService
@@ -17,7 +16,6 @@ from src.utils.dependencies import (
     get_auth_service,
     get_jwt_tokens_service,
     get_stateful_token_service,
-    get_users_dao,
 )
 
 auth_router = APIRouter(prefix="/auth", tags=["Authorization"])
@@ -25,25 +23,34 @@ auth_router = APIRouter(prefix="/auth", tags=["Authorization"])
 
 @auth_router.post("/register", response_model=UserReadSchema, status_code=201)
 async def register_user(
-    user_in: UserRegisterSchema,
+    data: UserRegisterSchema,
     auth_service: AuthService = Depends(get_auth_service),
-    repo: UsersDAO = Depends(get_users_dao),
+    token_service: JWTTokensService | None = Depends(get_jwt_tokens_service),
 ) -> UserReadSchema:
     """
     Ручка регистрации пользователя.
     POST [/auth/register]
     """
-    user = await auth_service.register_user(data=user_in, repo=repo)
+    if data.register_token:
+        user = await auth_service.register_user(
+            data=data,
+            token_service=token_service,
+        )
+        return user
+
+    user = await auth_service.register_user(
+        data=data,
+        token_service=None,
+    )
 
     return user
 
 
-@auth_router.post("/login", responses={200: {"description": "Succesful login"}})
+@auth_router.post("/login", responses={200: {"description": "Successfully login"}})
 async def login(
     response: Response,
     credentials: UserLoginSchema,
     auth_service: AuthService = Depends(get_auth_service),
-    repo: UsersDAO = Depends(get_users_dao),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ) -> None:
     """
@@ -52,7 +59,6 @@ async def login(
     """
     access_token, refresh_token = await auth_service.login_user(
         credentials=credentials,
-        repo=repo,
         token_service=token_service,
     )
 
@@ -77,7 +83,6 @@ async def login(
 async def forgot_password(
     data: UserForgotPasswordSchema,
     auth_service: AuthService = Depends(get_auth_service),
-    repo: UsersDAO = Depends(get_users_dao),
     token_service: StatefulTokenService = Depends(get_stateful_token_service),
 ) -> None:
     """
@@ -86,7 +91,6 @@ async def forgot_password(
     """
     await auth_service.forgot_password(
         user_email=data.email,
-        repo=repo,
         token_service=token_service,
     )
 
@@ -95,7 +99,6 @@ async def forgot_password(
 async def reset_password(
     confirm_data: PasswordResetConfirmSchema,
     auth_service: AuthService = Depends(get_auth_service),
-    repo: UsersDAO = Depends(get_users_dao),
     token_service: StatefulTokenService = Depends(get_stateful_token_service),
 ) -> None:
     """
@@ -106,7 +109,6 @@ async def reset_password(
         token=confirm_data.token,
         new_password=confirm_data.new_password,
         token_service=token_service,
-        repo=repo,
     )
 
 
@@ -135,7 +137,7 @@ async def refresh_token(
     POST [/auth/refresh_token]
     """
     result = await token_service.refresh_token(refresh_token=refresh_token)
-    refresh_token = result["refresh_token"]
+    new_refresh_token = result["refresh_token"]
     access_token = result["access_token"]
 
     response.set_cookie(
@@ -146,7 +148,7 @@ async def refresh_token(
     )
     response.set_cookie(
         "refresh_token",
-        refresh_token,
+        new_refresh_token,
         httponly=True,
         max_age=3600 * 24 * 7,
     )
@@ -155,9 +157,8 @@ async def refresh_token(
 @auth_router.post("/authorize", status_code=200)
 async def authorize_user(
     request: Request,
-    permission: PermissionEnum,
+    permission: str,
     auth_service: AuthService = Depends(get_auth_service),
-    repo: UsersDAO = Depends(get_users_dao),
     token_service: JWTTokensService = Depends(get_jwt_tokens_service),
 ) -> None:
     """
@@ -167,6 +168,21 @@ async def authorize_user(
     await auth_service.authorize_user(
         token=token,
         token_service=token_service,
-        repo=repo,
-        permission=permission,
+        required_permission=permission,
     )
+
+
+@auth_router.post("/generate_register_token", response_model=dict)
+async def generate_register_token(
+    employee_data: UserRegisterEmployeeSchema,
+    auth_service: AuthService = Depends(get_auth_service),
+    token_service: JWTTokensService = Depends(get_jwt_tokens_service),
+) -> dict:
+    """
+    Создание токена регистрации сотрудника
+    """
+    result = await auth_service.generate_register_token(
+        employee_data=employee_data,
+        token_service=token_service,
+    )
+    return result

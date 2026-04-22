@@ -1,0 +1,95 @@
+spring:
+  docker:
+    compose:
+      enabled: false # пока что false
+  application:
+    name: notifications-service
+  jpa:
+    open-in-view: false
+  liquibase:
+    change-log: migrations/db.changelog-master.yaml
+  datasource:
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    url: ${DB_URL}
+  rabbitmq:
+    username: ${MB_USER}
+    password: ${MB_PASS}
+    virtual-host: ${MB_VHOST}
+    host: ${MB_HOST}
+    port: ${MB_PORT}
+  mail:
+    host: ${SMTP_HOST}
+    username: ${SMTP_USER}
+    password: ${SMTP_PASS}
+    port: ${SMTP_PORT}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: ${SMTP_CON_TIMEOUT}
+          timeout: ${SMTP_TIMEOUT}
+          writetimeout: ${SMTP_WRITE_TIMEOUT}
+
+# noinspection undefined
+app:
+  notification:
+    schedule:
+      cleaning:
+        delay-ms: ${APP_NOTIFICATION_SCHEDULE_CLEANING_DELAY_MS}
+        ttl:
+          email-days: ${APP_NOTIFICATION_TTL_EMAIL_DAYS}
+          viewed-days: ${APP_NOTIFICATION_TTL_VIEWED_DAYS}
+          not-viewed-days: ${APP_NOTIFICATION_TTL_NOT_VIEWED_DAYS}
+    number-retry-attempts: ${APP_NOTIFICATION_NUMBER_RETRY_ATTEMPTS}
+  websocket:
+    base-topic: ${APP_WEBSOCKET_BASE_TOPIC}
+    allowed-origins: ${APP_WEBSOCKET_ALLOWED_ORIGINS}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
+    allowed-methods: ${APP_CORS_ALLOWED_METHODS}
+    allow-credentials: ${APP_CORS_ALLOW_CREDENTIALS}
+  messaging:
+    inbox-queue: ${APP_MESSAGING_INBOX_QUEUE}
+  inbox:
+    thread:
+      core-pool-size: ${APP_INBOX_THREAD_CORE_POOL_SIZE}
+      max-pool-size: ${APP_INBOX_THREAD_MAX_POOL_SIZE}
+      #     Capacity должна превышать batch-size. В два раза - дефолт.
+      queue-capacity: ${APP_INBOX_THREAD_QUEUE_CAPACITY}
+      name-prefix: ${APP_INBOX_THREAD_NAME_PREFIX}
+      wait-tasks-shutdown: ${APP_INBOX_THREAD_WAIT_TASKS_SHUTDOWN}
+      await-termination-sec: ${APP_INBOX_THREAD_AWAIT_TERMINATION_SEC}
+    reservation-min: ${APP_INBOX_RESERVATION_MIN}
+    cleaning-min: ${APP_INBOX_CLEANING_MIN}
+    schedule:
+      cleaning:
+        batch-size: ${APP_INBOX_SCHEDULE_CLEANING_BATCH_SIZE}
+        delay-ms: ${APP_INBOX_SCHEDULE_CLEANING_DELAY_MS}
+      processing:
+        batch-size: ${APP_INBOX_SCHEDULE_PROCESSING_BATCH_SIZE}
+        delay-ms: ${APP_INBOX_SCHEDULE_PROCESSING_DELAY_MS}
+
+management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - prometheus
+
+server:
+  port: 8003
+
+
+springdoc:
+  swagger-ui:
+    path: /docs
+  api-docs:
+    path: /v3/api-docs

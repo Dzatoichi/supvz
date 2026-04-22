@@ -6,7 +6,8 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-from src.schemas.users_schemas import SubscriptionEnum, UserRoleEnum
+from src.models.user_permissions.user_permissions import UserPermissions
+from src.schemas.users_schemas import SubscriptionEnum
 
 if TYPE_CHECKING:
     from src.models.tokens.refresh_tokens import RefreshTokens
@@ -24,19 +25,10 @@ class Users(Base):
         String(255),
         unique=True,
         nullable=False,
-        index=True,
     )
 
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UserRoleEnum] = mapped_column(
-        SAEnum(
-            UserRoleEnum,
-            name="user_role",
-            native_enum=False,
-        ),
-        nullable=False,
-        default=UserRoleEnum.owner,
-    )
+
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -65,8 +57,14 @@ class Users(Base):
         default=SubscriptionEnum.test,
     )
 
+    permission_links: Mapped[List["UserPermissions"]] = relationship(
+        "UserPermissions",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         """
         Метод возвращения пользователя в виде строки.
         """
-        return f"<User(id={self.id}, email={self.email}, role={self.role})>"
+        return f"<User(id={self.id}, email={self.email}>"

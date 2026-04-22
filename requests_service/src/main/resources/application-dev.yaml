@@ -3,7 +3,12 @@ spring:
     compose:
       enabled: true
       file:
-        - docker-compose.yaml
+        - docker_build/dev/docker-compose.yaml
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
 
-server:
-  port: 8001
+logging:
+  level:
+    com.supvz.requests_service: trace

@@ -1,7 +1,7 @@
 import re
-from typing import List
+from typing import List, Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.schemas.pvz_schemas import PVZRead
 
@@ -9,10 +9,12 @@ from src.schemas.pvz_schemas import PVZRead
 class EmployeeCreateRequestSchema(BaseModel):
     """Схема запроса для создания нового сотрудника."""
 
-    user_id: int
     owner_id: int
+    user_id: int
+    position_id: int
+    position_source: Literal["system", "custom"] = "system"
 
-    name: str
+    name: str = Field(max_length=255)
     phone_number: str
 
     @field_validator("phone_number")
@@ -33,6 +35,7 @@ class EmployeeResponseSchema(BaseModel):
 
     user_id: int
     owner_id: int
+    position_id: int
 
     name: str
     phone_number: str
@@ -65,3 +68,9 @@ class TransferRequestSchema(BaseModel):
     """Схема запроса для перевода сотрудника в другой ПВЗ."""
 
     new_pvz_id: int
+
+
+class InternalUserSchema(BaseModel):
+    """Контекст пользователя, полученный от оркестратора."""
+
+    id: int

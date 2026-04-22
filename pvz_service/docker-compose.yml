@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:17
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
     container_name: pvz_postgres
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -10,6 +12,8 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - ./pg_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: postgres -c shared_preload_libraries=pg_cron -c cron.database_name=${DB_NAME}
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
@@ -47,3 +51,22 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - pvz_service
+
+  postgres_test:
+    image: postgres:17
+    container_name: pvz_postgres_test
+    profiles: [ "test" ]
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: test_pvz_db
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    restart: no
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U test_user -d test_pvz_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
